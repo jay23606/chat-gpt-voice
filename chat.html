@@ -5,15 +5,7 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <meta name="viewport" content="width=device-width" />
     <title></title>
-    <style>
-        body, html {
-            margin: 0;
-            height: 100%;
-            font-size: larger;
-            background: black;
-            color: white
-        }
-    </style>
+    <style>body,html{margin:0;height:100%;font-size:larger;background:black;color:white}</style>
 </head>
 <body>
     <textarea id="prompt-input" style="width:100vw;height:4em" placeholder="Enter prompt or touch screen for voice prompt"></textarea>
@@ -28,19 +20,18 @@
             this.body = document.body;
             this.$ = (id) => document.getElementById(id);
             this.stopStreaming = false;
-
+            
             this.cancelSpeaking = () => { stopStreaming = true;  (speechSynthesis.speaking) ? speechSynthesis.cancel() : ''; }
             body.addEventListener('beforeunload', () => this.cancelSpeaking());
             let enableVoice = $('enable-voice'), submitBtn = $('submit-button'), promptInput = $('prompt-input'), openaiOutput = $('openai-output');
-            var utter = new SpeechSynthesisUtterance(), voices = speechSynthesis.getVoices();
-            if (voices.length) utter.voice = voices.find((v) => { v.lang === 'en-AU' && v.name.includes('Female'); });
+            var utter = new SpeechSynthesisUtterance();
             promptInput.focus();
             enableVoice.addEventListener('change', (e) => localStorage.setItem('ENABLE_VOICE', e.target.checked));
             enableVoice.disabled = false;
             var evc = localStorage.getItem('ENABLE_VOICE');
             if (evc === null) evc = true;
             else enableVoice.checked = (evc === "true") ? true : false;
-
+            
             submitBtn.addEventListener('click', async () => {
                 var token = localStorage.getItem('OPENAI_API_KEY');
                 if (!token || token.length < 10) {
@@ -50,20 +41,17 @@
                 stopStreaming = false;
                 await openAiSend(promptInput, openaiOutput, token);
             });
-
-            this.recognition = (input, btn, lang = 'en-US', continuous = false) => {
+            
+            this.recognition = (input, btn, lang = 'en-US') => {
                 var SpeechRecognition = SpeechRecognition || webkitSpeechRecognition;
                 let recognition = new SpeechRecognition();
-                recognition.continuous = continuous;
                 recognition.lang = lang;
-                recognition.interimResults = false;
-                recognition.maxAlternatives = 1;
                 body.onclick = (e) => ((e.target === body || e.target.id === 'openai-output') && enableVoice.checked) ? (cancelSpeaking(), recognition.start()) : '';
                 recognition.onresult = (e) => { input.value = e.results[0][0].transcript; if (btn) btn.click() }
                 recognition.onspeechend = () => recognition.stop();
             }
             recognition(promptInput, submitBtn);
-
+            
             this.openAiSend = async (input, output, token) => {
                 const response = await fetch('https://api.openai.com/v1/chat/completions', {
                     method: 'POST',
@@ -85,7 +73,7 @@
                             if (enableVoice.checked) {
                                 utter.text = output.textContent;
                                 utter.lang = 'en-AU';
-                                utter.rate = 1.2;
+                                utter.rate = 1.5;
                                 speechSynthesis.speak(utter);
                             }
                             return;
