@@ -20,4 +20,4 @@ To get api key:
 https://platform.openai.com/account/api-keys
 
 Screenshot:
-![screenshot](https://user-images.githubusercontent.com/4602056/229603347-391a628b-5396-48bc-bfe1-a74f0631fdee.png)
+![screenshot](https://user-images.githubusercontent.com/4602056/229603347-391a628b-5396-48bc-bfe1-a74f0631fdee.png | width=100)
