@@ -1,5 +1,5 @@
 # chat-gpt-voice
-A voice chatbot that uses ChatGPT 3.5 completions endpoint written in vanilla JavaScript and is under 100 lines of fairly legible code
+A voice chatbot that uses ChatGPT 3.5 completions endpoint written in vanilla JavaScript that is under 100 lines of fairly legible code
 
 Uses Web Speech API's SpeechRecognition and SpeechSynthesisUtterance interfaces for voice-to-text and text-to-voice 
 
