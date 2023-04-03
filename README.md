@@ -7,7 +7,7 @@ Simply tap/click on the body of the page to activate speech recognition
 
 Live demo:
 
-https://jabdal.w3spaces.com/voice.html
+https://chat-gpt-voice.w3spaces.com/
 
 Requires entering in an API key from openai.com which is stored in localStorage 
 
