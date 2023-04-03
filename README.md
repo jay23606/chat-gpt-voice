@@ -12,4 +12,3 @@ Requires entering in an API key from openai.com which is stored in localStorage
 A checkbox was added enable or disable Voice and the state is also stored in localStorage
 
 I wrote it primarily so I could ping ChatGPT more easily on my mobile device
-
