@@ -43,7 +43,7 @@
                     recognition.lang = lang;
                     recognition.interimResults = false;
                     recognition.maxAlternatives = 1;
-                    document.body.onclick = (e) => (e.target === document.body && enableVoice.checked) ? recognition.start() : undefined;
+                    document.body.onclick = (e) => ((e.target === document.body || e.target.id === 'openai-output') && enableVoice.checked) ? recognition.start() : undefined;
                     recognition.onresult = (e) => { input.value = e.results[0][0].transcript; if (btn) btn.click() }
                     recognition.onspeechend = () => recognition.stop(); 
                 }
