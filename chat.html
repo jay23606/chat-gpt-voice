@@ -70,19 +70,17 @@
                         if (stopStreaming) return;
                         if (lines[i].length === 0 || lines[i].startsWith(':')) continue;
                         if (lines[i] === 'data: [DONE]') {
-                            if (enableVoice.checked) {
-                                utter.text = output.textContent;
-                                utter.lang = 'en-AU';
-                                utter.rate = 1.5;
-                                speechSynthesis.speak(utter);
-                            }
+                            if (!enableVoice.checked) return;
+                            utter.text = output.textContent;
+                            utter.lang = 'en-AU';
+                            utter.rate = 1.4;
+                            speechSynthesis.speak(utter);
                             return;
                         }
                         let json = JSON.parse(lines[i].substring(6));
-                        if (json.choices) {
-                            arr.push(json.choices[0].delta.content || '')
-                            output.textContent = arr.join('');
-                        }
+                        if (!json.choices) continue; 
+                        arr.push(json.choices[0].delta.content || '')
+                        output.textContent = arr.join('');
                     }
                 }
             }
