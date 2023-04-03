@@ -20,8 +20,7 @@
             this.body = document.body;
             this.$ = (id) => document.getElementById(id);
             this.stopStreaming = false;
-            
-            this.cancelSpeaking = () => { stopStreaming = true;  (speechSynthesis.speaking) ? speechSynthesis.cancel() : ''; }
+            this.cancelSpeaking = () => { stopStreaming = true; speechSynthesis.cancel(); }
             body.addEventListener('beforeunload', () => this.cancelSpeaking());
             let enableVoice = $('enable-voice'), submitBtn = $('submit-button'), promptInput = $('prompt-input'), openaiOutput = $('openai-output');
             var utter = new SpeechSynthesisUtterance();
@@ -33,6 +32,11 @@
             else enableVoice.checked = (evc === "true") ? true : false;
             
             submitBtn.addEventListener('click', async () => {
+                //easter egg for my son, take out later
+                var words = promptInput.value.split(' ');
+                if (words.length < 3) body.style.backgroundColor = words.join('');
+
+                cancelSpeaking();
                 var token = localStorage.getItem('OPENAI_API_KEY');
                 if (!token || token.length < 10) {
                     token = prompt("Please input OpenAI API key (stored in browser cache)", "");
