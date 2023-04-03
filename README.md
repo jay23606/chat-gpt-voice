@@ -19,5 +19,8 @@ To get api key:
 
 https://platform.openai.com/account/api-keys
 
+
 Screenshot:
+
+
 ![screenshot](screenshot.png)
