@@ -13,7 +13,7 @@ Requires entering in an API key from openai.com which is stored in localStorage
 
 A checkbox is included to enable or disable STT and TTS whose state is also stored in localStorage
 
-I wrote it primarily so I could ping ChatGPT more easily on my mobile device
+I wrote it primarily so I could easily ping ChatGPT on my mobile device
 
 To get api key:
 
