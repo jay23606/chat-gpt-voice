@@ -5,4 +5,4 @@ Live demo:
 
 https://jabdal.w3spaces.com/voice.html
 
-Requires entering in an API key from openai.com which is stored in localStorage
+Requires entering in an API key from openai.com which is stored in localStorage (browser cache)
