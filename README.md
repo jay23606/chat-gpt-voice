@@ -1,4 +1,4 @@
-# chat-gpt-voice-chatbot
+# chat-gpt-voice
 A voice chatbot that uses ChatGPT 3.5 completions endpoint written in vanilla JavaScript
 
 Uses Web Speech API's SpeechRecognition and SpeechSynthesisUtterance interfaces for voice-to-text and text-to-voice 
