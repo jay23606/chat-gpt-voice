@@ -1,7 +1,7 @@
 # chat-gpt-voice
 A voice chatbot that uses ChatGPT 3.5 completions endpoint written in vanilla JavaScript that is under 100 lines of fairly legible code
 
-Uses Web Speech API's SpeechRecognition and SpeechSynthesisUtterance interfaces for voice-to-text and text-to-voice 
+Uses Web Speech API's SpeechRecognition and SpeechSynthesisUtterance interfaces for speech-to-text (STT) and text-to-speech (TTS) 
 
 Simply tap/click on the body of the page to activate speech recognition
 
@@ -11,7 +11,7 @@ https://jabdal.w3spaces.com/voice.html
 
 Requires entering in an API key from openai.com which is stored in localStorage 
 
-A checkbox was added enable or disable Voice whose state is also stored in localStorage
+A checkbox is included to enable or disable TTS and STT whose state is also stored in localStorage
 
 I wrote it primarily so I could ping ChatGPT more easily on my mobile device
 
