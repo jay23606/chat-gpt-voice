@@ -42,7 +42,6 @@
                     token = prompt("Please input OpenAI API key (stored in browser cache)", "");
                     localStorage.setItem('OPENAI_API_KEY', token)
                 }
-                stopStreaming = false;
                 await openAiSend(promptInput, openaiOutput, token);
             });
             
@@ -64,6 +63,7 @@
                 });
                 let arr = []
                 const reader = response.body.getReader();
+                stopStreaming = false;
                 while (true) {
                     const { done, value } = await reader.read();
                     if (done) break;
