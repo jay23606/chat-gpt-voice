@@ -3,7 +3,7 @@
 <head>
     <title>Chat GPT Voice</title>
     <meta charset="utf-8" />
-    <link rel="manifest" href="manifest.json" />
+    <!--<link rel="manifest" href="manifest.json" />-->
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <style>body, html {margin: 0;height: 100%;font-size: larger;background: black;color: white}</style>
 </head>
@@ -19,7 +19,7 @@
             this.body = document.body;
             this.$ = (id) => document.getElementById(id);
             this.stopStreaming = false;
-            this.cancelSpeaking = () => { timer.disableSpeaking();  stopStreaming = true; speechSynthesis.cancel(); }
+            this.cancelSpeaking = () => { let wasSpeaking = speechSynthesis.speaking; timer.disableSpeaking(); stopStreaming = true; speechSynthesis.cancel(); return wasSpeaking; }
             body.addEventListener('beforeunload', () => this.cancelSpeaking());
             let enableVoice = $('enable-voice'), submitBtn = $('submit-button'), promptInput = $('prompt-input'), openaiOutput = $('openai-output');
             promptInput.focus();
@@ -47,7 +47,7 @@
                 var SpeechRecognition = SpeechRecognition || webkitSpeechRecognition;
                 let recognition = new SpeechRecognition();
                 recognition.lang = lang;
-                body.onclick = (e) => ((e.target === body || e.target.id === 'openai-output') && enableVoice.checked) ? (cancelSpeaking(), recognition.start()) : '';
+                body.onclick = (e) => ((e.target === body || e.target.id === 'openai-output') && enableVoice.checked) ? ((cancelSpeaking()) ? '' : recognition.start()) : '';
                 recognition.onresult = (e) => { input.value = e.results[0][0].transcript; if (btn) btn.click() }
                 recognition.onspeechend = () => recognition.stop();
             }
@@ -99,6 +99,7 @@
                         if (lines[i].length === 0 || lines[i].startsWith(':')) continue;
                         if (lines[i] === 'data: [DONE]') {
                             if (!enableVoice.checked) return;
+                            if (arr.length) sentences.push(arr);
                             return;
                         }
                         let json = JSON.parse(lines[i].substring(6));
