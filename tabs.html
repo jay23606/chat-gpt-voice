@@ -115,7 +115,7 @@
                 tabsArr.forEach(t => t.style.background = (t.className === `v${len - 2}`) ? tabFg : tabBg);
                 ifrs = Array.from(iframes.children);
                 ifrs.forEach(ifr => ifr.style.display = (ifr.className === `v${len - 2}`) ? "block" : "none");
-            } else {
+            } else if (tab.tagName === 'LI') {
                 tabsArr.forEach(t => t.style.background = (t.className === tab.className) ? tabFg : tabBg);
                 ifrs.forEach(ifr => ifr.style.display = (tab.className === ifr.className) ? "block" : "none");
             }
