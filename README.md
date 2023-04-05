@@ -24,3 +24,7 @@ Screenshot:
 
 
 ![screenshot](screenshot.png)
+
+Inspiration:
+https://github.com/casualwriter/vanilla-chatgpt
+https://mdn.github.io/dom-examples/web-speech-api/speech-color-changer/
