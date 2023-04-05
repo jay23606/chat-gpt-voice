@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>VoiceGPT</title>
+    <meta charset="utf-8" />
+    <link rel="manifest" href="manifest.json" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <style>
+        body {
+            margin: 0;
+            font-size: larger;
+        }
+        iframe {
+            border: none;
+            width: 100%;
+            height: 100vh;
+        }
+        .tabs {
+            list-style: none;
+            background: black;
+            margin: 0;
+            padding: 0;
+        }
+        .tabs li {
+            display: inline-block;
+            padding: 1em 1.5em;
+            background: black;
+            color: #fff;
+            border: 0;
+            border-bottom: 0px !important;
+            border-right: .2em inset #353535;
+            color: #fff;
+            border-radius: 1.1em 1.1em 0 0;
+            cursor: pointer;
+        }
+        .tabs li:hover{
+            color: aqua;
+        }
+        .text, .wiki {
+            display:none;
+        }
+        .tab-add, .tab-sub {
+            border-right: 0 !important;
+        }
+        .tabs li b {
+            float:right
+        }
+
+        .nilla {
+        text-decoration: none;
+        color: white;
+        font-size:large;
+      }
+    </style>
+</head>
+<body onselect=function(e){e.preventDefault()}>
+    <div style="float:right;background:black">
+        <a class="nilla" href="#">Voice</a>
+    </div>
+    <ul class="tabs">
+        <li class="tab-sub">-</li>
+        <li class="v1">1</li>
+        <li class="tab-add">+</li>
+    </ul>
+    <div></div>
+
+    <div class="iframes">
+        <iframe class="v1"></iframe>
+    </div>
+    <script>
+        let tabFg = "#353535", tabBg = "#000";
+        document.addEventListener('selectstart', e => e.preventDefault());
+        const proto = HTMLElement.prototype;
+        proto.click = function (cb) { this.addEventListener('click', cb) }
+        const $one = sel => document.querySelector(sel);
+
+        let nilla = $one('.nilla');
+        let src = (nilla.textContent == "Nilla") ? "vanilla.html" : "chat.html";
+        nilla.click(e => {
+            if (nilla.textContent == "Nilla") {
+                nilla.textContent = "Voice";
+                src = "chat.html";
+            } else {
+                nilla.textContent = "Nilla";
+                src = "vanilla.html"
+            }
+        });
+        //const $all = sel => document.querySelectorAll(sel);
+        //const $id = id => document.getElementById(id);
+        const tabs = $one('.tabs');
+        const iframes = $one('.iframes');
+        let params = new URLSearchParams(window.location.search);
+        if (params.has("src")) src = params.get("src");
+        iframes.children[0].src = src;
+        tabs.children[1].style.background = tabFg;
+        tabs.click(e => {
+            let tab = e.target;
+            let len = tabs.children.length - 1;
+            let ifrs = Array.from(iframes.children);
+            let tabsArr = Array.from(tabs.children);
+            if (tab.className === 'tab-add') {
+                let li = document.createElement('li');
+                li.className = `v${len}`; li.textContent = len;
+                tabs.insertBefore(li, tab);
+                tabsArr = Array.from(tabs.children);
+                tabsArr.forEach(t => t.style.background = (t.className === `v${len}`) ? tabFg : tabBg);
+                ifrs.forEach(ifr => ifr.style.display = 'none');
+                let ifr = document.createElement('iframe');
+                ifr.className = `v${len}`; ifr.src = src;
+                iframes.appendChild(ifr);
+            } else if (tab.className === 'tab-sub') {
+                if (len < 3) return;
+                tabsArr[tabsArr.length - 2].remove();
+                ifrs[ifrs.length - 1].remove();
+                tabsArr = Array.from(tabs.children);
+                tabsArr.forEach(t => t.style.background = (t.className === `v${len - 2}`) ? tabFg : tabBg);
+                ifrs = Array.from(iframes.children);
+                ifrs.forEach(ifr => ifr.style.display = (ifr.className === `v${len - 2}`) ? "block" : "none");
+            } else {
+                tabsArr.forEach(t => t.style.background = (t.className === tab.className) ? tabFg : tabBg);
+                ifrs.forEach(ifr => ifr.style.display = (tab.className === ifr.className) ? "block" : "none");
+            }
+        });
+    </script>
+</body>
+</html>
