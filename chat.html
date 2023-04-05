@@ -86,6 +86,7 @@
                 sentences = []
                 sIndex = 0;
                 const reader = response.body.getReader();
+                reader.onerror = (error) => cancelSpeaking();
                 stopStreaming = false;
                 timer.enableSpeaking();
                 while (true) {
