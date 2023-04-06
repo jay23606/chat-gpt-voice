@@ -39,7 +39,7 @@ https://github.com/casualwriter/vanilla-chatgpt
 
 https://mdn.github.io/dom-examples/web-speech-api/speech-color-changer/
 
-<i>Speech recognition does not work in (Firefox)[https://developer.mozilla.org/en-US/docs/Web/API/Web_Speech_API#browser_compatibility]</i>
+<i>Speech recognition does not work in [Firefox](https://developer.mozilla.org/en-US/docs/Web/API/Web_Speech_API#browser_compatibility)</i>
 
 
 
