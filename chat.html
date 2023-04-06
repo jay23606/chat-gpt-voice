@@ -21,17 +21,14 @@
     <script>
         const body = document.body;
         const $ = id => document.getElementById(id);
-        let stopStreaming = false;
         const cancelSpeaking = () => { let wasSpeaking = speechSynthesis.speaking; timer.disableSpeaking(); stopStreaming = true; speechSynthesis.cancel(); return wasSpeaking; }
         body.addEventListener('beforeunload', () => this.cancelSpeaking());
-        let enableVoice = $('enable-voice'), codeCbx = $('code-cbx'), submitBtn = $('submit-button'), promptInput = $('prompt-input'),
-            openaiOutput = $('openai-output'), codeOutput = $('code-output'), saveCode = $('save-code');
-        promptInput.focus();
+        let enableVoice = $('enable-voice'), codeCbx = $('code-cbx'), submitBtn = $('submit-button'), promptInput = $('prompt-input'), openaiOutput = $('openai-output'),
+            codeOutput = $('code-output'), saveCode = $('save-code'), stopStreaming = false, history = [], sentences = [], sIndex = 0;
+        promptInput.focus(); enableVoice.disabled = false;
         enableVoice.addEventListener('change', e => localStorage.setItem('ENABLE_VOICE', e.target.checked));
-        enableVoice.disabled = false;
         enableVoice.checked = (localStorage.getItem('ENABLE_VOICE') ?? "true") === "true";
         
-        let history = []
         submitBtn.addEventListener('click', async () => {
             codeOutput.textContent = '';
             const words = promptInput.value.split(' ');
@@ -66,9 +63,7 @@
             recognition.onspeechend = () => recognition.stop();
         }
         recognition(promptInput, submitBtn);
-
-        let sentences = []
-        let sIndex = 0;
+        
         const timer = {
             iid: 0,
             enableSpeaking: function () {
