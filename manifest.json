@@ -18,7 +18,7 @@
     "background_color": "#000000",
     "display": "standalone",
     "orientation": "portrait",
-    "start_url": "tabs.html?min=1",
+    "start_url": "/jay23606/chat-gpt-voice/main/tabs.html?min=1",
     "shape": "circle",
     "version": "2.1.1"
 }
