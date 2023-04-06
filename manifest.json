@@ -18,7 +18,6 @@
     "background_color": "#000000",
     "display": "standalone",
     "orientation": "portrait",
-    "scope": "/",
     "start_url": "tabs.html?min=1",
     "shape": "circle",
     "version": "2.1.1"
