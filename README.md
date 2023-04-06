@@ -9,6 +9,7 @@ Live demo:
 
 https://raw.githack.com/jay23606/chat-gpt-voice/main/chat.html (or tinyurl.com/gpt-voice)
 
+I've also added a form of "tabs" using iframes and a way to toggle to vanilla-chatgpt
 
 https://raw.githack.com/jay23606/chat-gpt-voice/main/tabs.html (or tinyurl.com/gpt-voice-tabs)
 
@@ -18,7 +19,6 @@ A checkbox is included to enable or disable STT and TTS whose state is also stor
 
 I wrote it primarily so I could easily ping ChatGPT on my mobile device (Added PWA support using manifest.json)
 
-I've also added a form of "tabs" using iframes and a way to toggle to vanilla-chatgpt
 
 To get api key:
 
