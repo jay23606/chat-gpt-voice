@@ -14,7 +14,7 @@ I've also added a form of "tabs" using iframes and a way to toggle to vanilla-ch
 
 https://raw.githack.com/jay23606/chat-gpt-voice/main/tabs.html (or tinyurl.com/gpt-voice-tabs)
 
-Requires entering in an API key from openai.com which is stored in localStorage 
+Requires entering in an [API key](https://platform.openai.com/account/api-keys) from [openai.com](https://chat.openai.com) which is stored in localStorage 
 
 <strong>To get api key:</strong>
 
