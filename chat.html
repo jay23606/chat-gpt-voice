@@ -55,7 +55,7 @@
         }
 
         const recognition = (input, btn, lang = 'en-US') => {
-            var SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+            var SpeechRecognition = SpeechRecognition || webkitSpeechRecognition;
             let recognition = new SpeechRecognition();
             recognition.lang = lang;
             body.onclick = e => ((e.target === body || e.target.id === 'openai-output') && enableVoice.checked) ? ((cancelSpeaking()) ? '' : recognition.start()) : '';
