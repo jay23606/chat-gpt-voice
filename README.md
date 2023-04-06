@@ -1,7 +1,7 @@
 # chat-gpt-voice
 A voice chatbot that uses ChatGPT 3.5 completions endpoint written in vanilla JavaScript that is under 100 lines of fairly legible code
 
-Uses Web Speech API's SpeechRecognition and SpeechSynthesisUtterance interfaces for speech-to-text (STT) and text-to-speech (TTS) 
+Uses [Web Speech API](https://developer.mozilla.org/en-US/docs/Web/API/Web_Speech_API)'s SpeechRecognition and SpeechSynthesisUtterance interfaces for speech-to-text (STT) and text-to-speech (TTS) 
 
 Simply tap/click on the body of the page to activate speech recognition
 
