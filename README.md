@@ -15,7 +15,7 @@ https://raw.githack.com/jay23606/chat-gpt-voice/main/tabs.html (or tinyurl.com/g
 
 Requires entering in an API key from openai.com which is stored in localStorage 
 
-<strong>To get api key<strong>:
+<strong>To get api key</strong>:
 
 https://platform.openai.com/account/api-keys
 
