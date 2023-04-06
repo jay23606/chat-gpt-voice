@@ -5,117 +5,104 @@
     <meta charset="utf-8" />
     <!--<link rel="manifest" href="manifest.json" />-->
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <style>body, html {margin: 0;height: 100%;font-size: larger;background: black;color: white}</style>
+    <style>body, html {margin:0;height:100%;font-size:larger;background:black;color:white}</style>
 </head>
 <body>
-    <textarea id="prompt-input" style="width:100vw;height:4em" placeholder="Enter prompt or touch screen for voice prompt"></textarea>
+    <textarea id="prompt-input" style="width:100vw;height:4em;font-size:larger" placeholder="Enter prompt or touch screen for voice prompt"></textarea>
     <div style="text-align:right">
         <input checked type="checkbox" id="enable-voice" style="width:2em;height:2em"><label for="enable-voice">Enable Voice</label>
-        <button id="submit-button" style="width:50vw; text-align:center;height:4em; font-weight:bold">Submit</button>
+        <button id="submit-button" style="width:50vw;text-align:center;height:2.5em;font-size:larger">Submit</button>
     </div>
     <div id="openai-output" style="white-space:pre-wrap; color: white"></div>
     <script>
-        (() => {
-            this.body = document.body;
-            this.$ = (id) => document.getElementById(id);
-            this.stopStreaming = false;
-            this.cancelSpeaking = () => { let wasSpeaking = speechSynthesis.speaking; timer.disableSpeaking(); stopStreaming = true; speechSynthesis.cancel(); return wasSpeaking; }
-            body.addEventListener('beforeunload', () => this.cancelSpeaking());
-            let enableVoice = $('enable-voice'), submitBtn = $('submit-button'), promptInput = $('prompt-input'), openaiOutput = $('openai-output');
-            promptInput.focus();
-            enableVoice.addEventListener('change', (e) => localStorage.setItem('ENABLE_VOICE', e.target.checked));
-            enableVoice.disabled = false;
-            var evc = localStorage.getItem('ENABLE_VOICE');
-            if (evc === null) evc = true;
-            else enableVoice.checked = (evc === "true") ? true : false;
+        const body = document.body;
+        const $ = id => document.getElementById(id);
+        let stopStreaming = false;
+        const cancelSpeaking = () => { let wasSpeaking = speechSynthesis.speaking; timer.disableSpeaking(); stopStreaming = true; speechSynthesis.cancel(); return wasSpeaking; }
+        body.addEventListener('beforeunload', () => this.cancelSpeaking());
+        let enableVoice = $('enable-voice'), submitBtn = $('submit-button'), promptInput = $('prompt-input'), openaiOutput = $('openai-output');
+        promptInput.focus();
+        enableVoice.addEventListener('change', e => localStorage.setItem('ENABLE_VOICE', e.target.checked));
+        enableVoice.disabled = false;
+        enableVoice.checked = (localStorage.getItem('ENABLE_VOICE') ?? "true") === "true";
 
-            submitBtn.addEventListener('click', async () => {
-                //easter egg for my son so if you say a color it changes the background
-                var words = promptInput.value.split(' ');
-                if (words.length < 3) body.style.backgroundColor = words.join('');
-
-                cancelSpeaking();
-                var token = localStorage.getItem('OPENAI_API_KEY');
-                if (!token || token.length < 10) {
-                    token = prompt("Please input OpenAI API key (stored in browser cache)", "");
-                    localStorage.setItem('OPENAI_API_KEY', token)
-                }
-                await openAiSend(promptInput, openaiOutput, token);
-            });
-
-            this.recognition = (input, btn, lang = 'en-US') => {
-                var SpeechRecognition = SpeechRecognition || webkitSpeechRecognition;
-                let recognition = new SpeechRecognition();
-                recognition.lang = lang;
-                body.onclick = (e) => ((e.target === body || e.target.id === 'openai-output') && enableVoice.checked) ? ((cancelSpeaking()) ? '' : recognition.start()) : '';
-                recognition.onresult = (e) => { input.value = e.results[0][0].transcript; if (btn) btn.click() }
-                recognition.onspeechend = () => recognition.stop();
+        submitBtn.addEventListener('click', async () => {
+            const words = promptInput.value.split(' ');
+            if (words.length < 3) body.style.background = words.join(''); //easter egg for my son
+            cancelSpeaking();
+            var token = localStorage.getItem('OPENAI_API_KEY');
+            if (!token || token.length < 10) {
+                token = prompt("Please input OpenAI API key (stored in browser cache)", "");
+                localStorage.setItem('OPENAI_API_KEY', token)
             }
-            recognition(promptInput, submitBtn);
+            await openAiSend(promptInput, openaiOutput, token);
+        });
 
-            let sentences = []
-            let sIndex = 0;
-            const timer = {
-                iid: 0,
-                enableSpeaking: function () { 
-                    this.disableSpeaking();
-                    this.iid = setInterval(() => {
-                        if (!enableVoice.checked) return;
-                        if (!speechSynthesis.speaking && sentences.length > 0 && sentences.length > sIndex) {
-                            var utter = new SpeechSynthesisUtterance();
-                            utter.text = sentences[sIndex].join('');
-                            utter.lang = 'en-AU';
-                            utter.rate = 1.4;
-                            speechSynthesis.speak(utter);
-                            sIndex++;
-                        }
-                    }, 500);
-                },
-                disableSpeaking: function () {
-                    if (this.iid) clearInterval(this.iid)
-                }
-            };
+        const recognition = (input, btn, lang = 'en-US') => {
+            var SpeechRecognition = SpeechRecognition || webkitSpeechRecognition;
+            let recognition = new SpeechRecognition();
+            recognition.lang = lang;
+            body.onclick = e => ((e.target === body || e.target.id === 'openai-output') && enableVoice.checked) ? ((cancelSpeaking()) ? '' : recognition.start()) : '';
+            recognition.onresult = e => { input.value = e.results[0][0].transcript; if (btn) btn.click() }
+            recognition.onspeechend = () => recognition.stop();
+        }
+        recognition(promptInput, submitBtn);
 
-            this.openAiSend = async (input, output, token) => {
-                const response = await fetch('https://api.openai.com/v1/chat/completions', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-                    body: JSON.stringify({ model: "gpt-3.5-turbo", temperature: 0.8, stream: true, messages: [{ role: "user", content: input.value }] })
-                });
-                let arr = [], arr2 = []
-                sentences = []
-                sIndex = 0;
-                const reader = response.body.getReader();
-                reader.onerror = (error) => cancelSpeaking();
-                stopStreaming = false;
-                timer.enableSpeaking();
-                while (true) {
-                    const { done, value } = await reader.read();
-                    if (done) break;
-                    const textDecoder = new TextDecoder();
-                    const chunk = textDecoder.decode(value, { stream: true });
-                    const lines = chunk.split('\n');
-                    for (let i in lines) {
-                        if (stopStreaming) return;
-                        if (lines[i].length === 0 || lines[i].startsWith(':')) continue;
-                        if (lines[i] === 'data: [DONE]') {
-                            if (!enableVoice.checked) return;
-                            if (arr.length) sentences.push(arr);
-                            return;
-                        }
-                        let json = JSON.parse(lines[i].substring(6));
-                        if (!json.choices) continue;
-                        let word = json.choices[0].delta.content || '';
-                        arr.push(word); arr2.push(word);
-                        if (/[.;!?]$/.test(word.trimEnd())) {
-                            sentences.push(arr)
-                            arr = []
-                        }
-                        output.textContent = arr2.join(''); //sentences.map(words => words.join("")).join("");
+        let sentences = []
+        let sIndex = 0;
+        const timer = {
+            iid: 0,
+            enableSpeaking: function () {
+                this.disableSpeaking();
+                this.iid = setInterval(() => {
+                    if (!enableVoice.checked) return;
+                    if (!speechSynthesis.speaking && sentences.length > 0 && sentences.length > sIndex) {
+                        var utter = new SpeechSynthesisUtterance();
+                        utter.text = sentences[sIndex].join('');
+                        utter.lang = 'en-AU'; utter.rate = 1.4;
+                        speechSynthesis.speak(utter);
+                        sIndex++;
                     }
+                }, 500);
+            },
+            disableSpeaking: function () { if (this.iid) clearInterval(this.iid) }
+        };
+
+        const openAiSend = async (input, output, token) => {
+            const response = await fetch('https://api.openai.com/v1/chat/completions', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                body: JSON.stringify({ model: "gpt-3.5-turbo", temperature: 0.8, stream: true, messages: [{ role: "user", content: input.value }] })
+            });
+            let arr = [], arr2 = [];
+            sentences = []; sIndex = 0;
+            const reader = response.body.getReader();
+            reader.onerror = (error) => cancelSpeaking();
+            stopStreaming = false;
+            timer.enableSpeaking();
+            for(;;) {
+                const { done, value } = await reader.read();
+                if (done) return;
+                const textDecoder = new TextDecoder();
+                const chunk = textDecoder.decode(value, { stream: true });
+                const lines = chunk.split('\n');
+                for (const line of lines) {
+                    if (stopStreaming) return;
+                    if (line.length === 0 || line.startsWith(':')) continue;
+                    if (line === 'data: [DONE]') {
+                        if (!enableVoice.checked) return;
+                        if (arr.length) sentences.push(arr);
+                        return;
+                    }
+                    let json = JSON.parse(line.substring(6));
+                    if (!json.choices) continue;
+                    let word = json.choices[0].delta.content || '';
+                    arr.push(word); arr2.push(word);
+                    if (/[.;!?]$/.test(word.trimEnd())) { sentences.push(arr); arr = []; }
+                    output.textContent = arr2.join('');
                 }
             }
-        })();
+        }
     </script>
 </body>
 </html>
