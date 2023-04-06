@@ -19,7 +19,7 @@
     "display": "standalone",
     "orientation": "portrait",
     "scope": "/",
-    "start_url": "/index.html",
+    "start_url": "tabs.html?min=1",
     "shape": "circle",
     "version": "2.0.0"
 }
