@@ -29,7 +29,7 @@ A checkbox is included to enable or disable STT and TTS whose state is also stor
 
 ![screenshot](screenshot.png)
 
-It can now write it's own javascript apps:
+You can now instruct it to write editable JS apps:
 
 ![screenshot](screenshot2.png)
 
