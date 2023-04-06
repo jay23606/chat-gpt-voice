@@ -35,3 +35,6 @@ I wrote it primarily so I could easily ping ChatGPT on my mobile device (Added P
 https://github.com/casualwriter/vanilla-chatgpt
 
 https://mdn.github.io/dom-examples/web-speech-api/speech-color-changer/
+
+
+
