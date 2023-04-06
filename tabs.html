@@ -74,14 +74,14 @@
         const $one = sel => document.querySelector(sel);
 
         let nilla = $one('.nilla');
-        let src = (nilla.textContent == "Nilla") ? "https://raw.githack.com/casualwriter/vanilla-chatgpt/main/source/index.html" : "chat.html";
+        let src = "chat.html";
         nilla.click(e => {
             if (nilla.textContent == "Nilla") {
                 nilla.textContent = "Voice";
                 src = "chat.html";
             } else {
                 nilla.textContent = "Nilla";
-                src = "vanilla.html"
+                src = "https://raw.githack.com/casualwriter/vanilla-chatgpt/main/source/index.html"
             }
         });
         //const $all = sel => document.querySelectorAll(sel);
