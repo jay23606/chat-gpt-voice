@@ -37,9 +37,9 @@ You can now instruct it to write runnable and editable JS apps:
 
 https://github.com/casualwriter/vanilla-chatgpt
 
-For it to work under Firefox you have to navigate to about:config and enable media.webspeech.recognition.enable and media.webspeech.recognition.force_enable
-
 https://mdn.github.io/dom-examples/web-speech-api/speech-color-changer/
+
+<i>*For it to work under Firefox you have to navigate to about:config and enable media.webspeech.recognition.enable and media.webspeech.recognition.force_enable</i>
 
 
 
