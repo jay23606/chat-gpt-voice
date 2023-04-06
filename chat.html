@@ -26,6 +26,7 @@
         enableVoice.disabled = false;
         enableVoice.checked = (localStorage.getItem('ENABLE_VOICE') ?? "true") === "true";
 
+        let history = []
         submitBtn.addEventListener('click', async () => {
             const words = promptInput.value.split(' ');
             if (words.length < 3) body.style.background = words.join(''); //easter egg for my son
@@ -36,6 +37,8 @@
                 localStorage.setItem('OPENAI_API_KEY', token)
             }
             await openAiSend(promptInput, openaiOutput, token);
+            history.push({ role: 'user', content: promptInput.value }, { role: 'assistant', content: openaiOutput.textContent });
+            if (history.length > 4) { history.shift(); history.shift(); } 
         });
 
         const recognition = (input, btn, lang = 'en-US') => {
@@ -72,12 +75,12 @@
             const response = await fetch('https://api.openai.com/v1/chat/completions', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-                body: JSON.stringify({ model: "gpt-3.5-turbo", temperature: 0.8, stream: true, messages: [{ role: "user", content: input.value }] })
+                body: JSON.stringify({ model: "gpt-3.5-turbo", temperature: 0.8, stream: true, messages: [...history, { role: "user", content: input.value }] })
             });
             let arr = [], arr2 = [];
             sentences = []; sIndex = 0;
             const reader = response.body.getReader();
-            reader.onerror = (error) => cancelSpeaking();
+            reader.onerror = err => cancelSpeaking();
             stopStreaming = false;
             timer.enableSpeaking();
             for(;;) {
@@ -94,9 +97,9 @@
                         if (arr.length) sentences.push(arr);
                         return;
                     }
-                    let json = JSON.parse(line.substring(6));
+                    const json = JSON.parse(line.substring(6));
                     if (!json.choices) continue;
-                    let word = json.choices[0].delta.content || '';
+                    const word = json.choices[0].delta.content || '';
                     arr.push(word); arr2.push(word);
                     if (/[.;!?]$/.test(word.trimEnd())) { sentences.push(arr); arr = []; }
                     output.textContent = arr2.join('');
