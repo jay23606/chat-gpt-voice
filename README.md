@@ -5,7 +5,7 @@ Uses Web Speech API's SpeechRecognition and SpeechSynthesisUtterance interfaces 
 
 Simply tap/click on the body of the page to activate speech recognition
 
-Live demo:
+<strong>Live demo:</strong>
 
 https://raw.githack.com/jay23606/chat-gpt-voice/main/chat.html (or tinyurl.com/gpt-voice)
 
@@ -15,7 +15,7 @@ https://raw.githack.com/jay23606/chat-gpt-voice/main/tabs.html (or tinyurl.com/g
 
 Requires entering in an API key from openai.com which is stored in localStorage 
 
-<strong>To get api key</strong>:
+<strong>To get api key:</strong>
 
 https://platform.openai.com/account/api-keys
 
@@ -24,12 +24,12 @@ A checkbox is included to enable or disable STT and TTS whose state is also stor
 I wrote it primarily so I could easily ping ChatGPT on my mobile device (Added PWA support using manifest.json)
 
 
-Screenshot:
+<strong>Screenshot</strong>:
 
 
 ![screenshot](screenshot.png)
 
-Inspiration:
+<strong>Inspiration:</strong>
 
 https://github.com/casualwriter/vanilla-chatgpt
 
