@@ -24,10 +24,14 @@ https://platform.openai.com/account/api-keys
 
 A checkbox is included to enable or disable STT and TTS whose state is also stored in localStorage
 
-<strong>Screenshot</strong>:
+<strong>Screenshots</strong>:
 
 
 ![screenshot](screenshot.png)
+
+It can now write it's own javascript apps:
+
+![screenshot](screenshot2.png)
 
 <strong>Inspiration:</strong>
 
