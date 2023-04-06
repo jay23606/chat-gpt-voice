@@ -7,7 +7,7 @@ Simply tap/click on the body of the page to activate speech recognition
 
 Live demo:
 
-https://chat-gpt-voice.w3spaces.com/
+https://raw.githack.com/jay23606/chat-gpt-voice/main/chat.html or tinyurl.com/gpt-voice
 
 Requires entering in an API key from openai.com which is stored in localStorage 
 
