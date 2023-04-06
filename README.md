@@ -39,7 +39,7 @@ https://github.com/casualwriter/vanilla-chatgpt
 
 https://mdn.github.io/dom-examples/web-speech-api/speech-color-changer/
 
-<i>*For it to work under Firefox you have to navigate to about:config and enable media.webspeech.recognition.enable and media.webspeech.recognition.force_enable</i>
+<i>Speech recognition does not work in (Firefox)[https://developer.mozilla.org/en-US/docs/Web/API/Web_Speech_API#browser_compatibility]</i>
 
 
 
