@@ -10,46 +10,54 @@
             margin: 0;
             font-size: larger;
         }
+
         iframe {
             border: none;
             width: 100%;
             height: 100vh;
         }
+
         .tabs {
             list-style: none;
             background: black;
             margin: 0;
             padding: 0;
         }
-        .tabs li {
-            display: inline-block;
-            padding: 1em 1.5em;
-            background: black;
-            color: #fff;
-            border: 0;
-            border-bottom: 0px !important;
-            border-right: .2em inset #353535;
-            color: #fff;
-            border-radius: 1.1em 1.1em 0 0;
-            cursor: pointer;
-        }
-        .tabs li:hover{
-            color: aqua;
-        }
+
+            .tabs li {
+                display: inline-block;
+                padding: 1em 1.5em;
+                background: black;
+                color: #fff;
+                border: 0;
+                border-bottom: 0px !important;
+                border-right: .2em inset #353535;
+                color: #fff;
+                border-radius: 1.1em 1.1em 0 0;
+                cursor: pointer;
+            }
+
+                .tabs li:hover {
+                    color: aqua;
+                }
+
         .text, .wiki {
-            display:none;
+            display: none;
         }
+
         .tab-add, .tab-sub {
             border-right: 0 !important;
         }
+
         .tabs li b {
-            float:right
+            float: right
         }
+
         .nilla {
             text-decoration: none;
             color: white;
-            font-size:large;
-      }
+            font-size: large;
+        }
     </style>
 </head>
 <body>
@@ -72,13 +80,13 @@
         const proto = HTMLElement.prototype;
         proto.click = function (cb) { this.addEventListener('click', cb) }
         const $one = sel => document.querySelector(sel);
-
+        const rand = max => Math.floor(Math.random() * max);
         let nilla = $one('.nilla');
-        let src = "chat.html";
+        let src = `chat.html?x=${rand(9999)}`, src2 = src;
         nilla.click(e => {
             if (nilla.textContent == "Nilla") {
                 nilla.textContent = "Voice";
-                src = "chat.html";
+                src = src2;
             } else {
                 nilla.textContent = "Nilla";
                 src = "https://raw.githack.com/casualwriter/vanilla-chatgpt/main/source/index.html"
