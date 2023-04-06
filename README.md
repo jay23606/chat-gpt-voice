@@ -15,14 +15,13 @@ https://raw.githack.com/jay23606/chat-gpt-voice/main/tabs.html (or tinyurl.com/g
 
 Requires entering in an API key from openai.com which is stored in localStorage 
 
+<strong>To get api key<strong>:
+
+https://platform.openai.com/account/api-keys
+
 A checkbox is included to enable or disable STT and TTS whose state is also stored in localStorage
 
 I wrote it primarily so I could easily ping ChatGPT on my mobile device (Added PWA support using manifest.json)
-
-
-To get api key:
-
-https://platform.openai.com/account/api-keys
 
 
 Screenshot:
