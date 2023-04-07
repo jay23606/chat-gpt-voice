@@ -5,7 +5,15 @@
     <meta charset="utf-8" />
     <!--<link rel="manifest" href="manifest.json" />-->
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <style>body, html {margin:0;height:100%;font-size:large;background:black;color:white}</style>
+    <style>
+        body, html {
+            margin: 0;
+            height: 100%;
+            font-size: large;
+            background: black;
+            color: white
+        }
+    </style>
     <link rel="icon" href="data:,">
 </head>
 <body>
@@ -29,7 +37,7 @@
         promptInput.focus(); enableVoice.disabled = false;
         enableVoice.addEventListener('change', e => localStorage.setItem('ENABLE_VOICE', e.target.checked));
         enableVoice.checked = (localStorage.getItem('ENABLE_VOICE') ?? "true") === "true";
-        
+
         submitBtn.addEventListener('click', async () => {
             codeOutput.textContent = '';
             const words = promptInput.value.split(' ');
@@ -51,7 +59,18 @@
             if (codeCbx.checked) {
                 openaiOutput.contentEditable = "true"; saveCode.style.display = 'block';
                 div.style.background = 'white'; div.style.color = 'black';
-                div.innerHTML = `<button onclick="eval(document.getElementsByTagName('script')[0].innerHTML)">Run</button><br/>` + openaiOutput.textContent.replace('```html', '').replace('```', '').replace('```', '');
+                div.innerHTML = '';
+                let r = openaiOutput.textContent
+                let t0 = r.indexOf("```html"); let t0_ = r.indexOf("```");
+                if (t0 > 0) t0 += 7; if (t0 < 0 && t0_ > 0) { t0 = t0_; t0 += 3; }
+                if (t0 > 0) { 
+                    let t1 = r.indexOf("```", t0);
+                    if (t1 > t0) r = r.substring(t0, t1);
+                }
+                var iframe = document.createElement('iframe');
+                iframe.width = '100%'; iframe.height = `${innerHeight >> 1}`;
+                iframe.srcdoc = r;
+                div.appendChild(iframe);
             } else { openaiOutput.contentEditable = "false"; saveCode.style.display = 'none'; }
         }
 
@@ -64,7 +83,7 @@
             recognition.onspeechend = () => recognition.stop();
         }
         recognition(promptInput, submitBtn);
-        
+
         const timer = {
             iid: 0,
             enableSpeaking: function () {
