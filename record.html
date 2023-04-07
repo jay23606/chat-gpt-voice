@@ -1,8 +1,12 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Record by ChatGPT</title>
+</head>
 <body>
-  <h3>"write code to record the user for 5 seconds and then play back the audio"</h3>
 	<button id="recordButton">Record</button>
-	<button id="stopButton" disabled="">Stop</button>
-	<button id="playButton" disabled="">Play</button>
+	<button id="stopButton" disabled>Stop</button>
+	<button id="playButton" disabled>Play</button>
 	<audio id="audio"></audio>
 	<script>
 		let stream;
@@ -27,6 +31,7 @@
 			recorder.ondataavailable = e => chunks.push(e.data);
 			recorder.onstop = e => {
 				const blob = new Blob(chunks, {type: 'audio/webm'});
+				chunks = [];
 				audio.src = URL.createObjectURL(blob);
 				playButton.disabled = false;
 				audio.controls = true;
@@ -50,7 +55,6 @@
 				audio.play();
 			};
 		}
-		
 	</script>
-  
 </body>
+</html>
