@@ -18,11 +18,14 @@
         const audio = document.getElementById('audio');
 
         async function init() {
+            console.log('Initializing recording');
             try {
                 stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                console.log('Got audio stream');
                 audio.srcObject = stream;
                 audio.captureStream = audio.captureStream || audio.mozCaptureStream;
                 await new Promise(resolve => audio.onplaying = resolve);
+                console.log('Audio is playing');
                 startRecording();
             } catch (error) {
                 console.log('Error: ' + error);
@@ -31,37 +34,45 @@
                 playButton.disabled = true;
             }
         }
-        await init();
+        init();
 
         function startRecording() {
+            console.log('Starting recording');
             try {
+                console.log('Stream:', stream);
                 recorder = new MediaRecorder(stream);
+                console.log('Recorder:', recorder);
                 recorder.ondataavailable = e => chunks.push(e.data);
                 recorder.onstop = e => {
                     const blob = new Blob(chunks, { type: 'audio/webm' });
                     chunks = [];
                     audio.src = URL.createObjectURL(blob);
-                    playButton.disabled = false;
                     audio.controls = true;
+                    playButton.disabled = false;
                 };
                 recordButton.onclick = () => {
+                    console.log('Record button clicked');
                     recorder.start();
                     recordButton.disabled = true;
                     stopButton.disabled = false;
+                    console.log('Recorder state after start:', recorder.state);
                     setTimeout(function () {
+                        console.log('Recorder state before stop:', recorder.state);
                         recorder.stop();
+                        console.log('Recorder state after stop:', recorder.state);
                         recordButton.disabled = false;
                         stopButton.disabled = true;
                     }, 5000);
                 };
                 stopButton.onclick = () => {
+                    console.log('Stop button clicked');
+                    console.log('Recorder state before stop:', recorder.state);
                     recorder.stop();
+                    console.log('Recorder state after stop:', recorder.state);
                     recordButton.disabled = false;
                     stopButton.disabled = true;
                 };
-                playButton.onclick = () => {
-                    audio.play();
-                };
+
             } catch (err) {
                 console.log('Error: ' + err);
                 recordButton.disabled = true;
