@@ -1,0 +1,56 @@
+<body>
+  <h3>"write code to record the user for 5 seconds and then play back the audio"</h3>
+	<button id="recordButton">Record</button>
+	<button id="stopButton" disabled="">Stop</button>
+	<button id="playButton" disabled="">Play</button>
+	<audio id="audio"></audio>
+	<script>
+		let stream;
+		let recorder;
+		let chunks = [];
+		const recordButton = document.getElementById('recordButton');
+		const stopButton = document.getElementById('stopButton');
+		const playButton = document.getElementById('playButton');
+		const audio = document.getElementById('audio');
+
+		navigator.mediaDevices.getUserMedia({audio: true})
+			.then(function (stream) {
+				audio.srcObject = stream;
+				audio.captureStream = audio.captureStream || audio.mozCaptureStream;
+				return new Promise(resolve => audio.onplaying = resolve);
+			}).then(function() {
+				startRecording();
+			});
+
+		function startRecording() {
+			recorder = new MediaRecorder(audio.srcObject);
+			recorder.ondataavailable = e => chunks.push(e.data);
+			recorder.onstop = e => {
+				const blob = new Blob(chunks, {type: 'audio/webm'});
+				audio.src = URL.createObjectURL(blob);
+				playButton.disabled = false;
+				audio.controls = true;
+			};
+			recordButton.onclick = () => {
+				recorder.start();
+				recordButton.disabled = true;
+				stopButton.disabled = false;
+				setTimeout(function() {
+					recorder.stop();
+					recordButton.disabled = false;
+					stopButton.disabled = true;
+				}, 5000);
+			};
+			stopButton.onclick = () => {
+				recorder.stop();
+				recordButton.disabled = false;
+				stopButton.disabled = true;
+			};
+			playButton.onclick = () => {
+				audio.play();
+			};
+		}
+		
+	</script>
+  
+</body>
