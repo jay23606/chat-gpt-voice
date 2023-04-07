@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-	<title>Record by ChatGPT</title>
+	<title>Record and Playback Audio</title>
 </head>
 <body>
 	<button id="recordButton">Record</button>
@@ -24,36 +24,48 @@
 				return new Promise(resolve => audio.onplaying = resolve);
 			}).then(function() {
 				startRecording();
+			}).catch(function(err) {
+				console.log('Error: ' + err);
+				recordButton.disabled = true;
+				stopButton.disabled = true;
+				playButton.disabled = true;
 			});
 
 		function startRecording() {
-			recorder = new MediaRecorder(audio.srcObject);
-			recorder.ondataavailable = e => chunks.push(e.data);
-			recorder.onstop = e => {
-				const blob = new Blob(chunks, {type: 'audio/webm'});
-				chunks = [];
-				audio.src = URL.createObjectURL(blob);
-				playButton.disabled = false;
-				audio.controls = true;
-			};
-			recordButton.onclick = () => {
-				recorder.start();
-				recordButton.disabled = true;
-				stopButton.disabled = false;
-				setTimeout(function() {
+			try {
+				recorder = new MediaRecorder(audio.srcObject);
+				recorder.ondataavailable = e => chunks.push(e.data);
+				recorder.onstop = e => {
+					const blob = new Blob(chunks, {type: 'audio/webm'});
+					chunks = [];
+					audio.src = URL.createObjectURL(blob);
+					playButton.disabled = false;
+					audio.controls = true;
+				};
+				recordButton.onclick = () => {
+					recorder.start();
+					recordButton.disabled = true;
+					stopButton.disabled = false;
+					setTimeout(function() {
+						recorder.stop();
+						recordButton.disabled = false;
+						stopButton.disabled = true;
+					}, 5000);
+				};
+				stopButton.onclick = () => {
 					recorder.stop();
 					recordButton.disabled = false;
 					stopButton.disabled = true;
-				}, 5000);
-			};
-			stopButton.onclick = () => {
-				recorder.stop();
-				recordButton.disabled = false;
+				};
+				playButton.onclick = () => {
+					audio.play();
+				};
+			} catch (err) {
+				console.log('Error: ' + err);
+				recordButton.disabled = true;
 				stopButton.disabled = true;
-			};
-			playButton.onclick = () => {
-				audio.play();
-			};
+				playButton.disabled = true;
+			}
 		}
 	</script>
 </body>
