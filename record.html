@@ -1,72 +1,74 @@
 <!DOCTYPE html>
 <html>
 <head>
-	<title>Record and Playback Audio</title>
+    <title>Record and Playback Audio</title>
 </head>
 <body>
-	<button id="recordButton">Record</button>
-	<button id="stopButton" disabled>Stop</button>
-	<button id="playButton" disabled>Play</button>
-	<audio id="audio"></audio>
-	<script>
-		let stream;
-		let recorder;
-		let chunks = [];
-		const recordButton = document.getElementById('recordButton');
-		const stopButton = document.getElementById('stopButton');
-		const playButton = document.getElementById('playButton');
-		const audio = document.getElementById('audio');
+    <button id="recordButton">Record</button>
+    <button id="stopButton" disabled>Stop</button>
+    <button id="playButton" disabled>Play</button>
+    <audio id="audio"></audio>
+    <script>
+        let stream;
+        let recorder;
+        let chunks = [];
+        const recordButton = document.getElementById('recordButton');
+        const stopButton = document.getElementById('stopButton');
+        const playButton = document.getElementById('playButton');
+        const audio = document.getElementById('audio');
 
-		navigator.mediaDevices.getUserMedia({audio: true})
-			.then(function (stream) {
-				audio.srcObject = stream;
-				audio.captureStream = audio.captureStream || audio.mozCaptureStream;
-				return new Promise(resolve => audio.onplaying = resolve);
-			}).then(function() {
-				startRecording();
-			}).catch(function(err) {
-				console.log('Error: ' + err);
-				recordButton.disabled = true;
-				stopButton.disabled = true;
-				playButton.disabled = true;
-			});
+        async function init() {
+            try {
+                stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                audio.srcObject = stream;
+                audio.captureStream = audio.captureStream || audio.mozCaptureStream;
+                await new Promise(resolve => audio.onplaying = resolve);
+                startRecording();
+            } catch (error) {
+                console.log('Error: ' + error);
+                recordButton.disabled = true;
+                stopButton.disabled = true;
+                playButton.disabled = true;
+            }
+        }
+        init();
 
-		function startRecording() {
-			try {
-				recorder = new MediaRecorder(audio.srcObject);
-				recorder.ondataavailable = e => chunks.push(e.data);
-				recorder.onstop = e => {
-					const blob = new Blob(chunks, {type: 'audio/webm'});
-					chunks = [];
-					audio.src = URL.createObjectURL(blob);
-					playButton.disabled = false;
-					audio.controls = true;
-				};
-				recordButton.onclick = () => {
-					recorder.start();
-					recordButton.disabled = true;
-					stopButton.disabled = false;
-					setTimeout(function() {
-						recorder.stop();
-						recordButton.disabled = false;
-						stopButton.disabled = true;
-					}, 5000);
-				};
-				stopButton.onclick = () => {
-					recorder.stop();
-					recordButton.disabled = false;
-					stopButton.disabled = true;
-				};
-				playButton.onclick = () => {
-					audio.play();
-				};
-			} catch (err) {
-				console.log('Error: ' + err);
-				recordButton.disabled = true;
-				stopButton.disabled = true;
-				playButton.disabled = true;
-			}
-		}
-	</script>
+        function startRecording() {
+            try {
+                recorder = new MediaRecorder(stream);
+                recorder.ondataavailable = e => chunks.push(e.data);
+                recorder.onstop = e => {
+                    const blob = new Blob(chunks, { type: 'audio/webm' });
+                    chunks = [];
+                    audio.src = URL.createObjectURL(blob);
+                    playButton.disabled = false;
+                    audio.controls = true;
+                };
+                recordButton.onclick = () => {
+                    recorder.start();
+                    recordButton.disabled = true;
+                    stopButton.disabled = false;
+                    setTimeout(function () {
+                        recorder.stop();
+                        recordButton.disabled = false;
+                        stopButton.disabled = true;
+                    }, 5000);
+                };
+                stopButton.onclick = () => {
+                    recorder.stop();
+                    recordButton.disabled = false;
+                    stopButton.disabled = true;
+                };
+                playButton.onclick = () => {
+                    audio.play();
+                };
+            } catch (err) {
+                console.log('Error: ' + err);
+                recordButton.disabled = true;
+                stopButton.disabled = true;
+                playButton.disabled = true;
+            }
+        }
+    </script>
 </body>
 </html>
