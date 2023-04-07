@@ -1,80 +1,66 @@
 <!DOCTYPE html>
 <html lang="en-us">
-  <head>
+<head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width">
-    <title>..Recorder</title>
-  </head>
-  <body>
-      <button class="record">Record</button>
-      <button class="stop">Stop</button>
-      <section class="sound-clips"></section>
-      <script>
+    <title>Minimal example of recording audio and sending the recording to whisper-1 endpoint</title>
+</head>
+<body>
+    <button class="record">Record</button>
+    <button class="stop">Stop</button>
+    <section class="sound-clips"></section>
+    <script>
         const record = document.querySelector('.record');
         const stop = document.querySelector('.stop');
         const soundClips = document.querySelector('.sound-clips');
         stop.disabled = true;
         let audioCtx;
         if (navigator.mediaDevices.getUserMedia) {
-          console.log('getUserMedia supported.');
-          const constraints = { audio: true };
-          let chunks = [];
-          let onSuccess = function(stream) {
-            const mediaRecorder = new MediaRecorder(stream);
-            record.onclick = function() {
-              mediaRecorder.start();
-              //console.log(mediaRecorder.state);
-              //console.log("recorder started");
-              //record.style.background = "red";
-              stop.disabled = false;
-              record.disabled = true;
+            const constraints = { audio: true };
+            let chunks = [];
+            let onSuccess = function (stream) {
+                const mediaRecorder = new MediaRecorder(stream);
+                record.onclick = function () {
+                    mediaRecorder.start();
+                    stop.disabled = false;
+                    record.disabled = true;
+                }
+                stop.onclick = function () {
+                    mediaRecorder.stop();
+                    stop.disabled = true;
+                    record.disabled = false;
+                }
+                mediaRecorder.onstop = function (e) {
+                    const blob = new Blob(chunks, { 'type': 'audio/webm' });
+                    chunks = [];
+                    var token = localStorage.getItem('OPENAI_API_KEY');
+                    if (!token || token.length < 10) {
+                        token = prompt("Please input OpenAI API key (stored in browser cache)", "");
+                        localStorage.setItem('OPENAI_API_KEY', token)
+                    }
+                    const formData = new FormData();
+                    formData.append('file', blob, "test.webm");
+                    formData.append('model', 'whisper-1');
+                    const requestOptions = {
+                        method: 'POST',
+                        headers: {
+                            'Authorization': `Bearer ${token}`
+                        },
+                        body: formData
+                    };
+                    fetch('https://api.openai.com/v1/audio/transcriptions', requestOptions)
+                        .then(response => response.json())
+                        .then(data => {
+                            console.log(data)
+                            document.write(data);
+                        })
+                        .catch(error => console.log('Error:', error));
+                }
+                mediaRecorder.ondataavailable = function (e) { chunks.push(e.data) }
             }
-            stop.onclick = function() {
-              mediaRecorder.stop();
-              //console.log(mediaRecorder.state);
-              //console.log("recorder stopped");
-              //record.style.background = "";
-              //record.style.color = "";
-              stop.disabled = true;
-              record.disabled = false;
-            }
-            mediaRecorder.onstop = function(e) {
-              console.log("data available after MediaRecorder.stop() called.");
-              const clipName = prompt('Enter a name for your sound clip?','My unnamed clip');
-              const clipContainer = document.createElement('article');
-              const clipLabel = document.createElement('p');
-              const audio = document.createElement('audio');
-              const deleteButton = document.createElement('button');
-              clipContainer.classList.add('clip');
-              audio.setAttribute('controls', '');
-              deleteButton.textContent = 'Delete';
-              deleteButton.className = 'delete';
-              if(clipName === null) clipLabel.textContent = 'My unnamed clip';
-              else clipLabel.textContent = clipName;
-              clipContainer.appendChild(audio);
-              clipContainer.appendChild(clipLabel);
-              clipContainer.appendChild(deleteButton);
-              soundClips.appendChild(clipContainer);
-              audio.controls = true;
-              const blob = new Blob(chunks, { 'type' : 'audio/ogg; codecs=opus' });
-              chunks = [];
-              const audioURL = window.URL.createObjectURL(blob);
-              audio.src = audioURL;
-              console.log("recorder stopped");
-              deleteButton.onclick = function(e) { e.target.closest(".clip").remove() }
-              clipLabel.onclick = function() {
-                const existingName = clipLabel.textContent;
-                const newClipName = prompt('Enter a new name for your sound clip?');
-                if(newClipName === null) clipLabel.textContent = existingName;
-                else clipLabel.textContent = newClipName;
-              }
-            }
-            mediaRecorder.ondataavailable = function(e) { chunks.push(e.data) }
-          }
-          let onError = function(err) { console.log('The following error occured: ' + err) }
-          navigator.mediaDevices.getUserMedia(constraints).then(onSuccess, onError);
-        } else console.log('getUserMedia not supported on your browser!');
-      </script>
-
-  </body>
+            let onError = function (err) { console.log('The following error occured: ' + err) }
+            navigator.mediaDevices.getUserMedia(constraints).then(onSuccess, onError);
+        }
+    </script>
+</body>
 </html>
