@@ -8,7 +8,7 @@
 <body>
     <button class="record">Record</button>
     <button class="stop">Stop</button>
-    <section class="sound-clips"></section>
+    <div id="output"></div>
     <script>
         const record = document.querySelector('.record');
         const stop = document.querySelector('.stop');
@@ -51,8 +51,8 @@
                     fetch('https://api.openai.com/v1/audio/transcriptions', requestOptions)
                         .then(response => response.json())
                         .then(data => {
-                            console.log(data)
-                            document.write(data);
+                            console.log(data);
+                            document.getElementById('output').textContent = data.text;
                         })
                         .catch(error => console.log('Error:', error));
                 }
