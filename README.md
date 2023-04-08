@@ -45,5 +45,6 @@ https://mdn.github.io/dom-examples/web-speech-api/speech-color-changer/
 
 <i>Speech recognition does not work in [Firefox](https://developer.mozilla.org/en-US/docs/Web/API/Web_Speech_API#browser_compatibility) but should be possible to get working using the whisper example</i>
 
+Alternate ways to serve the page easily:
 
-
+https://htmlpreview.github.io/?https://github.com/jay23606/chat-gpt-voice/blob/main/chat.html
