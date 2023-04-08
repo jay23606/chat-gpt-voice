@@ -7,6 +7,10 @@
 </head>
 <body>
   <script>
+    caches.keys().then(cacheNames => {
+      alert(cacheNames);
+    });
+    
     if ('serviceWorker' in navigator) {
       let lenPrior = Array.from(caches.keys()).length;
       caches.keys().then(function(cacheNames) {
