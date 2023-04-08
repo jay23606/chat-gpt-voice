@@ -1,144 +1,116 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-    <title>Chat GPT Voice</title>
     <meta charset="utf-8" />
-    <!--<link rel="manifest" href="manifest.json" />-->
+    <link rel="manifest" href="manifest.json" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>P2P Chat</title>
     <style>
-        body, html {
-            margin: 0;
-            height: 100%;
-            font-size: large;
+        input, body {
             background: black;
-            color: white
+            color: white;
+            font-family: "Comic Sans MS", "Comic Sans", cursive;
+        }
+        #message {
+            display: flex;
+            flex-direction: column-reverse;
+            height: 500px;
+            overflow-y: auto;
         }
     </style>
-    <link rel="icon" href="data:,">
 </head>
 <body>
-    <textarea id="prompt-input" style="width:100vw;height:4em;font-size:large" placeholder="Enter prompt or touch screen for voice prompt"></textarea>
-    <div style="text-align:right">
-        <input type="checkbox" id="code-cbx" style="width:2em;height:2em"><label for="code-cbx">Code</label>
-        <input checked type="checkbox" id="enable-voice" style="width:2em;height:2em"><label for="enable-voice">Voice</label>
-        <button id="submit-button" style="width:50vw;text-align:center;height:2.5em;font-size:large">Submit</button>
+    <span style="float:right">Nick:<input id="nick" /></span>
+    <div id="server-div">
+        <button id="copy-btn">Copy shareable URL for this chat</button>
     </div>
-    <button id="save-code" style="display:none">Save</button>
-    <div id="openai-output" style="white-space:pre-wrap; color: white"></div>
-    <div id="code-output"></div>
+    <div id="stat">&nbsp;</div>
+    <hr />
+    <fieldset style="border:1px solid white">
+        <legend>Messages</legend>
+        <div id="message"></div>
+    </fieldset>
+    <input type="text" id="send-input" placeholder="Enter message and press enter" style="width:98.5%" />
+    <script src="https://unpkg.com/peerjs@1.4.7/dist/peerjs.min.js"></script>
+    <script type="text/javascript">
+        let lastPeerId = null, conn = [], isServer = true, isOpen = false;
+        $ = id => document.getElementById(id)
+        const stat = $("stat"), message = $("message"), sendInput = $("send-input"), serverDiv = $('server-div')
+        nick = $("nick"), copyBtn = $("copy-btn"), params = new URLSearchParams(location.search);
 
-    <script>
-        const body = document.body;
-        const $ = id => document.getElementById(id);
-        const cancelSpeaking = () => { let wasSpeaking = speechSynthesis.speaking; timer.disableSpeaking(); stopStreaming = true; speechSynthesis.cancel(); return wasSpeaking; }
-        body.addEventListener('beforeunload', () => this.cancelSpeaking());
-        let enableVoice = $('enable-voice'), codeCbx = $('code-cbx'), submitBtn = $('submit-button'), promptInput = $('prompt-input'), openaiOutput = $('openai-output'),
-            codeOutput = $('code-output'), saveCode = $('save-code'), stopStreaming = false, history = [], sentences = [], sIndex = 0;
-        promptInput.focus(); enableVoice.disabled = false;
-        enableVoice.addEventListener('change', e => localStorage.setItem('ENABLE_VOICE', e.target.checked));
-        enableVoice.checked = (localStorage.getItem('ENABLE_VOICE') ?? "true") === "true";
+        const addMessage = (msg) => message.innerHTML = message.innerHTML + "<br>" + msg
 
-        submitBtn.addEventListener('click', async () => {
-            codeOutput.textContent = '';
-            const words = promptInput.value.split(' ');
-            if (words.length < 3) body.style.background = words.join(''); //easter egg for my son
-            cancelSpeaking();
-            var token = localStorage.getItem('OPENAI_API_KEY');
-            if (!token || token.length < 10) {
-                token = prompt("Please input OpenAI API key (stored in browser cache)", "");
-                localStorage.setItem('OPENAI_API_KEY', token)
+        sendInput.addEventListener('keypress', e => (e.which === 13) ? connSend(sendInput) : '');
+
+        const connSend = (input) => {
+            if (conn.length) {
+                let msg = `${nick.value || 'Anonymous'}: ` + input.value;
+                conn.forEach(c => c.send(msg));
+                addMessage(msg); input.value = '';
             }
-            await openAiSend(promptInput, openaiOutput, token);
-            history.push({ role: 'user', content: promptInput.value }, { role: 'assistant', content: openaiOutput.textContent });
-            if (history.length > 4) { history.shift(); history.shift(); }
-            outputHtml(codeOutput);
+        }
+
+        let peer = new Peer(null, { debug: 2 });
+        peer.on('open', id => {
+            isOpen = true;
+            console.log('isOpen=' + isOpen);
+            if (peer.id === null) peer.id = lastPeerId;
+            else lastPeerId = peer.id;
+            console.log('ID: ' + peer.id);
         });
 
-        saveCode.addEventListener('click', () => outputHtml(codeOutput));
-        const outputHtml = (div) => {
-            if (codeCbx.checked) {
-                openaiOutput.contentEditable = "true"; saveCode.style.display = 'block';
-                div.style.background = 'white'; div.style.color = 'black';
-                div.innerHTML = '';
-                let r = openaiOutput.textContent
-                let t0 = r.indexOf("```html"); let t0_ = r.indexOf("```");
-                if (t0 > 0) t0 += 7; if (t0 < 0 && t0_ > 0) { t0 = t0_; t0 += 3; }
-                if (t0 > 0) { 
-                    let t1 = r.indexOf("```", t0);
-                    if (t1 > t0) r = r.substring(t0, t1);
-                }
-                var iframe = document.createElement('iframe');
-                iframe.width = '100%'; iframe.height = `${innerHeight >> 1}`;
-                iframe.srcdoc = r;
-                div.appendChild(iframe);
-            } else { openaiOutput.contentEditable = "false"; saveCode.style.display = 'none'; }
-        }
-
-        const recognition = (input, btn, lang = 'en-US') => {
-            var SpeechRecognition = SpeechRecognition || webkitSpeechRecognition;
-            let recognition = new SpeechRecognition();
-            recognition.lang = lang;
-            body.onclick = e => ((e.target === body || e.target.id === 'openai-output') && enableVoice.checked) ? ((cancelSpeaking()) ? '' : recognition.start()) : '';
-            recognition.onresult = e => { input.value = e.results[0][0].transcript; if (btn) btn.click() }
-            recognition.onspeechend = () => recognition.stop();
-        }
-        recognition(promptInput, submitBtn);
-
-        const timer = {
-            iid: 0,
-            enableSpeaking: function () {
-                this.disableSpeaking();
-                this.iid = setInterval(() => {
-                    if (!enableVoice.checked) return;
-                    if (!speechSynthesis.speaking && sentences.length > 0 && sentences.length > sIndex) {
-                        var utter = new SpeechSynthesisUtterance();
-                        utter.text = sentences[sIndex].join('');
-                        utter.lang = 'en-AU'; utter.rate = 1.4;
-                        speechSynthesis.speak(utter);
-                        sIndex++;
-                    }
-                }, 500);
-            },
-            disableSpeaking: function () { if (this.iid) clearInterval(this.iid) }
-        };
-
-        const openAiSend = async (input, output, token) => {
-            let system = [];
-            if (codeCbx.checked) system.push({ "role": "system", "content": "Write HTML and JS only.No comments or explanation.Put script tag in the body." });
-            const response = await fetch('https://api.openai.com/v1/chat/completions', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-                body: JSON.stringify({ model: "gpt-3.5-turbo", temperature: 0.8, stream: true, messages: [...system, ...history, { role: "user", content: input.value }] })
+        peer.on('connection', c => {
+            console.log('p.conn: ' + c.peer);
+            conn.push(c);
+            stat.textContent = `Connected ${conn.length} client(s)`;
+            c.on('open', () => stat.textContent = "Connected to: " + c.peer);
+            c.on('data', (data) => {
+                addMessage(data)
+                //if we are the server then we need to broadcast the data to other nodes as well
+                if (isServer && conn.length > 1) conn.forEach(x => (x.peer !== c.peer) ? x.send(data) : '');
             });
-            let arr = [], arr2 = [];
-            sentences = []; sIndex = 0;
-            const reader = response.body.getReader();
-            reader.onerror = err => cancelSpeaking();
-            stopStreaming = false;
-            timer.enableSpeaking();
-            for (; ;) {
-                const { done, value } = await reader.read();
-                if (done) return;
-                const textDecoder = new TextDecoder();
-                const chunk = textDecoder.decode(value, { stream: true });
-                const lines = chunk.split('\n');
-                for (const line of lines) {
-                    if (stopStreaming) return;
-                    if (line.length === 0 || line.startsWith(':')) continue;
-                    if (line === 'data: [DONE]') {
-                        if (!enableVoice.checked) return;
-                        if (arr.length) sentences.push(arr);
-                        return;
-                    }
-                    const json = JSON.parse(line.substring(6));
-                    if (!json.choices) continue;
-                    const word = json.choices[0].delta.content || '';
-                    arr.push(word); arr2.push(word);
-                    if (/[.;!?]$/.test(word.trimEnd())) { sentences.push(arr); arr = []; }
-                    output.textContent = arr2.join('');
-                }
+            c.on('close', () => stat.innerHTML = `close event from ${c.peer}`);
+        });
+
+        peer.on('disconnected', () => {
+            stat.textContent = "Connection lost. Please reconnect";
+            peer.id = lastPeerId;
+            peer._lastServerId = lastPeerId;
+            peer.reconnect();
+        });
+
+        peer.on('close', () => stat.textContent = "Connection destroyed. Please refresh");
+
+        peer.on('error', (err) => stat.textContent = `Error: ${err} `);
+
+        const copyText = (txt) => {
+            let ta = document.createElement("textarea");
+            ta.value = txt; document.body.appendChild(ta);
+            ta.select(); document.execCommand("copy");
+            document.body.removeChild(ta);
+        }
+        copyBtn.addEventListener('click', () => { copyText(`${location.href}${(Array.from(params.keys()).length ? '&' : '?')}x=${peer.id}`) });
+
+        const clientConnect = () => {
+            if (params.has('x')) {
+                if (conn.length) conn.foreach(c => c.close());
+                setTimeout(() => {
+                    conn = [];
+                    conn.push(peer.connect(params.get('x'), { reliable: true }));
+                    conn[0].on('open', () => stat.textContent = "Connected to: " + conn[0].peer);
+                    conn[0].on('data', (data) => addMessage(data));
+                    conn[0].on('close', () => stat.textContent = "Connection closed");
+                    tries--;
+                }, 1000);
             }
         }
+
+        const resizeChat = () => message.style.height = `${window.innerHeight - stat.getBoundingClientRect().bottom - 120}px`
+        window.onresize = () => resizeChat();
+
+        if (params.has('x')) { isServer = false; serverDiv.style.display = 'none'; }
+        clientConnect();
+        resizeChat();
     </script>
 </body>
 </html>
