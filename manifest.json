@@ -14,12 +14,12 @@
             "type": "image/png"
         }
     ],
-    "theme_color": "#fefefe",
+    "theme_color": "#fffefe",
     "background_color": "#000000",
     "display": "standalone",
     "orientation": "portrait",
-    "start_url": "tabs.html",
+    "start_url": "/jay23606/chat-gpt-voice/main/tabs.html",
     "scope": "/jay23606/chat-gpt-voice/main/",
     "shape": "circle",
-    "version": "3.0.0"
+    "version": "3.1.1"
 }
