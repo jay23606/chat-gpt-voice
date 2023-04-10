@@ -29,7 +29,10 @@
         <input checked type="checkbox" id="enable-voice" style="width:2em;height:2em"><label for="enable-voice">Voice</label>
         <button id="submit-button" style="width:50vw;text-align:center;height:2.5em;font-size:large">Submit</button>
     </div>
-    <button id="save-code" style="display:none">Save</button>
+    <div id="save-div">
+        <button id="save-code">Save</button>
+        <a id="gp-link" target="_blank" title="There is some delay before it's available-try passing random parameters" href="#"></a>
+    </div>
     <div id="openai-output" style="white-space:pre-wrap; color: white"></div>
     <div id="code-output"></div>
 
@@ -39,17 +42,17 @@
         const cancelSpeaking = () => { let wasSpeaking = speechSynthesis.speaking; timer.disableSpeaking(); stopStreaming = true; speechSynthesis.cancel(); return wasSpeaking; }
         body.addEventListener('beforeunload', () => this.cancelSpeaking());
         let enableVoice = $('enable-voice'), codeCbx = $('code-cbx'), submitBtn = $('submit-button'), promptInput = $('prompt-input'), openaiOutput = $('openai-output'),
-            codeOutput = $('code-output'), saveCode = $('save-code'), stopStreaming = false, history = [], sentences = [], sIndex = 0;
+            codeOutput = $('code-output'), saveCode = $('save-code'), saveDiv = $('save-div'), gpLink = $('gp-link'), stopStreaming = false, history = [], sentences = [], sIndex = 0;
         promptInput.focus(); enableVoice.disabled = false;
         enableVoice.addEventListener('change', e => localStorage.setItem('ENABLE_VOICE', e.target.checked));
         enableVoice.checked = (localStorage.getItem('ENABLE_VOICE') ?? "true") === "true";
 
         submitBtn.addEventListener('click', async () => {
-            codeOutput.textContent = '';
+            codeOutput.textContent = ''; gpLink.textContent = '';
             const words = promptInput.value.split(' ');
             if (words.length < 3) body.style.background = words.join(''); //easter egg for my son
             cancelSpeaking();
-            var token = localStorage.getItem('OPENAI_API_KEY');
+            let token = localStorage.getItem('OPENAI_API_KEY');
             if (!token || token.length < 10) {
                 token = prompt("Please input OpenAI API key (stored in browser cache)", "");
                 localStorage.setItem('OPENAI_API_KEY', token)
@@ -63,7 +66,7 @@
         saveCode.addEventListener('click', () => outputHtml(codeOutput));
         const outputHtml = (div) => {
             if (codeCbx.checked) {
-                openaiOutput.contentEditable = "true"; saveCode.style.display = 'block';
+                openaiOutput.contentEditable = "true"; saveDiv.style.display = 'block';
                 div.style.background = 'white'; div.style.color = 'black';
                 div.innerHTML = '';
                 let r = openaiOutput.textContent
@@ -73,11 +76,38 @@
                     let t1 = r.indexOf("```", t0);
                     if (t1 > t0) r = r.substring(t0, t1);
                 }
-                var iframe = document.createElement('iframe');
+                let iframe = document.createElement('iframe');
                 iframe.width = '100%'; iframe.height = `${innerHeight >> 1}`;
                 iframe.srcdoc = r;
                 div.appendChild(iframe);
-            } else { openaiOutput.contentEditable = "false"; saveCode.style.display = 'none'; }
+                if (confirm("Press OK to also push to GitHub")) {
+                    let token2 = localStorage.getItem('GITHUB_API_KEY'), branch = "gh-pages";
+                    if (!token2 || token2.length < 10) {
+                        token2 = prompt("Please input GitHub API key (requires repo permissions)", "");
+                        localStorage.setItem('GITHUB_API_KEY', token2)
+                    }
+                    let path = prompt("Provide a path (uses gh-pages branch)", localStorage.getItem('GITHUB_PATH') || "jay23606/chat-gpt-voice/contents/html/test.html");
+                    let p = path.replace('contents/','').split('/');
+                    let gp = `https://${p[0]}.github.io/${p[1]}/${p.slice(2).join('/')}` //add github pages link to top
+                    let data = btoa(`<!-- ${gp} -->
+${r}`);
+                    let init = {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token2}` },
+                        body: { message: "gpt-voice commit", committer: { name: "gpt-voice", email: "gpt-voice@mail.com" }, content: data, branch: branch }
+                    }
+                    fetch(`https://api.github.com/repos/${path}?ref=${branch}`, { method: 'HEAD' })
+                        .then(response => {
+                            if (response.status === 404) return Promise.resolve(); //don't error
+                            return response.headers.get('ETag')
+                        })
+                        .then(etag => {
+                            if (etag) init.body.sha = etag.substring(3, etag.length - 1);
+                            init.body = JSON.stringify(init.body);
+                            fetch(`https://api.github.com/repos/${path}`, init).then(() => { gpLink.href = `${gp}?x=${Math.floor(Math.random() * 99999)}`; gpLink.textContent = "Open in GitHub Pages"; });
+                        })
+                }
+            } else { openaiOutput.contentEditable = "false"; saveDiv.style.display = 'none'; }
         }
 
         const recognition = (input, btn, lang = 'en-US') => {
