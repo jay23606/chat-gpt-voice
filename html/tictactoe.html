@@ -5,10 +5,7 @@
 <head>
 	<title>Tic Tac Toe</title>
 	<style>
-		input[type=radio] {
-			display: none;
-		}
-		input[type=radio] + label {
+		button {
 			display: inline-block;
 			width: 50px;
 			height: 50px;
@@ -19,93 +16,78 @@
 			border: 2px solid #ccc;
 			border-radius: 5px;
 			cursor: pointer;
-		}
-		input[type=radio]:checked + label {
-			background-color: #f00;
-			color: #fff;
-			border-color: #f00;
+			background-color: #fff;
+			color: #000;
 		}
 	</style>
 </head>
 <body>
 	<h1>Tic Tac Toe</h1>
-	<form>
-		<fieldset>
-			<legend>Player 1 (X)</legend>
-			<input type="radio" name="1a" id="1a1" value="X"><label for="1a1"></label>
-			<input type="radio" name="1a" id="1a2" value="X"><label for="1a2"></label>
-			<input type="radio" name="1a" id="1a3" value="X"><label for="1a3"></label>
-			<br>
-			<input type="radio" name="1b" id="1b1" value="X"><label for="1b1"></label>
-			<input type="radio" name="1b" id="1b2" value="X"><label for="1b2"></label>
-			<input type="radio" name="1b" id="1b3" value="X"><label for="1b3"></label>
-			<br>
-			<input type="radio" name="1c" id="1c1" value="X"><label for="1c1"></label>
-			<input type="radio" name="1c" id="1c2" value="X"><label for="1c2"></label>
-			<input type="radio" name="1c" id="1c3" value="X"><label for="1c3"></label>
-		</fieldset>
-		<fieldset>
-			<legend>Player 2 (O)</legend>
-			<input type="radio" name="2a" id="2a1" value="O"><label for="2a1"></label>
-			<input type="radio" name="2a" id="2a2" value="O"><label for="2a2"></label>
-			<input type="radio" name="2a" id="2a3" value="O"><label for="2a3"></label>
-			<br>
-			<input type="radio" name="2b" id="2b1" value="O"><label for="2b1"></label>
-			<input type="radio" name="2b" id="2b2" value="O"><label for="2b2"></label>
-			<input type="radio" name="2b" id="2b3" value="O"><label for="2b3"></label>
-			<br>
-			<input type="radio" name="2c" id="2c1" value="O"><label for="2c1"></label>
-			<input type="radio" name="2c" id="2c2" value="O"><label for="2c2"></label>
-			<input type="radio" name="2c" id="2c3" value="O"><label for="2c3"></label>
-		</fieldset>
-	</form>
+	<div>
+		<button id="1" onclick="makeMove(1)"></button>
+		<button id="2" onclick="makeMove(2)"></button>
+		<button id="3" onclick="makeMove(3)"></button>
+	</div>
+	<div>
+		<button id="4" onclick="makeMove(4)"></button>
+		<button id="5" onclick="makeMove(5)"></button>
+		<button id="6" onclick="makeMove(6)"></button>
+	</div>
+	<div>
+		<button id="7" onclick="makeMove(7)"></button>
+		<button id="8" onclick="makeMove(8)"></button>
+		<button id="9" onclick="makeMove(9)"></button>
+	</div>
 	<script>
-		var player = 1;
-		var p1moves = [];
-		var p2moves = [];
+		var player = "X";
+		var moves = [];
 
 		// Check for winning combinations
-		function checkWin(playerMoves) {
+		function checkWin() {
 			var wins = [
-				[1, 2, 3],
-				[4, 5, 6],
-				[7, 8, 9],
+				[0, 1, 2],
+				[3, 4, 5],
+				[6, 7, 8],
+				[0, 3, 6],
 				[1, 4, 7],
 				[2, 5, 8],
-				[3, 6, 9],
-				[1, 5, 9],
-				[3, 5, 7]
+				[0, 4, 8],
+				[2, 4, 6]
 			];
+			
+			var playerMoves = moves.filter(function(value, index, arr) {
+				return index % 2 === (player === 'X' ? 0 : 1);
+			});
+			
 			for (var i = 0; i < wins.length; i++) {
-				if (wins[i].every(move => playerMoves.includes(move))) {
+				var isWin = true;
+				for (var j = 0; j < wins[i].length; j++) {
+					if (!playerMoves.includes(wins[i][j])) {
+						isWin = false;
+						break;
+					}
+				}
+				if (isWin) {
 					alert("Player " + player + " wins!");
 					location.reload();
 				}
 			}
 		}
 
-		// Handle radio button clicks
-		var inputs = document.getElementsByTagName("input");
-		for (var i = 0; i < inputs.length; i++) {
-			inputs[i].addEventListener("click", function() {
-				if (this.checked) {
-					if (player === 1) {
-						this.nextElementSibling.style.backgroundColor = "#f00";
-						this.nextElementSibling.style.color = "#fff";
-						this.nextElementSibling.style.borderColor = "#f00";
-						p1moves.push(Number(this.id.slice(-1)));
-						checkWin(p1moves);
-						player = 2;
-					} else {
-						this.nextElementSibling.style.backgroundColor = "#0f0";
-						this.nextElementSibling.style.color = "#fff";
-						this.nextElementSibling.style.borderColor = "#0f0";
-						p2moves.push(Number(this.id.slice(-1)));
-						checkWin(p2moves);
-						player = 1;
-					}
+		// Make a move
+		function makeMove(square) {
+			if (moves.includes(square - 1)) {
+				alert("That square is already taken.");
+			} else {
+				document.getElementById(square).innerHTML = player;
+				moves.push(square - 1);
+				checkWin();
+				if (player === "X") {
+					player = "O";
+				} else {
+					player = "X";
 				}
-			});
+			}
 		}
 	</script>
 </body>
