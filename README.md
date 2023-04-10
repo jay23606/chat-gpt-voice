@@ -33,7 +33,7 @@ A checkbox is included to enable or disable STT and TTS whose state is also stor
 
 ![screenshot](screenshot.png)
 
-You can now instruct it to write runnable and editable JS apps and it can also push it to GitHub Pages and provide a link (requires GitHub API PAT with repo access also stored in localStorage):
+You can now instruct it to write runnable and editable JS apps and it can also push it to GitHub Pages and provide a link (requires GitHub API PAT with repo access-also stored in localStorage):
 
 ![screenshot](screenshot2.png)
 
