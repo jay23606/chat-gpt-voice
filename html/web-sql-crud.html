@@ -19,9 +19,8 @@
         }
 
         function addUser() {
-            var name = document.getElementById("nameEmail").value;
-            var email = document.getElementById("nameEmail").value;
-            var nameEmail = name + " " + email;
+            var name = document.getElementById("nameEmail").value.split(" ")[0];
+            var email = document.getElementById("nameEmail").value.split(" ")[1];
             db.transaction(function (tx) {
                 tx.executeSql("INSERT INTO users (name,email) VALUES (?,?)", [name, email], function () {
                     alert("User added successfully!");
@@ -33,11 +32,12 @@
         }
 
         function deleteUser() {
-            var id = document.getElementById("id").value;
+            var id = document.getElementById("deleteId").value;
             db.transaction(function (tx) {
                 tx.executeSql("DELETE FROM users WHERE id=?", [id], function () {
                     alert("User deleted successfully!");
-                    document.getElementById("id").value = "";
+                    document.getElementById("deleteId").value = "";
+                    showUsers();
                 }, function (tx, error) {
                     alert("Error: " + error.message);
                 });
@@ -45,14 +45,15 @@
         }
 
         function updateUser() {
-            var id = document.getElementById("id").value;
-            var name = document.getElementById("nameEmail").value.split(" ")[0];
-            var email = document.getElementById("nameEmail").value.split(" ")[1];
+            var id = document.getElementById("updateId").value;
+            var name = document.getElementById("nameEmailUpdate").value.split(" ")[0];
+            var email = document.getElementById("nameEmailUpdate").value.split(" ")[1];
             db.transaction(function (tx) {
                 tx.executeSql("UPDATE users SET name=?, email=? WHERE id=?", [name, email, id], function () {
                     alert("User updated successfully!");
-                    document.getElementById("id").value = "";
-                    document.getElementById("nameEmail").value = "";
+                    document.getElementById("updateId").value = "";
+                    document.getElementById("nameEmailUpdate").value = "";
+                    showUsers();
                 }, function (tx, error) {
                     alert("Error: " + error.message);
                 });
@@ -94,19 +95,19 @@
 
     <h2>Delete User</h2>
     <p>
-        <label for="id">ID:</label>
-        <input type="number" id="id">
+        <label for="deleteId">ID:</label>
+        <input type="number" id="deleteId">
     </p>
     <button onclick="deleteUser()">Delete User</button>
 
     <h2>Update User</h2>
     <p>
-        <label for="id">ID:</label>
-        <input type="number" id="id">
+        <label for="updateId">ID:</label>
+        <input type="number" id="updateId">
     </p>
     <p>
-        <label for="nameEmail">Name and Email:</label>
-        <input type="text" id="nameEmail">
+        <label for="nameEmailUpdate">Name and Email:</label>
+        <input type="text" id="nameEmailUpdate">
     </p>
     <button onclick="updateUser()">Update User</button>
 
