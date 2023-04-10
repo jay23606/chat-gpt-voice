@@ -1,129 +1,121 @@
 <!-- https://jay23606.github.io/chat-gpt-voice/html/web-sql-crud.html -->
+
 <!DOCTYPE html>
 <html>
 <head>
-	<title>Web SQL CRUD Operations</title>
-	<script>
-		var db;
+    <title>Web SQL CRUD Operations</title>
+    <script>
+        var db;
 
-		function initDatabase() {
-			if (window.openDatabase) {
-				db = openDatabase("mydb", "1.0", "My Database", 2 * 1024 * 1024);
-				db.transaction(function (tx) {
-					tx.executeSql("CREATE TABLE IF NOT EXISTS users (id INTEGER PRIMARY KEY ASC, name TEXT, email TEXT)");
-				});
-			} else {
-				alert("WebSQL is not supported by your browser!");
-			}
-		}
+        function initDatabase() {
+            if (window.openDatabase) {
+                db = openDatabase("mydb", "1.0", "My Database", 2 * 1024 * 1024);
+                db.transaction(function (tx) {
+                    tx.executeSql("CREATE TABLE IF NOT EXISTS users (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT, email TEXT)");
+                });
+            } else {
+                alert("WebSQL is not supported by your browser!");
+            }
+        }
 
-		function addUser() {
-			var name = document.getElementById("name").value;
-			var email = document.getElementById("email").value;
-			db.transaction(function (tx) {
-				tx.executeSql("INSERT INTO users (name,email) VALUES (?,?)", [name, email], function () {
-					alert("User added successfully!");
-					document.getElementById("name").value = "";
-					document.getElementById("email").value = "";
-				}, function (tx, error) {
-					alert("Error: " + error.message);
-				});
-			});
-		}
+        function addUser() {
+            var name = document.getElementById("nameEmail").value;
+            var email = document.getElementById("nameEmail").value;
+            var nameEmail = name + " " + email;
+            db.transaction(function (tx) {
+                tx.executeSql("INSERT INTO users (name,email) VALUES (?,?)", [name, email], function () {
+                    alert("User added successfully!");
+                    document.getElementById("nameEmail").value = "";
+                }, function (tx, error) {
+                    alert("Error: " + error.message);
+                });
+            });
+        }
 
-		function deleteUser() {
-			var id = document.getElementById("id").value;
-			db.transaction(function (tx) {
-				tx.executeSql("DELETE FROM users WHERE id=?", [id], function () {
-					alert("User deleted successfully!");
-					document.getElementById("id").value = "";
-				}, function (tx, error) {
-					alert("Error: " + error.message);
-				});
-			});
-		}
+        function deleteUser() {
+            var id = document.getElementById("id").value;
+            db.transaction(function (tx) {
+                tx.executeSql("DELETE FROM users WHERE id=?", [id], function () {
+                    alert("User deleted successfully!");
+                    document.getElementById("id").value = "";
+                }, function (tx, error) {
+                    alert("Error: " + error.message);
+                });
+            });
+        }
 
-		function updateUser() {
-			var id = document.getElementById("id").value;
-			var name = document.getElementById("name").value;
-			var email = document.getElementById("email").value;
-			db.transaction(function (tx) {
-				tx.executeSql("UPDATE users SET name=?, email=? WHERE id=?", [name, email, id], function () {
-					alert("User updated successfully!");
-					document.getElementById("id").value = "";
-					document.getElementById("name").value = "";
-					document.getElementById("email").value = "";
-				}, function (tx, error) {
-					alert("Error: " + error.message);
-				});
-			});
-		}
+        function updateUser() {
+            var id = document.getElementById("id").value;
+            var name = document.getElementById("nameEmail").value.split(" ")[0];
+            var email = document.getElementById("nameEmail").value.split(" ")[1];
+            db.transaction(function (tx) {
+                tx.executeSql("UPDATE users SET name=?, email=? WHERE id=?", [name, email, id], function () {
+                    alert("User updated successfully!");
+                    document.getElementById("id").value = "";
+                    document.getElementById("nameEmail").value = "";
+                }, function (tx, error) {
+                    alert("Error: " + error.message);
+                });
+            });
+        }
 
-		function showUsers() {
-			db.transaction(function (tx) {
-				tx.executeSql("SELECT * FROM users", [], function (tx, result) {
-					var table = document.getElementById("usersTable");
-					table.innerHTML = "";
-					var row = table.insertRow(-1);
-					var cell1 = row.insertCell(-1);
-					var cell2 = row.insertCell(-1);
-					cell1.innerHTML = "<b>ID</b>";
-					cell2.innerHTML = "<b>Name</b>";
-					for (var i = 0; i < result.rows.length; i++) {
-						var row = table.insertRow(-1);
-						var cell1 = row.insertCell(-1);
-						var cell2 = row.insertCell(-1);
-						cell1.innerHTML = result.rows.item(i).id;
-						cell2.innerHTML = result.rows.item(i).name;
-					}
-				}, function (tx, error) {
-					alert("Error: " + error.message);
-				});
-			});
-		}
-	</script>
+        function showUsers() {
+            db.transaction(function (tx) {
+                tx.executeSql("SELECT * FROM users", [], function (tx, result) {
+                    var table = document.getElementById("usersTable");
+                    table.innerHTML = "";
+                    var row = table.insertRow(-1);
+                    var cell1 = row.insertCell(-1);
+                    var cell2 = row.insertCell(-1);
+                    cell1.innerHTML = "<b>ID</b>";
+                    cell2.innerHTML = "<b>Name</b>";
+                    for (var i = 0; i < result.rows.length; i++) {
+                        var row = table.insertRow(-1);
+                        var cell1 = row.insertCell(-1);
+                        var cell2 = row.insertCell(-1);
+                        cell1.innerHTML = result.rows.item(i).id;
+                        cell2.innerHTML = result.rows.item(i).name + " " + result.rows.item(i).email;
+                    }
+                }, function (tx, error) {
+                    alert("Error: " + error.message);
+                });
+            });
+        }
+    </script>
 </head>
 <body onload="initDatabase()">
-	<h1>Web SQL CRUD Operations</h1>
-	<h2>Add User</h2>
-	<p>
-		<label for="name">Name:</label>
-		<input type="text" id="name">
-	</p>
-	<p>
-		<label for="email">Email:</label>
-		<input type="text" id="email">
-	</p>
-	<button onclick="addUser()">Add User</button>
+    <h1>Web SQL CRUD Operations</h1>
+    <h2>Add User</h2>
+    <p>
+        <label for="nameEmail">Name and Email:</label>
+        <input type="text" id="nameEmail">
+    </p>
+    <button onclick="addUser()">Add User</button>
 
-	<h2>Delete User</h2>
-	<p>
-		<label for="id">ID:</label>
-		<input type="number" id="id">
-	</p>
-	<button onclick="deleteUser()">Delete User</button>
+    <h2>Delete User</h2>
+    <p>
+        <label for="id">ID:</label>
+        <input type="number" id="id">
+    </p>
+    <button onclick="deleteUser()">Delete User</button>
 
-	<h2>Update User</h2>
-	<p>
-		<label for="id">ID:</label>
-		<input type="number" id="id">
-	</p>
-	<p>
-		<label for="name">Name:</label>
-		<input type="text" id="name">
-	</p>
-	<p>
-		<label for="email">Email:</label>
-		<input type="text" id="email">
-	</p>
-	<button onclick="updateUser()">Update User</button>
+    <h2>Update User</h2>
+    <p>
+        <label for="id">ID:</label>
+        <input type="number" id="id">
+    </p>
+    <p>
+        <label for="nameEmail">Name and Email:</label>
+        <input type="text" id="nameEmail">
+    </p>
+    <button onclick="updateUser()">Update User</button>
 
-	<h2>Show Users</h2>
-	<table id="usersTable" border="1">
-	</table>
+    <h2>Show Users</h2>
+    <table id="usersTable" border="1">
+    </table>
 
-	<script>
-		showUsers();
-	</script>
+    <script>
+        showUsers();
+    </script>
 </body>
 </html>
