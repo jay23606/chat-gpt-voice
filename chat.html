@@ -87,6 +87,7 @@
                         localStorage.setItem('GITHUB_API_KEY', token2)
                     }
                     let path = prompt("Provide a path (uses gh-pages branch)", localStorage.getItem('GITHUB_PATH') || "jay23606/chat-gpt-voice/contents/html/test.html");
+                    localStorage.setItem('GITHUB_PATH', path);
                     let p = path.replace('contents/','').split('/');
                     let gp = `https://${p[0]}.github.io/${p[1]}/${p.slice(2).join('/')}` //add github pages link to top
                     let data = btoa(`<!-- ${gp} -->
