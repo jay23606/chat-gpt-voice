@@ -1,12 +1,14 @@
 <!-- https://jay23606.github.io/chat-gpt-voice/html/test.htm -->
-                    <!DOCTYPE html>
+<!DOCTYPE html>
 <html>
   <head>
     <title>Hello World</title>
   </head>
   <body>
+    <h1 id="greeting"></h1>
     <script>
-      document.write("Hello World!");
+      let greeting = document.getElementById("greeting");
+      greeting.innerHTML = "Hello World";
     </script>
   </body>
 </html>
