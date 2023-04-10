@@ -1,0 +1,27 @@
+<!-- https://jay23606.github.io/chat-gpt-voice/html/factorial.html -->
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Factorial Calculator</title>
+</head>
+<body>
+	<h1>Factorial Calculator</h1>
+	<p>Enter a number to calculate its factorial:</p>
+	<input type="number" id="number" min="0">
+	<button onclick="calculate()">Calculate</button>
+	<p id="result"></p>
+
+	<script>
+		function calculate() {
+			let number = document.getElementById("number").value;
+			let factorial = 1;
+
+			for (let i = 1; i <= number; i++) {
+				factorial *= i;
+			}
+
+			document.getElementById("result").innerHTML = number + "! = " + factorial;
+		}
+	</script>
+</body>
+</html>
