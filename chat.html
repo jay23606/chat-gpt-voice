@@ -48,7 +48,7 @@
         enableVoice.checked = (localStorage.getItem('ENABLE_VOICE') ?? "true") === "true";
 
         submitBtn.addEventListener('click', async () => {
-            codeOutput.textContent = '';
+            codeOutput.textContent = ''; gpLink.textContent = '';
             const words = promptInput.value.split(' ');
             if (words.length < 3) body.style.background = words.join(''); //easter egg for my son
             cancelSpeaking();
@@ -92,7 +92,7 @@
                     let data = btoa(`<!-- ${gp} -->
 ${r}`);
                     let init = {
-                        method: 'POST',
+                        method: 'PUT',
                         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token2}` },
                         body: { message: "gpt-voice commit", committer: { name: "gpt-voice", email: "gpt-voice@mail.com" }, content: data, branch: branch }
                     }
@@ -102,10 +102,7 @@ ${r}`);
                             return response.headers.get('ETag')
                         })
                         .then(etag => {
-                            if (etag) {
-                                init.body.sha = etag.substring(3, etag.length - 1);
-                                init.method = 'PUT';
-                            }
+                            if (etag) init.body.sha = etag.substring(3, etag.length - 1);
                             init.body = JSON.stringify(init.body);
                             fetch(`https://api.github.com/repos/${path}`, init).then(() => { gpLink.href = `${gp}?x=${Math.floor(Math.random() * 99999)}`; gpLink.textContent = "Open in GitHub Pages"; });
                         })
