@@ -49,12 +49,18 @@ I apologize for the mistake. Here is the updated code with the ball logic fixed 
 				//music.play();
 				//Audio only plays mp3s and stuff
 				navigator.requestMIDIAccess().then(midiAccess => {
-				  const outputs = midiAccess.outputs.values();
-				  const output = outputs.next().value;
+				  const output = midiAccess.outputs.values().next().value;
 				  const player = new MidiPlayer.Player(event => output.send(event.message));
 				  player.loadFile('music.mid');
 				  player.play({loop: true});
 				});
+				//alternate?
+				//navigator.requestMIDIAccess().then(midiAccess => {
+				//  const output = midiAccess.outputs.values().next().value;
+				//  fetch('music.mid')
+				//    .then(response => response.arrayBuffer())
+				//    .then(midiData => output.send(midiData));
+				//});
 			}
 		}
 
