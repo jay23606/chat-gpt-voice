@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Web MIDI API Example</title>
+</head>
+<body>
+  <button id="play-btn">Play</button>
+
+  <script>
+    function playMelody() {
+      navigator.requestMIDIAccess().then(function(midiAccess) {
+        var output = midiAccess.outputs.values().next().value;
+        var notes = parseNotes('C4 D4 E4 C4 C4 D4 E4 C4 E4 F4 G4 G4 F4 E4 D4 C4 C4 G4 G4 F4 E4 D4 C4');
+        var tempo = 120; // beats per minute
+        var microsecondsPerBeat = 60000000 / tempo;
+
+        var deltaTime = 0;
+        notes.forEach(function(note) {
+          var message = [
+            0x90, // note on
+            note.pitch, // MIDI pitch value
+            127 // velocity
+          ];
+          output.send(message, deltaTime * microsecondsPerBeat / 1000);
+
+          deltaTime += note.duration;
+          output.send([0x80, note.pitch, 0], deltaTime * microsecondsPerBeat / 1000); // note off
+        });
+      });
+    }
+
+    function parseNotes(noteString) {
+      var noteValues = {
+        'C': 60,
+        'D': 62,
+        'E': 64,
+        'F': 65,
+        'G': 67,
+        'A': 69,
+        'B': 71
+      };
+
+      var notes = noteString.split(' ');
+      var parsedNotes = [];
+      notes.forEach(function(note) {
+        var pitch = noteValues[note[0]] + (parseInt(note[1]) - 4) * 12;
+        var duration = parseInt(note.slice(2)) * 1000; // duration in milliseconds
+        parsedNotes.push({ pitch: pitch, duration: duration });
+      });
+
+      return parsedNotes;
+    }
+
+    // Start playing melody when button is clicked
+    var playBtn = document.getElementById('play-btn');
+    playBtn.addEventListener('click', playMelody);
+  </script>
+</body>
+</html>
