@@ -18,10 +18,17 @@
 
 		// Set up the ball
 		var ballRadius = 10;
-		var x = canvas.width/2;
-		var y = canvas.height-30;
-		var dx = 2;
-		var dy = -2;
+		var ballCount = 1;
+		var balls = [];
+		for (var i = 0; i < ballCount; i++) {
+			balls[i] = {
+				x: canvas.width/2,
+				y: canvas.height-30,
+				dx: 2,
+				dy: -2,
+				status: 1
+			};
+		}
 
 		// Set up the paddle
 		var paddleHeight = 10;
@@ -54,16 +61,18 @@
 		music.loop = true;
 		music.play();
 
-		// Draw the ball
 		function drawBall() {
-			ctx.beginPath();
-			ctx.arc(x, y, ballRadius, 0, Math.PI*2);
-			ctx.fillStyle = "#0095DD";
-			ctx.fill();
-			ctx.closePath();
+			for (var i = 0; i < balls.length; i++) {
+				if (balls[i].status == 1) {
+					ctx.beginPath();
+					ctx.arc(balls[i].x, balls[i].y, ballRadius, 0, Math.PI*2);
+					ctx.fillStyle = "#0095DD";
+					ctx.fill();
+					ctx.closePath();
+				}
+			}
 		}
 
-		// Draw the paddle
 		function drawPaddle() {
 			ctx.beginPath();
 			ctx.rect(paddleX, canvas.height-paddleHeight, paddleWidth, paddleHeight);
@@ -72,7 +81,6 @@
 			ctx.closePath();
 		}
 
-		// Draw the blocks
 		function drawBlocks() {
 			for(var c=0; c<blockColumnCount; c++) {
 				for(var r=0; r<blockRowCount; r++) {
@@ -91,7 +99,6 @@
 			}
 		}
 
-		// Handle key presses
 		function keyDownHandler(e) {
 			if(e.key == "Right" || e.key == "ArrowRight") {
 				rightPressed = true;
@@ -109,49 +116,49 @@
 			}
 		}
 
-		// Check for collisions
 		function collisionDetection() {
-			for(var c=0; c<blockColumnCount; c++) {
-				for(var r=0; r<blockRowCount; r++) {
-					var b = blocks[c][r];
-					if(b.status == 1) {
-						if(x > b.x && x < b.x+blockWidth && y > b.y && y < b.y+blockHeight) {
-							dy = -dy;
-							b.status = 0;
-							points++;
-						}
-					}
-				}
-			}
-
-			if(y + dy < ballRadius) {
-				dy = -dy;
-			}
-			else if(y + dy > canvas.height-ballRadius) {
-				if(x > paddleX && x < paddleX + paddleWidth) {
-					dy = -dy;
-				}
-				else {
-					points = 0;
-					x = canvas.width/2;
-					y = canvas.height-30;
-					dx = 2;
-					dy = -2;
-					paddleX = (canvas.width-paddleWidth)/2;
+			for(var i = 0; i < balls.length; i++) {
+				if (balls[i].status == 1) {
 					for(var c=0; c<blockColumnCount; c++) {
 						for(var r=0; r<blockRowCount; r++) {
-							blocks[c][r].status = 1;
+							var b = blocks[c][r];
+							if(b.status == 1) {
+								if(balls[i].x > b.x && balls[i].x < b.x+blockWidth && balls[i].y > b.y && balls[i].y < b.y+blockHeight) {
+									balls[i].dy = -balls[i].dy;
+									b.status = 0;
+									points++;
+									if(points == blockRowCount*blockColumnCount) {
+										resetGame();
+									}
+								}
+							}
 						}
+					}
+
+					if(balls[i].y + balls[i].dy < ballRadius) {
+						balls[i].dy = -balls[i].dy;
+					}
+					else if(balls[i].y + balls[i].dy > canvas.height-ballRadius) {
+						if(balls[i].x > paddleX && balls[i].x < paddleX+paddleWidth) {
+							balls[i].dy = -balls[i].dy;
+						}
+						else {
+							points = 0;
+							balls.splice(i,1);
+							i--;
+							if (balls.length == 0) {
+								resetGame();
+							}
+						}
+					}
+
+					if(balls[i].x + balls[i].dx > canvas.width-ballRadius || balls[i].x + balls[i].dx < ballRadius) {
+						balls[i].dx = -balls[i].dx;
 					}
 				}
 			}
-
-			if(x + dx > canvas.width-ballRadius || x + dx < ballRadius) {
-				dx = -dx;
-			}
 		}
-		
-		// Generate random color
+
 		function getRandomColor() {
 			var letters = "0123456789ABCDEF";
 			var color = "#";
@@ -161,14 +168,12 @@
 			return color;
 		}
 
-		// Draw the score
 		function drawScore() {
 			ctx.font = "16px Arial";
 			ctx.fillStyle = "#0095DD";
 			ctx.fillText("Score: " + points, 8, 20);
 		}
 
-		// Draw the game
 		function draw() {
 			ctx.clearRect(0, 0, canvas.width, canvas.height);
 			drawBlocks();
@@ -176,24 +181,42 @@
 			drawPaddle();
 			drawScore();
 			collisionDetection();
-
-			// Move the paddle
 			if(rightPressed && paddleX < canvas.width-paddleWidth) {
 				paddleX += 7;
 			}
 			else if(leftPressed && paddleX > 0) {
 				paddleX -= 7;
 			}
-
-			// Move the ball
-			x += dx;
-			y += dy;
+			for (var i = 0; i < balls.length; i++) {
+				balls[i].x += balls[i].dx;
+				balls[i].y += balls[i].dy;
+			}
 		}
 
-		// Set up the game loop
-		var interval = setInterval(draw, 10);
+		function resetGame() {
+			points = 0;
+			paddleX = (canvas.width-paddleWidth)/2;
+			ballCount++;
+			balls = [];
+			for (var i = 0; i < ballCount; i++) {
+				balls[i] = {
+					x: canvas.width/2,
+					y: canvas.height-30,
+					dx: 2,
+					dy: -2,
+					status: 1
+				};
+			}
+			blocks = [];
+			for(var c=0; c<blockColumnCount; c++) {
+				blocks[c] = [];
+				for(var r=0; r<blockRowCount; r++) {
+					blocks[c][r] = { x: 0, y: 0, status: 1, color: getRandomColor() };
+				}
+			}
+		}
 
-		// Set up the event listeners for key presses
+		var interval = setInterval(draw, 10);
 		document.addEventListener("keydown", keyDownHandler, false);
 		document.addEventListener("keyup", keyUpHandler, false);
 
