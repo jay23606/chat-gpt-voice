@@ -36,7 +36,18 @@
         modelViewMatrixUniformLocation = gl.getUniformLocation(program, "u_modelViewMatrix");
       const positionBuffer = gl.createBuffer();
       gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
-      const positions = [.5, .5, -.5, -.5, .5, -.5, -.5, -.5, -.5, .5, -.5, -.5, .5, .5, .5, -.5, .5, .5, -.5, -.5, -.5, -.5, .5, -.5, .5];
+      const positions = [
+          // front
+          -0.5, -0.5,  0.5, // bottom left
+           0.5, -0.5,  0.5, // bottom right
+           0.5,  0.5,  0.5, // top right
+          -0.5,  0.5,  0.5, // top left
+          // back
+          -0.5, -0.5, -0.5, // bottom left
+           0.5, -0.5, -0.5, // bottom right
+           0.5,  0.5, -0.5, // top right
+          -0.5,  0.5, -0.5, // top left
+      ];
       gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(positions), gl.STATIC_DRAW), gl.enableVertexAttribArray(positionAttributeLocation), gl.vertexAttribPointer(positionAttributeLocation, 3, gl.FLOAT, !1, 0, 0);
       const normalBuffer = gl.createBuffer();
       gl.bindBuffer(gl.ARRAY_BUFFER, normalBuffer);
