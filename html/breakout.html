@@ -30,8 +30,29 @@
 		var rightPressed = false;
 		var leftPressed = false;
 
+		// Set up the blocks
+		var blockRowCount = 3;
+		var blockColumnCount = 5;
+		var blockWidth = 75;
+		var blockHeight = 20;
+		var blockPadding = 10;
+		var blockOffsetTop = 30;
+		var blockOffsetLeft = 30;
+		var blocks = [];
+		for(var c=0; c<blockColumnCount; c++) {
+			blocks[c] = [];
+			for(var r=0; r<blockRowCount; r++) {
+				blocks[c][r] = { x: 0, y: 0, status: 1 };
+			}
+		}
+
 		// Set up the points counter
 		var points = 0;
+
+		// Set up the background music
+		var music = new Audio('audio/music.mid');
+		music.loop = true;
+		music.play();
 
 		// Draw the ball
 		function drawBall() {
@@ -49,6 +70,25 @@
 			ctx.fillStyle = "#0095DD";
 			ctx.fill();
 			ctx.closePath();
+		}
+
+		// Draw the blocks
+		function drawBlocks() {
+			for(var c=0; c<blockColumnCount; c++) {
+				for(var r=0; r<blockRowCount; r++) {
+					if(blocks[c][r].status == 1) {
+						var blockX = (c*(blockWidth+blockPadding))+blockOffsetLeft;
+						var blockY = (r*(blockHeight+blockPadding))+blockOffsetTop;
+						blocks[c][r].x = blockX;
+						blocks[c][r].y = blockY;
+						ctx.beginPath();
+						ctx.rect(blockX, blockY, blockWidth, blockHeight);
+						ctx.fillStyle = "#0095DD";
+						ctx.fill();
+						ctx.closePath();
+					}
+				}
+			}
 		}
 
 		// Handle key presses
@@ -71,13 +111,25 @@
 
 		// Check for collisions
 		function collisionDetection() {
+			for(var c=0; c<blockColumnCount; c++) {
+				for(var r=0; r<blockRowCount; r++) {
+					var b = blocks[c][r];
+					if(b.status == 1) {
+						if(x > b.x && x < b.x+blockWidth && y > b.y && y < b.y+blockHeight) {
+							dy = -dy;
+							b.status = 0;
+							points++;
+						}
+					}
+				}
+			}
+
 			if(y + dy < ballRadius) {
 				dy = -dy;
 			}
 			else if(y + dy > canvas.height-ballRadius) {
 				if(x > paddleX && x < paddleX + paddleWidth) {
 					dy = -dy;
-					points++;
 				}
 				else {
 					points = 0;
@@ -86,6 +138,11 @@
 					dx = 2;
 					dy = -2;
 					paddleX = (canvas.width-paddleWidth)/2;
+					for(var c=0; c<blockColumnCount; c++) {
+						for(var r=0; r<blockRowCount; r++) {
+							blocks[c][r].status = 1;
+						}
+					}
 				}
 			}
 
@@ -104,6 +161,7 @@
 		// Draw the game
 		function draw() {
 			ctx.clearRect(0, 0, canvas.width, canvas.height);
+			drawBlocks();
 			drawBall();
 			drawPaddle();
 			drawScore();
