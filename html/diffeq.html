@@ -1,0 +1,34 @@
+<!-- https://jay23606.github.io/chat-gpt-voice/html/diffeq.html -->
+
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Differential Equation Solver</title>
+</head>
+<body>
+	<h1>Differential Equation Solver</h1>
+	<form>
+		<label for="y0">Initial Value of y:</label>
+		<input type="number" id="y0" name="y0" value="1"><br><br>
+		<label for="h">Step Size h:</label>
+		<input type="number" id="h" name="h" value="0.1"><br><br>
+		<label for="n">Number of Steps n:</label>
+		<input type="number" id="n" name="n" value="10"><br><br>
+		<input type="button" value="Solve" onclick="solve()">
+	</form>
+	<p id="result"></p>
+	<script>
+		const f = (y) => y**2 - 4;
+		const solve = () => {
+			const y0 = parseFloat(document.getElementById('y0').value);
+			const h = parseFloat(document.getElementById('h').value);
+			const n = parseInt(document.getElementById('n').value);
+			let y = y0;
+			for (let i = 0; i < n; i++) {
+				y += h * f(y);
+			}
+			document.getElementById('result').innerHTML = `y(${n*h}) = ${y.toFixed(2)}`;
+		};
+	</script>
+</body>
+</html>
