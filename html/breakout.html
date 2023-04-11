@@ -1,0 +1,135 @@
+<!-- https://jay23606.github.io/chat-gpt-voice/html/breakout.html -->
+
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Breakout Game</title>
+</head>
+<body>
+
+	<canvas id="gameCanvas" width="800" height="600" tabindex="1"></canvas>
+
+	<script>
+
+		// Set up the canvas
+		var canvas = document.getElementById("gameCanvas");
+		var ctx = canvas.getContext("2d");
+		canvas.focus();
+
+		// Set up the ball
+		var ballRadius = 10;
+		var x = canvas.width/2;
+		var y = canvas.height-30;
+		var dx = 2;
+		var dy = -2;
+
+		// Set up the paddle
+		var paddleHeight = 10;
+		var paddleWidth = 75;
+		var paddleX = (canvas.width-paddleWidth)/2;
+		var rightPressed = false;
+		var leftPressed = false;
+
+		// Set up the points counter
+		var points = 0;
+
+		// Draw the ball
+		function drawBall() {
+			ctx.beginPath();
+			ctx.arc(x, y, ballRadius, 0, Math.PI*2);
+			ctx.fillStyle = "#0095DD";
+			ctx.fill();
+			ctx.closePath();
+		}
+
+		// Draw the paddle
+		function drawPaddle() {
+			ctx.beginPath();
+			ctx.rect(paddleX, canvas.height-paddleHeight, paddleWidth, paddleHeight);
+			ctx.fillStyle = "#0095DD";
+			ctx.fill();
+			ctx.closePath();
+		}
+
+		// Handle key presses
+		function keyDownHandler(e) {
+			if(e.key == "Right" || e.key == "ArrowRight") {
+				rightPressed = true;
+			}
+			else if(e.key == "Left" || e.key == "ArrowLeft") {
+				leftPressed = true;
+			}
+		}
+		function keyUpHandler(e) {
+			if(e.key == "Right" || e.key == "ArrowRight") {
+				rightPressed = false;
+			}
+			else if(e.key == "Left" || e.key == "ArrowLeft") {
+				leftPressed = false;
+			}
+		}
+
+		// Check for collisions
+		function collisionDetection() {
+			if(y + dy < ballRadius) {
+				dy = -dy;
+			}
+			else if(y + dy > canvas.height-ballRadius) {
+				if(x > paddleX && x < paddleX + paddleWidth) {
+					dy = -dy;
+					points++;
+				}
+				else {
+					points = 0;
+					x = canvas.width/2;
+					y = canvas.height-30;
+					dx = 2;
+					dy = -2;
+					paddleX = (canvas.width-paddleWidth)/2;
+				}
+			}
+
+			if(x + dx > canvas.width-ballRadius || x + dx < ballRadius) {
+				dx = -dx;
+			}
+		}
+
+		// Draw the score
+		function drawScore() {
+			ctx.font = "16px Arial";
+			ctx.fillStyle = "#0095DD";
+			ctx.fillText("Score: " + points, 8, 20);
+		}
+
+		// Draw the game
+		function draw() {
+			ctx.clearRect(0, 0, canvas.width, canvas.height);
+			drawBall();
+			drawPaddle();
+			drawScore();
+			collisionDetection();
+
+			// Move the paddle
+			if(rightPressed && paddleX < canvas.width-paddleWidth) {
+				paddleX += 7;
+			}
+			else if(leftPressed && paddleX > 0) {
+				paddleX -= 7;
+			}
+
+			// Move the ball
+			x += dx;
+			y += dy;
+		}
+
+		// Set up the game loop
+		var interval = setInterval(draw, 10);
+
+		// Set up the event listeners for key presses
+		document.addEventListener("keydown", keyDownHandler, false);
+		document.addEventListener("keyup", keyUpHandler, false);
+
+	</script>
+
+</body>
+</html>
