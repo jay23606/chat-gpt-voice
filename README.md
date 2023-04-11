@@ -37,6 +37,8 @@ You can now instruct it to write runnable and editable JS apps and it can also p
 
 ![screenshot](screenshot2.png)
 
+If you look until the html folder in the gh-pages branch you will find some apps this app has written
+
 <strong>Inspiration:</strong>
 
 https://github.com/casualwriter/vanilla-chatgpt
@@ -44,7 +46,3 @@ https://github.com/casualwriter/vanilla-chatgpt
 https://mdn.github.io/dom-examples/web-speech-api/speech-color-changer/
 
 <i>Speech recognition does not work in [Firefox](https://developer.mozilla.org/en-US/docs/Web/API/Web_Speech_API#browser_compatibility) but should be possible to get working using the whisper example</i>
-
-Alternate ways to serve the page easily (since PWA likes unique domains):
-
-https://htmlpreview.github.io/?https://github.com/jay23606/chat-gpt-voice/blob/main/chat.html
