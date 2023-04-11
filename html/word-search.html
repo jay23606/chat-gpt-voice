@@ -1,0 +1,206 @@
+<!-- https://jay23606.github.io/chat-gpt-voice/html/word-search.html -->
+
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Word Search Game</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+      }
+
+      #word-search {
+        display: grid;
+        grid-template-columns: repeat(10, 1fr);
+        grid-template-rows: repeat(10, 1fr);
+        margin-bottom: 20px;
+      }
+
+      #word-list {
+        margin-bottom: 20px;
+      }
+
+      #reset-button {
+        font-size: 16px;
+        padding: 10px 20px;
+        background-color: #3b3eac;
+        color: white;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+      }
+
+      .selected {
+        background-color: lightgreen;
+      }
+
+      .found {
+        text-decoration: line-through;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Word Search Game</h1>
+    <div id="word-search"></div>
+    <div id="word-list"></div>
+    <button id="reset-button">Reset</button>
+    <script>
+      const words = [
+        "apple",
+        "banana",
+        "orange",
+        "pear",
+        "grape",
+        "pineapple",
+        "mango",
+        "kiwi",
+        "watermelon",
+        "strawberry",
+      ];
+
+      let wordSearch = [];
+      let selectedLetters = [];
+      let foundWords = [];
+
+      function createWordSearch(words) {
+        const alphabet = "abcdefghijklmnopqrstuvwxyz";
+        const grid = [];
+
+        // create 10x10 grid of random letters
+        for (let i = 0; i < 10; i++) {
+          const row = [];
+          for (let j = 0; j < 10; j++) {
+            const letter = alphabet.charAt(Math.floor(Math.random() * alphabet.length));
+            row.push(letter);
+          }
+          grid.push(row);
+        }
+
+        // add words to the grid horizontally or vertically
+        for (const word of words) {
+          const orientation = Math.random() < 0.5 ? "horizontal" : "vertical";
+
+          let row, col;
+          if (orientation === "horizontal") {
+            row = Math.floor(Math.random() * 10);
+            col = Math.floor(Math.random() * (11 - word.length));
+          } else {
+            row = Math.floor(Math.random() * (11 - word.length));
+            col = Math.floor(Math.random() * 10);
+          }
+
+          for (let i = 0; i < word.length; i++) {
+            const letter = word.charAt(i);
+            if (orientation === "horizontal") {
+              grid[row][col + i] = letter;
+            } else {
+              grid[row + i][col] = letter;
+            }
+          }
+        }
+
+        return grid;
+      }
+
+      function renderWordSearch(wordSearch) {
+        const container = document.querySelector("#word-search");
+
+        // clear previous contents
+        container.innerHTML = "";
+
+        // render grid of letters
+        for (let i = 0; i < 10; i++) {
+          for (let j = 0; j < 10; j++) {
+            const letter = wordSearch[i][j];
+            const cell = document.createElement("div");
+            cell.textContent = letter;
+            cell.classList.add("cell");
+            cell.dataset.row = i;
+            cell.dataset.col = j;
+            container.appendChild(cell);
+          }
+        }
+
+        // add click event listeners to cells
+        const cells = document.querySelectorAll(".cell");
+        cells.forEach((cell) => {
+          cell.addEventListener("click", () => {
+            const row = parseInt(cell.dataset.row);
+            const col = parseInt(cell.dataset.col);
+            const index = selectedLetters.findIndex((letter) => letter.row === row && letter.col === col);
+            if (index === -1) {
+              selectedLetters.push({ row, col });
+              cell.classList.add("selected");
+              checkSelectedLetters();
+            } else {
+              selectedLetters.splice(index, 1);
+              cell.classList.remove("selected");
+            }
+          });
+        });
+      }
+
+      function renderWordList(words) {
+        const container = document.querySelector("#word-list");
+
+        // clear previous contents
+        container.innerHTML = "";
+
+        // render list of words to find
+        for (const word of words) {
+          const item = document.createElement("div");
+          item.textContent = word;
+          container.appendChild(item);
+        }
+      }
+
+      function checkSelectedLetters() {
+        const selectedWord = selectedLetters
+          .sort((a, b) => a.row - b.row || a.col - b.col)
+          .map((letter) => wordSearch[letter.row][letter.col])
+          .join("");
+
+        for (const word of words) {
+          if (word === selectedWord) {
+            foundWords.push(word);
+            const items = document.querySelectorAll("#word-list div");
+            items.forEach((item) => {
+              if (item.textContent === word) {
+                item.classList.add("found");
+              }
+            });
+            const cells = document.querySelectorAll(".selected");
+            cells.forEach((cell) => {
+              cell.classList.remove("selected");
+              cell.classList.add("found");
+            });
+            selectedLetters = [];
+            checkGameFinished();
+            return;
+          }
+        }
+      }
+
+      function checkGameFinished() {
+        if (foundWords.length === words.length) {
+          alert("Congratulations! You found all the words!");
+        }
+      }
+
+      function resetGame() {
+        wordSearch = createWordSearch(words);
+        selectedLetters = [];
+        foundWords = [];
+        renderWordSearch(wordSearch);
+        renderWordList(words);
+      }
+
+      // initialize game
+      resetGame();
+
+      // add click event listener to reset button
+      const resetButton = document.querySelector("#reset-button");
+      resetButton.addEventListener("click", resetGame);
+    </script>
+  </body>
+</html>
