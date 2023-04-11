@@ -4,7 +4,6 @@
 <html>
 <head>
 	<title>100 Common Spanish Words</title>
-	<script src="script.js"></script>
 </head>
 <body>
 	<h1>100 Common Spanish Words</h1>
@@ -17,5 +16,170 @@
 		<button id="nextButton">Next</button>
 		<p id="score"></p>
 	</div>
+	<script>
+	let currentWordIndex;
+	let currentScore;
+
+	const startButton = document.getElementById('startButton');
+	const wordContainer = document.getElementById('wordContainer');
+	const word = document.getElementById('word');
+	const translation = document.getElementById('translation');
+	const checkButton = document.getElementById('checkButton');
+	const nextButton = document.getElementById('nextButton');
+	const score = document.getElementById('score');
+
+	startButton.addEventListener('click', startPractice);
+	checkButton.addEventListener('click', checkTranslation);
+	nextButton.addEventListener('click', nextWord);
+
+	function startPractice() {
+		currentWordIndex = 0;
+		currentScore = 0;
+		showWord();
+		startButton.style.display = 'none';
+		wordContainer.style.display = 'block';
+	}
+
+	function showWord() {
+		word.textContent = words[currentWordIndex].spanish;
+		translation.value = '';
+		checkButton.disabled = false;
+		nextButton.disabled = true;
+		score.textContent = `Score: ${currentScore}/${currentWordIndex}`;
+	}
+
+	function checkTranslation() {
+		if (translation.value.toLowerCase() === words[currentWordIndex].english) {
+			currentScore++;
+			score.style.color = 'green';
+			score.textContent = 'Correct!';
+		} else {
+			score.style.color = 'red';
+			score.textContent = `Incorrect. The correct translation is "${words[currentWordIndex].english}".`;
+		}
+		checkButton.disabled = true;
+		nextButton.disabled = false;
+	}
+
+	function nextWord() {
+		currentWordIndex++;
+		if (currentWordIndex < words.length) {
+			showWord();
+		} else {
+			wordContainer.style.display = 'none';
+			startButton.style.display = 'block';
+			startButton.textContent = `Practice again (Score: ${currentScore}/${words.length})`;
+		}
+	}
+		
+	const words = [
+		  { spanish: 'el', english: 'the' },
+		  { spanish: 'de', english: 'of' },
+		  { spanish: 'que', english: 'that' },
+		  { spanish: 'y', english: 'and' },
+		  { spanish: 'a', english: 'to' },
+		  { spanish: 'en', english: 'in' },
+		  { spanish: 'un', english: 'a' },
+		  { spanish: 'ser', english: 'to be' },
+		  { spanish: 'se', english: 'se' },
+		  { spanish: 'no', english: 'not' },
+		  { spanish: 'haber', english: 'to have' },
+		  { spanish: 'por', english: 'by' },
+		  { spanish: 'con', english: 'with' },
+		  { spanish: 'su', english: 'his' },
+		  { spanish: 'para', english: 'for' },
+		  { spanish: 'como', english: 'like' },
+		  { spanish: 'estar', english: 'to be' },
+		  { spanish: 'tener', english: 'to have' },
+		  { spanish: 'le', english: 'to' },
+		  { spanish: 'lo', english: 'it' },
+		  { spanish: 'lo', english: 'him' },
+		  { spanish: 'todo', english: 'all' },
+		  { spanish: 'pero', english: 'but' },
+		  { spanish: 'más', english: 'more' },
+		  { spanish: 'hacer', english: 'to do' },
+		  { spanish: 'o', english: 'or' },
+		  { spanish: 'poder', english: 'can' },
+		  { spanish: 'decir', english: 'to say' },
+		  { spanish: 'este', english: 'this' },
+		  { spanish: 'ir', english: 'to go' },
+		  { spanish: 'otro', english: 'other' },
+		  { spanish: 'ese', english: 'that' },
+		  { spanish: 'la', english: 'the' },
+		  { spanish: 'si', english: 'if' },
+		  { spanish: 'me', english: 'me' },
+		  { spanish: 'ya', english: 'already' },
+		  { spanish: 'ver', english: 'to see' },
+		  { spanish: 'porque', english: 'because' },
+		  { spanish: 'dar', english: 'to give' },
+		  { spanish: 'cuando', english: 'when' },
+		  { spanish: 'él', english: 'he' },
+		  { spanish: 'muy', english: 'very' },
+		  { spanish: 'sin', english: 'without' },
+		  { spanish: 'vez', english: 'time' },
+		  { spanish: 'mucho', english: 'much' },
+		  { spanish: 'saber', english: 'to know' },
+		  { spanish: 'qué', english: 'what' },
+		  { spanish: 'sobre', english: 'about' },
+		  { spanish: 'mi', english: 'my' },
+		  { spanish: 'alguno', english: 'some' },
+		  { spanish: 'mismo', english: 'same' },
+		  { spanish: 'yo', english: 'I' },
+		  { spanish: 'también', english: 'also' },
+		  { spanish: 'hasta', english: 'until' },
+		  { spanish: 'año', english: 'year' },
+		  { spanish: 'dos', english: 'two' },
+		  { spanish: 'querer', english: 'to want' },
+		  { spanish: 'entre', english: 'between' },
+		  { spanish: 'así', english: 'so' },
+		  { spanish: 'primero', english: 'first' },
+		  { spanish: 'desde', english: 'from' },
+		  { spanish: 'grande', english: 'big' },
+		  { spanish: 'eso', english: 'that' },
+		  { spanish: 'ni', english: 'nor' },
+		  { spanish: 'nos', english: 'us' },
+		  { spanish: 'llegar', english: 'to arrive' },
+		  { spanish: 'pasar', english: 'to pass' },
+		  { spanish: 'tiempo', english: 'time' },
+		  { spanish: 'ella', english: 'she' },
+		  { spanish: 'sí', english: 'yes' },
+		  { spanish: 'día', english: 'day' },
+		  { spanish: 'uno', english: 'one' },
+		  { spanish: 'bien', english: 'well' },
+		  { spanish: 'poco', english: 'little' },
+		  { spanish: 'deber', english: 'to owe' },
+		  { spanish: 'entonces', english: 'then' },
+		  { spanish: 'poner', english: 'to put' },
+		  { spanish: 'cosa', english: 'thing' },
+		  { spanish: 'tanto', english: 'so much' },
+		  { spanish: 'hombre', english: 'man' },
+		  { spanish: 'parecer', english: 'to seem' },
+		  { spanish: 'nuestro', english: 'our' },
+		  { spanish: 'tan', english: 'so' },
+		  { spanish: 'donde', english: 'where' },
+		  { spanish: 'ahora', english: 'now' },
+		  { spanish: 'parte', english: 'part' },
+		  { spanish: 'después', english: 'after' },
+		  { spanish: 'vida', english: 'life' },
+		  { spanish: 'quedar', english: 'to stay' },
+		  { spanish: 'siempre', english: 'always' },
+		  { spanish: 'creer', english: 'to believe' },
+		  { spanish: 'hablar', english: 'to talk' },
+		  { spanish: 'llevar', english: 'to carry' },
+		  { spanish: 'dejar', english: 'to leave' },
+		  { spanish: 'nada', english: 'nothing' },
+		  { spanish: 'cada', english: 'each' },
+		  { spanish: 'seguir', english: 'to follow' },
+		  { spanish: 'menos', english: 'less' },
+		  { spanish: 'nuevo', english: 'new' },
+		  { spanish: 'encontrar', english: 'to find' },
+		  { spanish: 'pasar', english: 'to happen' },
+		  { spanish: 'gente', english: 'people' },
+		  { spanish: 'tener', english: 'to hold' },
+		  { spanish: 'hacer', english: 'to make' },
+		  { spanish: 'ninguno', english: 'none' },
+		  { spanish: 'trabajo', english: 'work' },
+		];
+	</script>
 </body>
 </html>
