@@ -20,7 +20,8 @@
     <script src=https://cdnjs.cloudflare.com/ajax/libs/gl-matrix/2.8.1/gl-matrix-min.js></script>
     <script>
       const canvas = document.querySelector("#glCanvas"),
-        gl = canvas.getContext("webgl");
+      gl = canvas.getContext("webgl");
+      gl.enable(gl.DEPTH_TEST);
       gl.clearColor(1, 1, 1, 1), gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT), gl.enable(gl.CULL_FACE), gl.enable(gl.DEPTH_TEST);
       const vertexShaderSource = "attribute vec4 a_position;attribute vec3 a_normal;uniform mat4 u_projectionMatrix;uniform mat4 u_modelViewMatrix;varying vec3 v_normal;void main(){gl_Position=u_projectionMatrix*u_modelViewMatrix*a_position;v_normal=mat3(u_modelViewMatrix)*a_normal;}",
         fragmentShaderSource = "precision mediump float;varying vec3 v_normal;void main(){vec3 color=abs(normalize(v_normal));gl_FragColor=vec4(color,1);}";
