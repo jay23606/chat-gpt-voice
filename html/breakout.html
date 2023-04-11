@@ -44,16 +44,16 @@ I apologize for the mistake. Here is the updated code with the ball logic fixed 
 		function startGame() {
 			if (!gameStarted) {
 				gameStarted = true;
-				//music = new Audio('music.mid');
-				//music.loop = true;
-				//music.play();
+				music = new Audio('music.mid');
+				music.loop = true;
+				music.play();
 				//Audio only plays mp3s and stuff
-				navigator.requestMIDIAccess().then(midiAccess => {
-				  const output = midiAccess.outputs.values().next().value;
-				  fetch('music.mid')
-				    .then(response => response.arrayBuffer())
-				    .then(midiData => output.send(midiData));
-				});
+				//navigator.requestMIDIAccess().then(midiAccess => {
+				//  const output = midiAccess.outputs.values().next().value;
+				//  fetch('music.mid')
+				//    .then(response => response.arrayBuffer())
+				//    .then(midiData => output.send(midiData));
+				//});
 			}
 		}
 
