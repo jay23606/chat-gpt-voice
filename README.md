@@ -4,6 +4,8 @@ Under ~~100~~ 200 lines of plain HTML/CSS/JS code creates a voice bot using [Cha
 
 I wrote it primarily so I could easily ping ChatGPT on my mobile device (Added [PWA](https://en.wikipedia.org/wiki/Progressive_web_app "A progressive web application (PWA), or progressive web app, is a type of application software delivered through the web, built using common web technologies including HTML, CSS, JavaScript, and WebAssembly. It is intended to work on any platform with a standards-compliant browser, including desktop and mobile devices.") support using manifest.json)
 
+I then thought it would be neat if it could write it's own code just like [OpenAI Codex playground](https://dev.to/bhagvank/open-ai-codex-playground-5ebk) but also optionally publish to github instead of JSBin. I looked into JSBin but I didn't see a way to POST the data there without a paid subscription although it may be possible with other online JS editors. I did enable contenteditable while Code is checked and turned off spellcheck so that modifications to the output can be made easily.
+
 Employs [Web Speech API](https://developer.mozilla.org/en-US/docs/Web/API/Web_Speech_API "The Web Speech API enables you to incorporate voice data into web apps. The Web Speech API has two parts: SpeechSynthesis (Text-to-Speech), and SpeechRecognition (Asynchronous Speech Recognition.)")'s interfaces for speech recognition and text synthesis, enabling speech-to-text and text-to-speech capabilities.
 
 Simply tap/click on the body of the page to activate speech recognition
