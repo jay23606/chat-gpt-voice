@@ -1,0 +1,43 @@
+<!-- https://jay23606.github.io/chat-gpt-voice/html/html-editor-Ace.html -->
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Ace HTML Editor</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.4.12/ace.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.4.12/ext-language_tools.js"></script>
+    <style>
+        #editor { 
+            position: absolute;
+            top: 0; 
+            right: 0; 
+            bottom: 0; 
+            left: 0; 
+        }
+    </style>
+</head>
+<body>
+    <div id="editor">&lt;html&gt;
+    &lt;head&gt;
+        &lt;title&gt;My Website&lt;/title&gt;
+    &lt;/head&gt;
+    &lt;body&gt;
+        &lt;h1&gt;Welcome to my website!&lt;/h1&gt;
+        &lt;p&gt;This is a paragraph.&lt;/p&gt;
+    &lt;/body&gt;
+&lt;/html&gt;</div>
+ 
+    <script>
+        var editor = ace.edit("editor");
+        editor.setTheme("ace/theme/monokai");
+        editor.session.setMode("ace/mode/html");
+        editor.setOptions({
+            fontSize: "16px",
+            fontFamily: "Courier New",
+            enableBasicAutocompletion: true,
+            enableLiveAutocompletion: true,
+            enableSnippets: true,
+        });
+    </script>
+</body>
+</html>
