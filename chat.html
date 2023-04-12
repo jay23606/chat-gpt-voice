@@ -148,7 +148,7 @@ ${r}`);
 
         const openAiSend = async (input, output, token) => {
             let system = [];
-            if (codeCbx.checked) system.push({ "role": "system", "content": "write HTML+JS ONLY.Put script in body.Use one-liners and lamdas to save space." });
+            if (codeCbx.checked) system.push({ "role": "system", "content": "Write html only,no explanation.Put script tag in body.Use lamdas to save space" });
             const response = await fetch('https://api.openai.com/v1/chat/completions', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
