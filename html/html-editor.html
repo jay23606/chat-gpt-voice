@@ -1,0 +1,40 @@
+<!-- https://jay23606.github.io/chat-gpt-voice/html/html-editor.html -->
+
+<div id="my-contenteditable" contenteditable="true" spellcheck="false"></div>
+<button onclick="saveAndRestore()">Save and Restore Cursor</button>
+
+<script>
+function saveAndRestore() {
+  const contentEditable = document.getElementById('my-contenteditable');
+  const selection = window.getSelection();
+  const baseOffset = selection.baseOffset;
+  const placeholder = document.createElement('span');
+  placeholder.id = 'cursor-pos';
+  placeholder.style.display = 'none';
+  const range = selection.getRangeAt(0);
+  range.insertNode(placeholder);
+  range.setStartBefore(placeholder);
+  range.collapse(true);
+  selection.removeAllRanges();
+  selection.addRange(range);
+
+  // Highlight XML tags in orange
+  const xmlRegex = /&lt;(\/?\w+)&gt;/g;
+  contentEditable.innerHTML = contentEditable.innerHTML.replace(xmlRegex, '<span style="color: orange;">$&</span>');
+
+  // Restore the cursor position
+  requestAnimationFrame(() => {
+    const cursorPos = document.getElementById('cursor-pos');
+    if (cursorPos) {
+      const range = document.createRange();
+      range.setStartBefore(cursorPos);
+      range.setEndBefore(cursorPos);
+      selection.removeAllRanges();
+      selection.addRange(range);
+      cursorPos.parentNode.removeChild(cursorPos);
+    }
+  });
+}
+
+document.getElementById('my-contenteditable').addEventListener('input', saveAndRestore);
+</script>
