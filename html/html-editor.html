@@ -34,7 +34,7 @@ function saveAndRestore() {
   selection.addRange(range);
 
   // Highlight XML tags in orange
-  const xmlRegex = /&lt;(\/?\w+)&gt;/g;
+  const xmlRegex = /&lt;(\/?\w[\w\s\/.-]*?)&gt;/g;
   contentEditable.innerHTML = contentEditable.innerHTML.replace(xmlRegex, '<span style="color: orange;">&lt;$1&gt;</span>');
 
   // Restore the cursor position
