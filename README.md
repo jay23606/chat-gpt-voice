@@ -37,6 +37,10 @@ You can now instruct it to write runnable and editable JS apps:
 
 ![screenshot](screenshot2.png)
 
+And I added CodeMirror for the code editor after exploring some other options:
+
+![screenshot](screenshot3.png)
+
 <strong>Inspiration:</strong>
 
 https://github.com/casualwriter/vanilla-chatgpt
