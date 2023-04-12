@@ -2,11 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="utf-8" />
-    <!--<link rel="manifest" href="manifest.json" />
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=League+Gothic&display=swap">
-    <link href='https://fonts.googleapis.com/css?family=Bilbo' rel='stylesheet'>
-    <link href="https://fonts.cdnfonts.com/css/amiga-forever" rel="stylesheet">
-    <link href="https://fonts.cdnfonts.com/css/quake-dpquake" rel="stylesheet">-->
+    <!--<link rel="manifest" href="manifest.json" />-->
     <link href="https://fonts.cdnfonts.com/css/perfect-dos-vga-437" rel="stylesheet">
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <style>
@@ -57,11 +53,8 @@
             const words = promptInput.value.split(' ');
             if (words.length < 3) body.style.background = words.join(''); //easter egg for my son
             cancelSpeaking();
-            let token = localStorage.getItem('OPENAI_API_KEY');
-            if (!token || token.length < 10) {
-                token = prompt("Please input OpenAI API key (stored in browser cache)", "");
-                localStorage.setItem('OPENAI_API_KEY', token)
-            }
+            let token = localStorage.getItem('OPENAI_API_KEY') || prompt("Please input OpenAI API key (stored in browser cache)", "")?.trim();
+            if (token && token.length >= 10) localStorage.setItem('OPENAI_API_KEY', token);
             await openAiSend(promptInput, openaiOutput, token);
             history.push({ role: 'user', content: promptInput.value }, { role: 'assistant', content: openaiOutput.textContent });
             if (history.length > 4) { history.shift(); history.shift(); }
@@ -70,52 +63,31 @@
 
         saveCode.addEventListener('click', () => outputHtml(codeOutput));
         const outputHtml = (div) => {
-            if (codeCbx.checked) {
-                openaiOutput.contentEditable = "true"; saveDiv.style.display = 'block';
-                div.style.background = 'white'; div.style.color = 'black';
-                div.innerHTML = '';
-                let r = openaiOutput.textContent
-                let t0 = r.indexOf("```html"); let t0_ = r.indexOf("```");
-                if (t0 > 0) t0 += 7; if (t0 < 0 && t0_ > 0) { t0 = t0_; t0 += 3; }
-                if (t0 > 0) { 
-                    let t1 = r.indexOf("```", t0);
-                    if (t1 > t0) r = r.substring(t0, t1);
-                }
-                let iframe = document.createElement('iframe');
-                iframe.width = '99%'; iframe.height = `${innerHeight >> 1}`;
-                iframe.srcdoc = r;
-                div.appendChild(iframe);
-                if (confirm("Press OK to also push to GitHub")) {
-                    let token2 = localStorage.getItem('GITHUB_API_KEY'), branch = "gh-pages";
-                    if (!token2 || token2.length < 10) {
-                        token2 = prompt("Please input GitHub API key (requires repo permissions)", "");
-                        localStorage.setItem('GITHUB_API_KEY', token2)
-                    }
-                    let ghPath = localStorage.getItem('GITHUB_PATH');
-                    if (ghPath === 'null') ghPath = null;
-                    let path = prompt("Provide a path (uses gh-pages branch)", ghPath || "jay23606/chat-gpt-voice/contents/html/test.html");
-                    localStorage.setItem('GITHUB_PATH', path);
-                    let p = path.replace('contents/','').split('/');
-                    let gp = `https://${p[0]}.github.io/${p[1]}/${p.slice(2).join('/')}` //add github pages link to top
-                    let data = btoa(`<!-- ${gp} -->
-${r}`);
-                    let init = {
-                        method: 'PUT',
-                        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token2}` },
-                        body: { message: "gpt-voice commit", committer: { name: "gpt-voice", email: "gpt-voice@mail.com" }, content: data, branch: branch }
-                    }
-                    fetch(`https://api.github.com/repos/${path}?ref=${branch}`, { method: 'HEAD' })
-                        .then(response => {
-                            if (response.status === 404) return Promise.resolve(); //don't error
-                            return response.headers.get('ETag')
-                        })
-                        .then(etag => {
-                            if (etag) init.body.sha = etag.substring(3, etag.length - 1);
-                            init.body = JSON.stringify(init.body);
-                            fetch(`https://api.github.com/repos/${path}`, init).then(() => { gpLink.href = `${gp}?x=${Math.floor(Math.random() * 99999)}`; gpLink.textContent = "Open in GitHub Pages"; });
-                        })
-                }
-            } else { openaiOutput.contentEditable = "false"; saveDiv.style.display = 'none'; }
+            if (!codeCbx.checked) return openaiOutput.contentEditable = "false", saveDiv.style.display = 'none';
+            openaiOutput.contentEditable = "true", saveDiv.style.display = 'block', div.style.background = 'white', div.style.color = 'black', div.innerHTML = '';
+            let r = (openaiOutput.textContent.match(/```(?:html)?([\s\S]*?)```/i) || [])[1] || openaiOutput.textContent;
+            let iframe = document.createElement('iframe');
+            iframe.width = '99%', iframe.height = `${innerHeight >> 1}`, iframe.srcdoc = r;
+            div.appendChild(iframe);
+            if (!confirm("Press OK to also push to GitHub")) return;
+            let token2 = localStorage.getItem('GITHUB_API_KEY') || prompt("Please input GitHub API key (requires repo permissions)", "")?.trim();
+            if (token2 && token.length >= 10) localStorage.setItem('GITHUB_API_KEY', token2);
+            let path = prompt("Provide a path (uses gh-pages branch)", localStorage.getItem('GITHUB_PATH')?.replace('null', '') || "jay23606/chat-gpt-voice/contents/html/test.html");
+            localStorage.setItem('GITHUB_PATH', path);
+            let p = path.replace('contents/', '').split('/');
+            let gp = `https://${p[0]}.github.io/${p[1]}/${p.slice(2).join('/')}`
+            let data = btoa(`<!-- ${gp} -->\n${r}`);
+            let init = {
+                method: 'PUT', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token2}` },
+                body: { message: "gpt-voice commit", committer: { name: "gpt-voice", email: "gpt-voice@mail.com" }, content: data, branch: branch }
+            };
+            fetch(`https://api.github.com/repos/${path}?ref=${branch}`, { method: 'HEAD' })
+                .then(response => response.status === 404 ? Promise.resolve() : response.headers.get('ETag'))
+                .then(etag => {
+                    if (etag) init.body.sha = etag.substring(3, etag.length - 1);
+                    init.body = JSON.stringify(init.body);
+                    fetch(`https://api.github.com/repos/${path}`, init).then(() => { gpLink.href = gp; gpLink.textContent = "Open in GitHub Pages"; });
+                });
         }
 
         const recognition = (input, btn, lang = 'en-US') => {
@@ -129,21 +101,19 @@ ${r}`);
         recognition(promptInput, submitBtn);
 
         const timer = {
-            iid: 0,
+            iid: 0, disableSpeaking: function () { if (this.iid) clearInterval(this.iid) },
             enableSpeaking: function () {
                 this.disableSpeaking();
                 this.iid = setInterval(() => {
                     if (!enableVoice.checked) return;
                     if (!speechSynthesis.speaking && sentences.length > 0 && sentences.length > sIndex) {
                         var utter = new SpeechSynthesisUtterance();
-                        utter.text = sentences[sIndex].join('');
-                        utter.lang = 'en-AU'; utter.rate = 1.4;
+                        utter.text = sentences[sIndex].join(''), utter.lang = 'en-AU', utter.rate = 1.4;
                         speechSynthesis.speak(utter);
                         sIndex++;
                     }
                 }, 500);
-            },
-            disableSpeaking: function () { if (this.iid) clearInterval(this.iid) }
+            }
         };
 
         const openAiSend = async (input, output, token) => {
@@ -154,18 +124,14 @@ ${r}`);
                 headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
                 body: JSON.stringify({ model: "gpt-3.5-turbo", temperature: 0.8, stream: true, messages: [...system, ...history, { role: "user", content: input.value }] })
             });
-            let arr = [], arr2 = [];
-            sentences = []; sIndex = 0;
-            const reader = response.body.getReader();
+            sentences = [], sIndex = 0, stopStreaming = false;
+            let arr = [], arr2 = [], reader = response.body.getReader();
             reader.onerror = err => cancelSpeaking();
-            stopStreaming = false;
             timer.enableSpeaking();
             for (; ;) {
                 const { done, value } = await reader.read();
                 if (done) return;
-                const textDecoder = new TextDecoder();
-                const chunk = textDecoder.decode(value, { stream: true });
-                const lines = chunk.split('\n');
+                const decoder = new TextDecoder(), chunk = decoder.decode(value, { stream: true }), lines = chunk.split('\n');
                 for (const line of lines) {
                     if (stopStreaming) return;
                     if (line.length === 0 || line.startsWith(':')) continue;
@@ -174,9 +140,9 @@ ${r}`);
                         if (arr.length) sentences.push(arr);
                         return;
                     }
-                    const json = JSON.parse(line.substring(6));
-                    if (!json.choices) continue;
-                    const word = json.choices[0].delta.content || '';
+                    const { choices } = JSON.parse(line.substring(6));
+                    if (!choices) continue;
+                    const word = choices[0].delta.content || '';
                     arr.push(word); arr2.push(word);
                     if (/[.;!?]$/.test(word.trimEnd())) { sentences.push(arr); arr = []; }
                     output.textContent = arr2.join('');
