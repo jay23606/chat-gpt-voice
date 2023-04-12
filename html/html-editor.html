@@ -32,9 +32,13 @@ function saveAndRestore() {
   range.collapse(true);
   selection.removeAllRanges();
   selection.addRange(range);
+}
 
-  // Highlight XML tags in orange
-  const xmlRegex = /&lt;(\/?\w[\w\s\/.-]*?)&gt;/g;
+function highlightXMLTags() {
+  const contentEditable = document.getElementById('my-contenteditable');
+
+  // Highlight XML/HTML tags in orange
+  const xmlRegex = /&lt;(\/?[^<&]*?)&gt;(?!([^<]*>|[^&]*;))/g;
   contentEditable.innerHTML = contentEditable.innerHTML.replace(xmlRegex, '<span style="color: orange;">&lt;$1&gt;</span>');
 
   // Restore the cursor position
@@ -44,6 +48,7 @@ function saveAndRestore() {
       const range = document.createRange();
       range.setStartBefore(cursorPos);
       range.setEndBefore(cursorPos);
+      const selection = window.getSelection();
       selection.removeAllRanges();
       selection.addRange(range);
       cursorPos.parentNode.removeChild(cursorPos);
@@ -51,7 +56,10 @@ function saveAndRestore() {
   });
 }
 
-const saveAndRestoreDebounced = debounce(saveAndRestore, 250);
+const highlightXMLTagsDebounced = debounce(highlightXMLTags, 250);
 
-document.getElementById('my-contenteditable').addEventListener('input', saveAndRestoreDebounced);
+document.getElementById('my-contenteditable').addEventListener('keyup', () => {
+  saveAndRestore();
+  highlightXMLTagsDebounced();
+});
 </script>
