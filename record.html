@@ -6,61 +6,45 @@
     <title>Minimal example of recording audio and sending the recording to whisper-1 endpoint</title>
 </head>
 <body>
-    <button class="record">Record</button>
-    <button class="stop">Stop</button>
+    <button id="record">Record</button>
+    <button id="stop" disabled>Stop</button>
     <div id="output"></div>
     <script>
-        const record = document.querySelector('.record');
-        const stop = document.querySelector('.stop');
-        const soundClips = document.querySelector('.sound-clips');
-        stop.disabled = true;
-        let audioCtx;
-        if (navigator.mediaDevices.getUserMedia) {
-            const constraints = { audio: true };
+        (() => {
+            const $ = id => document.getElementById(id), record = $('record'), stop = $('stop'),
+                devices = navigator.mediaDevices, constraints = { audio: true };
+            if (!devices.getUserMedia) return;
             let chunks = [];
-            let onSuccess = function (stream) {
-                const mediaRecorder = new MediaRecorder(stream);
-                record.onclick = function () {
-                    mediaRecorder.start();
+            let onSuccess = (stream) => {
+                const recorder = new MediaRecorder(stream);
+                record.onclick = () => {
+                    recorder.start();
                     stop.disabled = false;
                     record.disabled = true;
                 }
-                stop.onclick = function () {
-                    mediaRecorder.stop();
+                stop.onclick = () => {
+                    recorder.stop();
                     stop.disabled = true;
                     record.disabled = false;
                 }
-                mediaRecorder.onstop = function (e) {
-                    const blob = new Blob(chunks, { 'type': 'audio/webm' });
+                recorder.onstop = e => {
+                    if (!(token = localStorage.getItem('OPENAI_API_KEY'))) 
+                        localStorage.setItem('OPENAI_API_KEY', token = prompt("Please input OpenAI API key (stored in browser cache)", ""))
+                    const data = new FormData();
+                    data.append('file', new Blob(chunks, { 'type': 'audio/webm' }), "test.webm")
+                    data.append('model', 'whisper-1');
+                    const opts = { method: 'POST', headers: { 'Authorization': `Bearer ${token}` }, body: data };
                     chunks = [];
-                    var token = localStorage.getItem('OPENAI_API_KEY');
-                    if (!token || token.length < 10) {
-                        token = prompt("Please input OpenAI API key (stored in browser cache)", "");
-                        localStorage.setItem('OPENAI_API_KEY', token)
-                    }
-                    const formData = new FormData();
-                    formData.append('file', blob, "test.webm");
-                    formData.append('model', 'whisper-1');
-                    const requestOptions = {
-                        method: 'POST',
-                        headers: {
-                            'Authorization': `Bearer ${token}`
-                        },
-                        body: formData
-                    };
-                    fetch('https://api.openai.com/v1/audio/transcriptions', requestOptions)
+                    fetch('https://api.openai.com/v1/audio/transcriptions', opts)
                         .then(response => response.json())
-                        .then(data => {
-                            console.log(data);
-                            document.getElementById('output').textContent = data.text;
-                        })
+                        .then(data => $('output').textContent = data.text)
                         .catch(error => console.log('Error:', error));
                 }
-                mediaRecorder.ondataavailable = function (e) { chunks.push(e.data) }
+                recorder.ondataavailable = e => chunks.push(e.data)
             }
-            let onError = function (err) { console.log('The following error occured: ' + err) }
-            navigator.mediaDevices.getUserMedia(constraints).then(onSuccess, onError);
-        }
+            let onError = err => console.log('The following error occured: ' + err)
+            devices.getUserMedia(constraints).then(onSuccess, onError);
+        })();
     </script>
 </body>
 </html>
