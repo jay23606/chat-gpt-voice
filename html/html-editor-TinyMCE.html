@@ -1,0 +1,41 @@
+<!-- https://jay23606.github.io/chat-gpt-voice/html/html-editor-TinyMCE.html -->
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Simplemde HTML Editor</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/simplemde/latest/simplemde.min.css">
+    <script src="https://cdn.jsdelivr.net/simplemde/latest/simplemde.min.js"></script>
+</head>
+<body>
+    <textarea id="editor">&lt;html&gt;
+    &lt;head&gt;
+        &lt;title&gt;My Website&lt;/title&gt;
+    &lt;/head&gt;
+    &lt;body&gt;
+        &lt;h1&gt;Welcome to my website!&lt;/h1&gt;
+        &lt;p&gt;This is a paragraph.&lt;/p&gt;
+    &lt;/body&gt;
+&lt;/html&gt;</textarea>
+ 
+    <script>
+        var simplemde = new SimpleMDE({
+            element: document.getElementById("editor"),
+            spellChecker: false,
+            tabSize: 4,
+            status: false,
+            toolbar: [
+                "bold", "italic", "strikethrough", "|",
+                "heading-1", "heading-2", "heading-3", "|",
+                "code", "quote", "unordered-list", "ordered-list", "|",
+                "link", "image", "table", "|",
+                "preview", "fullscreen"
+            ],
+            renderingConfig: {
+                singleLineBreaks: false,
+                codeSyntaxHighlighting: true,
+            }
+        });
+    </script>
+</body>
+</html>
