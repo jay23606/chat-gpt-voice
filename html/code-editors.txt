@@ -1,0 +1,5 @@
+Ace is often regarded as the most lightweight editor of the three, as it has a smaller codebase and fewer features out of the box. It's a good choice if you need a simple editor with basic syntax highlighting and some basic code completion features.
+
+CodeMirror is a bit heavier than Ace, but still relatively lightweight. It's an excellent choice if you need more advanced features such as built-in linting, multiple cursors, and more advanced code completion features.
+
+Monaco is the heaviest of the three, as it was originally developed for use in Visual Studio Code. However, it also has the most extensive feature set of the three, including advanced code completion, debugging, and testing tools. If you need a powerful and feature-rich editor, Monaco may be the best choice for you.
