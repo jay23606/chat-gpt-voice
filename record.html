@@ -7,26 +7,15 @@
 </head>
 <body>
     <button id="record">Record</button>
-    <button id="stop" disabled>Stop</button>
     <div id="output"></div>
     <script>
         (() => {
-            const $ = id => document.getElementById(id), record = $('record'), stop = $('stop'),
-                devices = navigator.mediaDevices, constraints = { audio: true };
+            const $ = id => document.getElementById(id), record = $('record'), devices = navigator.mediaDevices, constraints = { audio: true };
             if (!devices.getUserMedia) return;
             let chunks = [];
             let onSuccess = (stream) => {
                 const recorder = new MediaRecorder(stream);
-                record.onclick = () => {
-                    recorder.start();
-                    stop.disabled = false;
-                    record.disabled = true;
-                }
-                stop.onclick = () => {
-                    recorder.stop();
-                    stop.disabled = true;
-                    record.disabled = false;
-                }
+                record.onclick = () => record.textContent === 'Stop' ? (recorder.stop(), record.textContent = 'Start') : (recorder.start(), record.textContent = 'Stop');
                 recorder.onstop = e => {
                     if (!(token = localStorage.getItem('OPENAI_API_KEY'))) 
                         localStorage.setItem('OPENAI_API_KEY', token = prompt("Please input OpenAI API key (stored in browser cache)", ""))
