@@ -37,7 +37,7 @@ You can now instruct it to write runnable and editable JS apps and it can also p
 
 ![screenshot](screenshot2.png)
 
-If you look until the html folder in the gh-pages branch you will find some apps this app has written
+If you look under the html folder in the gh-pages branch you will find some apps this app has written
 
 <strong>Inspiration:</strong>
 
