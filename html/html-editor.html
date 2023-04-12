@@ -32,6 +32,13 @@ function saveAndRestore() {
   range.collapse(true);
   selection.removeAllRanges();
   selection.addRange(range);
+
+  // Calculate the line number of the cursor
+  const textBeforeCursor = contentEditable.innerText.slice(0, baseOffset);
+  const lineNumber = (textBeforeCursor.match(/\n/g) || []).length + 1;
+
+  // Save the line number to the placeholder element
+  placeholder.dataset.lineNumber = lineNumber;
 }
 
 function highlightXMLTags() {
@@ -51,15 +58,23 @@ function highlightXMLTags() {
       const selection = window.getSelection();
       selection.removeAllRanges();
       selection.addRange(range);
+
+      // Scroll to the correct line number
+      const lineNumber = cursorPos.dataset.lineNumber;
+      if (lineNumber) {
+        contentEditable.scrollTop = (lineNumber - 1) * 20;
+      }
+
       cursorPos.parentNode.removeChild(cursorPos);
     }
   });
 }
 
+const saveAndRestoreDebounced = debounce(saveAndRestore, 250);
 const highlightXMLTagsDebounced = debounce(highlightXMLTags, 250);
 
 document.getElementById('my-contenteditable').addEventListener('keyup', () => {
-  saveAndRestore();
+  saveAndRestoreDebounced();
   highlightXMLTagsDebounced();
 });
 </script>
