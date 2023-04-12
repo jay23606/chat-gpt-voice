@@ -19,11 +19,9 @@
             font-family: 'Perfect DOS VGA 437', sans-serif;
             background-color: #B3C0B7;
         }
-
         button {
             font-family: 'Perfect DOS VGA 437', sans-serif;
         }
-
         body, html {
             margin: 0;
             height: 100%;
@@ -32,8 +30,11 @@
             background: black;
             color: white;
         }
-
-        #openai-output {
+        .btn {
+            width:50vw;
+            text-align:center;
+            height:2.5em;
+            font-size:large
         }
     </style>
     <link rel="icon" href="data:,">
@@ -43,17 +44,14 @@
     <div style="text-align:right">
         <input type="checkbox" id="code-cbx" style="width:2em;height:2em"><label for="code-cbx">Code</label>
         <input checked type="checkbox" id="enable-voice" style="width:2em;height:2em"><label for="enable-voice">Voice</label>
-        <button id="submit-button" style="width:50vw;text-align:center;height:2.5em;font-size:large">Submit</button>
+        <button id="submit-button" class="btn">Submit</button>
     </div>
-    <div id="save-div" style="display:none">
-        <button id="save-code">Save</button>
+    <div id="openai-output" spellcheck="false" style="white-space:pre-wrap; color: white"></div>
+    <div id="save-div" style="display: none; text-align: right">
         <a id="gp-link" target="_blank" title="There is some delay before it's available-try passing random parameters" href="#"></a>
-    </div>
-    <div style="position:relative">
-        <div id="openai-output" spellcheck="false" style="white-space:pre-wrap; color: white"></div>
+        <button id="save-code" class="btn">Save</button>
     </div>
     <div id="code-output"></div>
-
     <script>
         const body = document.body;
         const $ = id => document.getElementById(id);
@@ -99,12 +97,12 @@
             div.appendChild(iframe);
             if (!fromSave || !confirm("Press OK to also push to GitHub")) return;
             let token2 = localStorage.getItem('GITHUB_API_KEY') || prompt("Please input GitHub API key (requires repo permissions)", "")?.trim();
-            if (token2 && token.length >= 10) localStorage.setItem('GITHUB_API_KEY', token2);
+            if (token2 && token2.length >= 10) localStorage.setItem('GITHUB_API_KEY', token2);
             let path = prompt("Provide a path (uses gh-pages branch)", localStorage.getItem('GITHUB_PATH')?.replace('null', '') || "jay23606/chat-gpt-voice/contents/html/test.html");
             localStorage.setItem('GITHUB_PATH', path);
             let p = path.replace('contents/', '').split('/');
             let gp = `https://${p[0]}.github.io/${p[1]}/${p.slice(2).join('/')}`
-            let data = btoa(`<!-- ${gp} -->\n${r}`);
+            let data = btoa(`<!-- ${gp} -->\n${r}`), branch = 'gh-pages';
             let init = {
                 method: 'PUT', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token2}` },
                 body: { message: "gpt-voice commit", committer: { name: "gpt-voice", email: "gpt-voice@mail.com" }, content: data, branch: branch }
