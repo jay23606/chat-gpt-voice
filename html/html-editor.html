@@ -4,6 +4,21 @@
 <button onclick="saveAndRestore()">Save and Restore Cursor</button>
 
 <script>
+function debounce(func, wait, immediate) {
+  let timeout;
+  return function() {
+    const context = this, args = arguments;
+    const later = function() {
+      timeout = null;
+      if (!immediate) func.apply(context, args);
+    };
+    const callNow = immediate && !timeout;
+    clearTimeout(timeout);
+    timeout = setTimeout(later, wait);
+    if (callNow) func.apply(context, args);
+  };
+}
+
 function saveAndRestore() {
   const contentEditable = document.getElementById('my-contenteditable');
   const selection = window.getSelection();
@@ -20,7 +35,7 @@ function saveAndRestore() {
 
   // Highlight XML tags in orange
   const xmlRegex = /&lt;(\/?\w+)&gt;/g;
-  contentEditable.innerHTML = contentEditable.innerHTML.replace(xmlRegex, '<span style="color: orange;">$&</span>');
+  contentEditable.innerHTML = contentEditable.innerHTML.replace(xmlRegex, '<span style="color: orange;">&lt;$1&gt;</span>');
 
   // Restore the cursor position
   requestAnimationFrame(() => {
@@ -36,5 +51,7 @@ function saveAndRestore() {
   });
 }
 
-document.getElementById('my-contenteditable').addEventListener('input', saveAndRestore);
+const saveAndRestoreDebounced = debounce(saveAndRestore, 250);
+
+document.getElementById('my-contenteditable').addEventListener('input', saveAndRestoreDebounced);
 </script>
