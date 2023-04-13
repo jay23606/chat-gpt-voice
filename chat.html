@@ -36,6 +36,9 @@
             height:2.5em;
             font-size:large
         }
+        legend {
+            text-align: left;
+        }
     </style>
     <link rel="icon" href="data:,">
 </head>
@@ -46,12 +49,22 @@
         <input checked type="checkbox" id="enable-voice" style="width:2em;height:2em"><label for="enable-voice">Voice</label>
         <button id="submit-button" class="btn">Submit</button>
     </div>
-    <div id="openai-output" spellcheck="false" style="white-space:pre-wrap; color: white"></div>
+    <fieldset>
+        <legend>ChatGPT Response</legend>
+        <div id="openai-output" spellcheck="false" style="white-space:pre-wrap; color: white"></div>
+    </fieldset>
     <div id="save-div" style="display: none; text-align: right">
         <a id="gp-link" target="_blank" title="There is some delay before it's available-try passing random parameters" href="#"></a>
-        <button id="save-code" class="btn">Save</button>
+        <fieldset>
+            <legend>Code Editor</legend>
+            <div style="text-align:left" id="code-editor"></div>
+            <button id="save-code" class="btn">Save</button>
+        </fieldset>
+        <fieldset>
+            <legend>Output Web Application</legend>
+            <div id="code-output"></div>
+        </fieldset>
     </div>
-    <div id="code-output"></div>
     <script>
         const body = document.body;
         const $ = id => document.getElementById(id);
@@ -82,7 +95,7 @@
             saveDiv.style.display = 'block', div.style.background = 'white', div.style.color = 'black', div.innerHTML = '';
             const r = editor && fromSave ? editor.getValue() : openaiOutput.textContent.match(/```(?:html)?([\s\S]*?)```/i)?.[1] || openaiOutput.textContent;
             editor?.getWrapperElement()?.remove();
-            editor = CodeMirror(openaiOutput, {
+            editor = CodeMirror($('code-editor'), {
                 lineNumbers: true,
                 mode: "htmlmixed",
                 theme: "dracula",
@@ -174,7 +187,11 @@
                     output.textContent = arr2.join('');
                 }
             }
-        }
+        } //Add accordian-like thingy with the fieldset (patent pending)
+        document.querySelectorAll('legend').forEach((legend) => legend.addEventListener('click', () => {
+            const c = legend.parentNode.children;
+            for (let i = 1; i < c.length; i++)  c[i].style.display = (c[i].style.display === 'none') ? 'block' : 'none';
+        }));
     </script>
 </body>
 </html>
