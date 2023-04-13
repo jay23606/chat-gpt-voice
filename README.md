@@ -41,9 +41,11 @@ You can now instruct it to write runnable and editable JS apps and it can also p
 
 ![screenshot](screenshot2.png)
 
-And I added [CodeMirror](https://codemirror.net) for the code editor after exploring options:
+Added [CodeMirror](https://codemirror.net) for the code editor after exploring options:
 
 ![screenshot](screenshot3.png)
+
+I've also added [fieldset](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/fieldset) elements that act as accordians for the different views and have included error information in red for the resultant web application so that any errors are not hidden within dev tools
 
 If you look under the html folder in the gh-pages branch you will find some apps this app has written
 
