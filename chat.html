@@ -38,6 +38,11 @@
         }
         legend {
             text-align: left;
+            cursor: pointer;
+            user-select: none;
+        }
+        legend:hover{
+            color: blue;
         }
     </style>
     <link rel="icon" href="data:,">
@@ -54,10 +59,11 @@
         <div id="openai-output" spellcheck="false" style="white-space:pre-wrap; color: white"></div>
     </fieldset>
     <div id="save-div" style="display: none; text-align: right">
-        <a id="gp-link" target="_blank" title="There is some delay before it's available-try passing random parameters" href="#"></a>
+        
         <fieldset>
             <legend>Code Editor</legend>
             <div style="text-align:left" id="code-editor"></div>
+            <a id="gp-link" target="_blank" title="There is some delay before it is available" href="#"></a>
             <button id="save-code" class="btn">Save</button>
         </fieldset>
         <fieldset>
@@ -71,14 +77,15 @@
         const $ = id => document.getElementById(id);
         const cancelSpeaking = () => { let wasSpeaking = speechSynthesis.speaking; timer.disableSpeaking(); stopStreaming = true; speechSynthesis.cancel(); return wasSpeaking; }
         body.addEventListener('beforeunload', () => this.cancelSpeaking());
-        let enableVoice = $('enable-voice'), codeCbx = $('code-cbx'), submitBtn = $('submit-button'), promptInput = $('prompt-input'), openaiOutput = $('openai-output'),
+        let enableVoice = $('enable-voice'), codeCbx = $('code-cbx'), submitBtn = $('submit-button'), promptInput = $('prompt-input'), openaiOutput = $('openai-output'), codeEditor = $('code-editor'),
             codeOutput = $('code-output'), saveCode = $('save-code'), saveDiv = $('save-div'), gpLink = $('gp-link'), stopStreaming = false, history = [], sentences = [], sIndex = 0;
         promptInput.focus(); enableVoice.disabled = false;
         enableVoice.addEventListener('change', e => localStorage.setItem('ENABLE_VOICE', e.target.checked));
         enableVoice.checked = (localStorage.getItem('ENABLE_VOICE') ?? "true") === "true";
 
         submitBtn.addEventListener('click', async () => {
-            codeOutput.textContent = ''; gpLink.textContent = '';
+            openaiOutput.innerHTML = `Waiting for response from OpenAI completions endpoint..<div style="text-align:center"><img src="loading.gif"/></div>`;
+            codeOutput.textContent = gpLink.textContent = codeEditor.textContent = '';
             const words = promptInput.value.split(' ');
             if (words.length < 3) body.style.background = words.join(''); //easter egg for my son
             cancelSpeaking();
@@ -96,7 +103,7 @@
             saveDiv.style.display = 'block', div.style.background = 'white', div.style.color = 'black', div.innerHTML = '';
             const r = editor && fromSave ? editor.getValue() : openaiOutput.textContent.match(/```(?:html)?([\s\S]*?)```/i)?.[1] || openaiOutput.textContent;
             editor?.getWrapperElement()?.remove();
-            editor = CodeMirror($('code-editor'), {
+            editor = CodeMirror(codeEditor, {
                 lineNumbers: true,
                 mode: "htmlmixed",
                 theme: "dracula",
@@ -191,8 +198,10 @@
             }
         } //Add accordian-like thingy with the fieldset (patent pending)
         document.querySelectorAll('legend').forEach((legend) => legend.addEventListener('click', () => {
-            const c = legend.parentNode.children;
-            for (let i = 1; i < c.length; i++)  c[i].style.display = (c[i].style.display === 'none') ? 'block' : 'none';
+            let c = legend.parentNode.children, ls = legend.style, isShown = true;
+            for (let i = 1; i < c.length; i++)  c[i].style.display = (isShown = c[i].style.display === 'none') ? 'block' : 'none';
+            ls.fontStyle = isShown ? 'normal' : 'italic', ls.textDecoration = isShown ? 'none' : 'line-through';
+
         }));
         let errors = []; //also show errors that may occur in the iframe without hunting in dev tools
         let showErrors = (message, source, lineno, colno, error) => {
