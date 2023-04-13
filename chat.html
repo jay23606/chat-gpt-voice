@@ -208,9 +208,11 @@
         }));
         let errors = []; //also show errors that may occur in the iframe without hunting in dev tools
         let showErrors = (message, source, lineno, colno, error) => {
-            errors.push(`(${lineno},${colno}) ${error} `)
-            $('errors').innerHTML = `<div style="color:red;font-size:medium">` + errors.join('<br><br>') + '</div>';
+            errors.push(`${error} on line ${lineno} col ${colno}`);
+            $('errors').innerHTML = `<div style="color:red;font-size:medium">` + errors.join('<br>') +
+                `</div><button onclick="fixIt()">Fix it for me!</button>`;
         }
+        let fixIt = () => { promptInput.value = "Help! I am getting error(s):\n" + errors.join('\n'); submitBtn.click() }
     </script>
 </body>
 </html>
