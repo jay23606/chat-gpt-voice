@@ -62,6 +62,7 @@
         </fieldset>
         <fieldset>
             <legend>Output Web Application</legend>
+            <div style="text-align:left" id="errors"></div>
             <div id="code-output"></div>
         </fieldset>
     </div>
@@ -104,10 +105,13 @@
                 autoCloseTags: true,
                 autoCloseBrackets: true
             });
-            editor.setValue(r);
+            editor.setValue(r); errors = [];
             let iframe = document.createElement('iframe');
+            
             iframe.width = '99%', iframe.height = `${innerHeight >> 1}`, iframe.srcdoc = r;
             div.appendChild(iframe);
+            iframe.contentWindow.onerror = showErrors;
+
             if (!fromSave || !confirm("Press OK to also push to GitHub")) return;
             let token2 = localStorage.getItem('GITHUB_API_KEY') || prompt("Please input GitHub API key (requires repo permissions)", "")?.trim();
             if (token2 && token2.length >= 10) localStorage.setItem('GITHUB_API_KEY', token2);
@@ -192,6 +196,11 @@
             const c = legend.parentNode.children;
             for (let i = 1; i < c.length; i++)  c[i].style.display = (c[i].style.display === 'none') ? 'block' : 'none';
         }));
+        let errors = []; //also show errors that may occur in the iframe without hunting in dev tools
+        let showErrors = (message, source, lineno, colno, error) => {
+            errors.push(`(${lineno},${colno}) ${error} `)
+            $('errors').innerHTML = `<div style="color:red;font-size:medium">` + errors.join('<br><br>') + '</div>';
+        }
     </script>
 </body>
 </html>
