@@ -1,13 +1,13 @@
 <!-- https://jay23606.github.io/chat-gpt-voice/html/hello-world.html -->
 <!DOCTYPE html>
 <html>
-  <head>
-    <title>Hello World</title>
-  </head>
   <body>
-    <h1>Hello World</h1>
+    <h1 id="output"></h1>
     <script>
-      (() => console.log("Hello World"))();
+      (() => {
+        const message = "Hello, World!";
+        documen.getElementById("output").innerHTML = message;
+      })();
     </script>
   </body>
 </html>
