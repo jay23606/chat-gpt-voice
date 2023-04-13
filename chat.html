@@ -105,13 +105,11 @@
                 autoCloseTags: true,
                 autoCloseBrackets: true
             });
-            editor.setValue(r); errors = [];
+            editor.setValue(r);
             let iframe = document.createElement('iframe');
-            
-            iframe.width = '99%', iframe.height = `${innerHeight >> 1}`, iframe.srcdoc = r;
+            iframe.width = '99%', iframe.height = `${innerHeight >> 1}`, iframe.srcdoc = r, errors = [], $('errors').innerHTML = '';
             div.appendChild(iframe);
             iframe.contentWindow.onerror = showErrors;
-
             if (!fromSave || !confirm("Press OK to also push to GitHub")) return;
             let token2 = localStorage.getItem('GITHUB_API_KEY') || prompt("Please input GitHub API key (requires repo permissions)", "")?.trim();
             if (token2 && token2.length >= 10) localStorage.setItem('GITHUB_API_KEY', token2);
