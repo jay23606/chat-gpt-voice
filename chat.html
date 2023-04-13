@@ -62,7 +62,7 @@
         
         <fieldset>
             <legend>Code Editor</legend>
-            <div style="text-align:left" id="code-editor"></div>
+            <div style="text-align: left; width: 100%" id="code-editor"></div>
             <div style="text-align:right">
                 <a id="gp-link" target="_blank" title="There is some delay before it is available" href="#"></a>
                 <button id="save-code" class="btn">Save</button>
@@ -114,6 +114,7 @@
                 autoCloseTags: true,
                 autoCloseBrackets: true
             });
+            //editor.setSize(innerWidth - 52, innerHeight >> 1);
             editor.setValue(r);
             let iframe = document.createElement('iframe');
             iframe.width = '99%', iframe.height = `${innerHeight >> 1}`, iframe.srcdoc = r, errors = [], $('errors').innerHTML = '';
