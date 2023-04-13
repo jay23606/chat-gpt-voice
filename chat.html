@@ -63,8 +63,10 @@
         <fieldset>
             <legend>Code Editor</legend>
             <div style="text-align:left" id="code-editor"></div>
-            <a id="gp-link" target="_blank" title="There is some delay before it is available" href="#"></a>
-            <button id="save-code" class="btn">Save</button>
+            <div style="text-align:right">
+                <a id="gp-link" target="_blank" title="There is some delay before it is available" href="#"></a>
+                <button id="save-code" class="btn">Save</button>
+            </div>
         </fieldset>
         <fieldset>
             <legend>Output Web Application</legend>
@@ -85,7 +87,7 @@
 
         submitBtn.addEventListener('click', async () => {
             openaiOutput.innerHTML = `Waiting for response from OpenAI completions endpoint..<div style="text-align:center"><img src="loading.gif"/></div>`;
-            codeOutput.textContent = gpLink.textContent = codeEditor.textContent = '';
+            codeOutput.textContent = gpLink.textContent = codeEditor.textContent = '', saveDiv.style.display = 'none';
             const words = promptInput.value.split(' ');
             if (words.length < 3) body.style.background = words.join(''); //easter egg for my son
             cancelSpeaking();
@@ -99,7 +101,7 @@
         saveCode.addEventListener('click', () => outputHtml(codeOutput, true));
         var editor = null;
         const outputHtml = (div, fromSave = false) => {
-            if (!codeCbx.checked) return saveDiv.style.display = 'none'
+            if (!codeCbx.checked) return saveDiv.style.display = 'none';
             saveDiv.style.display = 'block', div.style.background = 'white', div.style.color = 'black', div.innerHTML = '';
             const r = editor && fromSave ? editor.getValue() : openaiOutput.textContent.match(/```(?:html)?([\s\S]*?)```/i)?.[1] || openaiOutput.textContent;
             editor?.getWrapperElement()?.remove();
