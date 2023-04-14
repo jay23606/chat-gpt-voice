@@ -1,0 +1,18 @@
+<!-- https://jay23606.github.io/chat-gpt-voice/html/js2asmScript.html -->
+javascript
+// Define a simple JavaScript function
+const add = (a, b) => a + b;
+
+// Use as-bind to compile the function to AssemblyScript
+const asc = require("assemblyscript/cli/asc");
+const asBind = require("as-bind");
+const wasm = asc.compileString(`
+  export function add(a: i32, b: i32): i32 {
+    return a + b;
+  }
+`);
+const wasmBytes = new Uint8Array(wasm.outputFiles[1].contents);
+asBind.instantiate(wasmBytes).then(instance => {
+  const addResult = instance.exports.add(2, 3);
+  console.log(`Result: ${addResult}`);
+});
