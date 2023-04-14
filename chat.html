@@ -2,10 +2,9 @@
 <html lang="en">
 <head>
     <meta charset="utf-8" />
-    <!--<link rel="manifest" href="manifest.json" />-->
-    <link href="https://fonts.cdnfonts.com/css/perfect-dos-vga-437" rel="stylesheet">
+    <!--<link rel="manifest" href="manifest.json" /> already in tabs.html-->
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <!-- needed for CodeMirror editor -->
+    <link href="https://fonts.cdnfonts.com/css/perfect-dos-vga-437" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.62.0/codemirror.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.62.0/theme/dracula.min.css" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.62.0/codemirror.min.js"></script>
@@ -14,38 +13,13 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.62.0/mode/css/css.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.62.0/mode/htmlmixed/htmlmixed.min.js"></script>
     <style>
-        textarea {
-            font-size: large;
-            font-family: 'Perfect DOS VGA 437', sans-serif;
-            background-color: #B3C0B7;
-        }
-        button {
-            font-family: 'Perfect DOS VGA 437', sans-serif;
-        }
-        body, html {
-            margin: 0;
-            height: 100%;
-            font-size: large;
-            font-family: 'Perfect DOS VGA 437', sans-serif;
-            background: black;
-            color: white;
-        }
-        .btn {
-            width:50vw;
-            text-align:center;
-            height:2.5em;
-            font-size:large
-        }
-        legend {
-            text-align: left;
-            cursor: pointer;
-            user-select: none;
-        }
-        legend:hover{
-            color: blue;
-        }
+        body, html {margin: 0;height: 100%;font:large 'Perfect DOS VGA 437',sans-serif;background:black;color:white;}
+        textarea {font:large 'Perfect DOS VGA 437',sans-serif;background-color:#B3C0B7;}
+        button, .btn {font:'Perfect DOS VGA 437',sans-serif;}
+        .btn {width:50vw;text-align:center;height:2.5em;}
+        legend {text-align:left;cursor:pointer;user-select:none;}
+        legend:hover {color:blue;}
     </style>
-    <link rel="icon" href="data:,">
 </head>
 <body>
     <textarea id="prompt-input" style="width:99vw;height:4em;font-size:large" placeholder="Enter prompt or touch screen for voice prompt"></textarea>
@@ -59,7 +33,6 @@
         <div id="openai-output" spellcheck="false" style="white-space:pre-wrap; color: white"></div>
     </fieldset>
     <div id="save-div" style="display: none; text-align: right">
-        
         <fieldset>
             <legend>Code Editor</legend>
             <div style="text-align: left; width: 100%" id="code-editor"></div>
@@ -75,59 +48,45 @@
         </fieldset>
     </div>
     <script>
-        const body = document.body;
-        const $ = id => document.getElementById(id);
+        const body = document.body, $ = id => document.getElementById(id), $$ = s => document.querySelectorAll(s);
+        HTMLElement.prototype.on = function (e, fn) { this.addEventListener(e, fn) }
         const cancelSpeaking = () => { let wasSpeaking = speechSynthesis.speaking; timer.disableSpeaking(); stopStreaming = true; speechSynthesis.cancel(); return wasSpeaking; }
-        body.addEventListener('beforeunload', () => this.cancelSpeaking());
+        body.on('beforeunload', () => this.cancelSpeaking());
         let enableVoice = $('enable-voice'), codeCbx = $('code-cbx'), submitBtn = $('submit-button'), promptInput = $('prompt-input'), openaiOutput = $('openai-output'), codeEditor = $('code-editor'),
-            codeOutput = $('code-output'), saveCode = $('save-code'), saveDiv = $('save-div'), gpLink = $('gp-link'), stopStreaming = false, history = [], sentences = [], sIndex = 0;
+            codeOutput = $('code-output'), saveCode = $('save-code'), saveDiv = $('save-div'), gpLink = $('gp-link'), stopStreaming = false, history = [], sentences = [], sIndex = 0, editor = null;
         promptInput.focus(); enableVoice.disabled = false;
-        enableVoice.addEventListener('change', e => localStorage.setItem('ENABLE_VOICE', e.target.checked));
+        enableVoice.on('change', e => localStorage.setItem('ENABLE_VOICE', e.target.checked));
         enableVoice.checked = (localStorage.getItem('ENABLE_VOICE') ?? "true") === "true";
-
-        submitBtn.addEventListener('click', async () => {
-            openaiOutput.innerHTML = `Waiting for response from OpenAI completions endpoint..<div style="text-align:center"><img src="loading.gif"/></div>`;
-            codeOutput.textContent = gpLink.textContent = codeEditor.textContent = '', saveDiv.style.display = 'none';
-            const words = promptInput.value.split(' ');
-            if (words.length < 3) body.style.background = words.join(''); //easter egg for my son
+        //submit also called by clicking on body while Voice checked (after recognition complete) and from fixIt button
+        submitBtn.on('click', async () => {
             cancelSpeaking();
-            let token = localStorage.getItem('OPENAI_API_KEY') || prompt("Please input OpenAI API key (stored in browser cache)", "")?.trim();
-            if (token && token.length >= 10) localStorage.setItem('OPENAI_API_KEY', token);
+            openaiOutput.innerHTML = `Waiting for response from OpenAI completions endpoint..<div style="text-align:center"><img src="loading.gif"/></div>`;
+            codeOutput.textContent = gpLink.textContent = '', saveDiv.style.display = 'none';
+            body.style.background = promptInput.value.split(' ').length < 3 && promptInput.value.split(' ').join(''); //easter egg for my son
+            let token = localStorage.getItem('OPENAI_API_KEY') || (prompt("Please input OpenAI API key (stored in browser cache)", "") || '').trim();
+            token && token.length >= 10 && localStorage.setItem('OPENAI_API_KEY', token);
             await openAiSend(promptInput, openaiOutput, token);
             history.push({ role: 'user', content: promptInput.value }, { role: 'assistant', content: openaiOutput.textContent });
-            if (history.length > 4) { history.shift(); history.shift(); }
-            outputHtml(codeOutput);
+            history.length > 4 && (history.shift(), history.shift());
+            handleCode(codeOutput);
         });
-        saveCode.addEventListener('click', () => outputHtml(codeOutput, true));
-        var editor = null;
-        const outputHtml = (div, fromSave = false) => {
+        saveCode.on('click', () => outputHtml(handleCode, true));
+        //sets up the code editor section and gets/sets github credentials if fromSave && confirmed
+        const handleCode = (div, fromSave = false) => {
             if (!codeCbx.checked) return saveDiv.style.display = 'none';
             saveDiv.style.display = 'block', div.style.background = 'white', div.style.color = 'black', div.innerHTML = '';
             const r = editor && fromSave ? editor.getValue() : openaiOutput.textContent.match(/```(?:html)?([\s\S]*?)```/i)?.[1] || openaiOutput.textContent;
-            editor?.getWrapperElement()?.remove();
-            editor = CodeMirror(codeEditor, {
-                lineNumbers: true,
-                mode: "htmlmixed",
-                theme: "dracula",
-                htmlMode: true,
-                matchTags: { bothTags: true },
-                autoCloseTags: true,
-                autoCloseBrackets: true
-            });
-            //editor.setSize(innerWidth - 52, innerHeight >> 1);
+            if(!editor) editor = CodeMirror(codeEditor, { lineNumbers: true, mode: "htmlmixed", theme: "dracula", htmlMode: true, matchTags: { bothTags: true }, autoCloseTags: true, autoCloseBrackets: true });
             editor.setValue(r);
             let iframe = document.createElement('iframe');
             iframe.width = '99%', iframe.height = `${innerHeight >> 1}`, iframe.srcdoc = r, errors = [], $('errors').innerHTML = '';
-            div.appendChild(iframe);
-            iframe.contentWindow.onerror = showErrors;
+            div.appendChild(iframe); iframe.contentWindow.onerror = showErrors;
             if (!fromSave || !confirm("Press OK to also push to GitHub")) return;
             let token2 = localStorage.getItem('GITHUB_API_KEY') || prompt("Please input GitHub API key (requires repo permissions)", "")?.trim();
             if (token2 && token2.length >= 10) localStorage.setItem('GITHUB_API_KEY', token2);
             let path = prompt("Provide a path (uses gh-pages branch)", localStorage.getItem('GITHUB_PATH')?.replace('null', '') || "jay23606/chat-gpt-voice/contents/html/test.html");
             localStorage.setItem('GITHUB_PATH', path);
-            let p = path.replace('contents/', '').split('/');
-            let gp = `https://${p[0]}.github.io/${p[1]}/${p.slice(2).join('/')}`
-            let data = btoa(`<!-- ${gp} -->\n${r}`), branch = 'gh-pages';
+            let p = path.replace('contents/', '').split('/'), gp = `https://${p[0]}.github.io/${p[1]}/${p.slice(2).join('/')}`, data = btoa(`<!-- ${gp} -->\n${r}`), branch = 'gh-pages';
             let init = {
                 method: 'PUT', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token2}` },
                 body: { message: "gpt-voice commit", committer: { name: "gpt-voice", email: "gpt-voice@mail.com" }, content: data, branch: branch }
@@ -140,7 +99,7 @@
                     fetch(`https://api.github.com/repos/${path}`, init).then(() => { gpLink.href = gp; gpLink.textContent = "Open in GitHub Pages"; });
                 });
         }
-
+        //handles voice recognition
         const recognition = (input, btn, lang = 'en-US') => {
             var SpeechRecognition = SpeechRecognition || webkitSpeechRecognition;
             let recognition = new SpeechRecognition();
@@ -150,7 +109,7 @@
             recognition.onspeechend = () => recognition.stop();
         }
         recognition(promptInput, submitBtn);
-
+        //checks every so often for new sentences while enabled and speaks them
         const timer = {
             iid: 0, disableSpeaking: function () { if (this.iid) clearInterval(this.iid) },
             enableSpeaking: function () {
@@ -160,13 +119,12 @@
                     if (!speechSynthesis.speaking && sentences.length > 0 && sentences.length > sIndex) {
                         var utter = new SpeechSynthesisUtterance();
                         utter.text = sentences[sIndex].join(''), utter.lang = 'en-AU', utter.rate = 1.4;
-                        speechSynthesis.speak(utter);
-                        sIndex++;
+                        speechSynthesis.speak(utter); sIndex++;
                     }
                 }, 500);
             }
         };
-
+        //streaming response from openAI completions endpoint
         const openAiSend = async (input, output, token) => {
             let system = [];
             if (codeCbx.checked) system.push({ "role": "system", "content": "Write html only,no explanation.Put script tag in body.Use lamdas to save space" });
@@ -199,20 +157,18 @@
                     output.textContent = arr2.join('');
                 }
             }
-        } //Add accordian-like thingy with the fieldset (patent pending)
-        document.querySelectorAll('legend').forEach((legend) => legend.addEventListener('click', () => {
+        } //add accordian-like thingy with using fieldsets/legends
+        $$('legend').forEach((legend) => legend.on('click', () => {
             let c = legend.parentNode.children, ls = legend.style, isShown = true;
             for (let i = 1; i < c.length; i++)  c[i].style.display = (isShown = c[i].style.display === 'none') ? 'block' : 'none';
             ls.fontStyle = isShown ? 'normal' : 'italic', ls.textDecoration = isShown ? 'none' : 'line-through';
-
         }));
         let errors = []; //also show errors that may occur in the iframe without hunting in dev tools
         let showErrors = (message, source, lineno, colno, error) => {
             errors.push(`${error} on line ${lineno} col ${colno}`);
-            $('errors').innerHTML = `<div style="color:red;font-size:medium">` + errors.join('<br>') +
-                `</div><button onclick="fixIt()">Fix it for me!</button>`;
-        }
-        let fixIt = () => { promptInput.value = "Help! I am getting error(s):\n" + errors.join('\n'); submitBtn.click() }
+            $('errors').innerHTML = `<div style="color:red;font-size:medium">${errors.join('<br>')}</div><button onclick="fixIt()">Fix it for me!</button>`;
+        } //add button to quickly ask AI to fix the errors
+        let fixIt = () => (promptInput.value = `Help! I am getting error(s):\n${errors.join('\n')}`, submitBtn.click());
     </script>
 </body>
 </html>
