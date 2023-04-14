@@ -56,7 +56,7 @@
         </fieldset>
     </div>
     <script>
-        const body = document.body, $ = id => document.getElementById(id), $$ = s => document.querySelectorAll(s);
+        const body = document.body, $ = id => document.getElementById(id), $$ = s => document.querySelectorAll(s), $el = el => document.createElement(el);
         HTMLElement.prototype.on = function (e, fn) { this.addEventListener(e, fn) }
         const cancelSpeaking = () => { let wasSpeaking = speechSynthesis.speaking; timer.disableSpeaking(); stopStreaming = true; speechSynthesis.cancel(); return wasSpeaking; }
         body.on('beforeunload', () => this.cancelSpeaking());
@@ -86,7 +86,7 @@
             const r = codeMirror && fromSave ? codeMirror.getValue() : openaiOutput.textContent.match(/```(?:html)?([\s\S]*?)```/i)?.[1] || openaiOutput.textContent;
             if (!codeMirror) codeMirror = CodeMirror(editor, { lineNumbers: true, mode: "htmlmixed", theme: "dracula", htmlMode: true, matchTags: { bothTags: true }, autoCloseTags: true, autoCloseBrackets: true });
             codeMirror.setValue(r);
-            let iframe = document.createElement('iframe');
+            let iframe = $el('iframe');
             iframe.width = '99%', iframe.height = `${innerHeight >> 1}`, iframe.srcdoc = r, errors = [], $('errors').innerHTML = '';
             div.appendChild(iframe);
             iframe.contentWindow.onerror = showErrors;
