@@ -19,6 +19,27 @@
         .btn {width:50vw;text-align:center;height:2.5em;}
         legend {text-align:left;cursor:pointer;user-select:none;}
         legend:hover {color:blue;}
+
+        #editor-wrapper {
+            position: relative;
+            height: 100%;
+            width: 100%;
+        }
+
+        #editor {
+            height: 100%;
+            width: 100%;
+        }
+
+        #resizer {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            height: 5px;
+            width: 100%;
+            background-color: gray;
+            cursor: row-resize;
+        }
     </style>
 </head>
 <body>
@@ -35,7 +56,10 @@
     <div id="save-div" style="display: none; text-align: right">
         <fieldset>
             <legend>Code Editor</legend>
-            <div style="text-align: left; width: 100%" id="code-editor"></div>
+            <div id="editor-wrapper">
+                <div style="text-align: left; width: 100%; height:100%" id="editor"></div>
+                <div id="resizer"></div>
+            </div>
             <div style="text-align:right">
                 <a id="gp-link" target="_blank" title="There is some delay before it is available" href="#"></a>
                 <button id="save-code" class="btn">Save</button>
@@ -52,8 +76,8 @@
         HTMLElement.prototype.on = function (e, fn) { this.addEventListener(e, fn) }
         const cancelSpeaking = () => { let wasSpeaking = speechSynthesis.speaking; timer.disableSpeaking(); stopStreaming = true; speechSynthesis.cancel(); return wasSpeaking; }
         body.on('beforeunload', () => this.cancelSpeaking());
-        let enableVoice = $('enable-voice'), codeCbx = $('code-cbx'), submitBtn = $('submit-button'), promptInput = $('prompt-input'), openaiOutput = $('openai-output'), codeEditor = $('code-editor'),
-            codeOutput = $('code-output'), saveCode = $('save-code'), saveDiv = $('save-div'), gpLink = $('gp-link'), stopStreaming = false, history = [], sentences = [], sIndex = 0, editor = null;
+        let enableVoice = $('enable-voice'), codeCbx = $('code-cbx'), submitBtn = $('submit-button'), promptInput = $('prompt-input'), openaiOutput = $('openai-output'), editor = $('editor'),
+            codeOutput = $('code-output'), saveCode = $('save-code'), saveDiv = $('save-div'), gpLink = $('gp-link'), stopStreaming = false, history = [], sentences = [], sIndex = 0, codeMirror = null;
         promptInput.focus(); enableVoice.disabled = false;
         enableVoice.on('change', e => localStorage.setItem('ENABLE_VOICE', e.target.checked));
         enableVoice.checked = (localStorage.getItem('ENABLE_VOICE') ?? "true") === "true";
@@ -70,14 +94,14 @@
             history.length > 4 && (history.shift(), history.shift());
             handleCode(codeOutput);
         });
-        saveCode.on('click', () => outputHtml(handleCode, true));
+        saveCode.on('click', () => handleCode(codeOutput, true));
         //sets up the code editor section and gets/sets github credentials if fromSave && confirmed
         const handleCode = (div, fromSave = false) => {
             if (!codeCbx.checked) return saveDiv.style.display = 'none';
             saveDiv.style.display = 'block', div.style.background = 'white', div.style.color = 'black', div.innerHTML = '';
-            const r = editor && fromSave ? editor.getValue() : openaiOutput.textContent.match(/```(?:html)?([\s\S]*?)```/i)?.[1] || openaiOutput.textContent;
-            if(!editor) editor = CodeMirror(codeEditor, { lineNumbers: true, mode: "htmlmixed", theme: "dracula", htmlMode: true, matchTags: { bothTags: true }, autoCloseTags: true, autoCloseBrackets: true });
-            editor.setValue(r);
+            const r = codeMirror && fromSave ? codeMirror.getValue() : openaiOutput.textContent.match(/```(?:html)?([\s\S]*?)```/i)?.[1] || openaiOutput.textContent;
+            if (!codeMirror) codeMirror = CodeMirror(editor, { lineNumbers: true, mode: "htmlmixed", theme: "dracula", htmlMode: true, matchTags: { bothTags: true }, autoCloseTags: true, autoCloseBrackets: true });
+            codeMirror.setValue(r);
             let iframe = document.createElement('iframe');
             iframe.width = '99%', iframe.height = `${innerHeight >> 1}`, iframe.srcdoc = r, errors = [], $('errors').innerHTML = '';
             div.appendChild(iframe); iframe.contentWindow.onerror = showErrors;
@@ -169,6 +193,15 @@
             $('errors').innerHTML = `<div style="color:red;font-size:medium">${errors.join('<br>')}</div><button onclick="fixIt()">Fix it for me!</button>`;
         } //add button to quickly ask AI to fix the errors
         let fixIt = () => (promptInput.value = `Help! I am getting error(s):\n${errors.join('\n')}`, submitBtn.click());
+        //make code editor vertically resizable
+        let mouseDown = false, startY, startHeight, resizer = $("resizer");
+        resizer.addEventListener("mousedown", e => (mouseDown = true, startY = e.clientY, startHeight = codeMirror.getWrapperElement().clientHeight));
+        window.addEventListener("mousemove", e => {
+            if (!mouseDown) return;
+            const newHeight = startHeight + (e.clientY - startY);
+            codeMirror.setSize(null, newHeight);
+        });
+        window.addEventListener("mouseup", e => mouseDown = false);
     </script>
 </body>
 </html>
