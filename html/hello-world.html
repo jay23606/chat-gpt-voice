@@ -1,7 +1,14 @@
 <!-- https://jay23606.github.io/chat-gpt-voice/html/hello-world.html -->
 <!DOCTYPE html>
 <html>
-  <body>
-    <script> () => { document.write("Hello World!"); } </script>
-  </body>
+<body>
+  <h1 id="greeting"></h1>
+
+  <script>
+    (() => {
+      const greeting = document.querySelector("#greeting");
+      greeting.textContent = "Hello World2!";
+    })();
+  </script>
+</body>
 </html>
