@@ -1,0 +1,47 @@
+<!-- https://jay23606.github.io/chat-gpt-voice/html/loadScript.html -->
+
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8">
+    <title>CodeMirror Example</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.62.0/codemirror.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.62.0/theme/dracula.min.css">
+  </head>
+  <body>
+    <textarea id="code"></textarea>
+    <script>
+      function loadScript(src) {
+        return new Promise((resolve, reject) => {
+          const script = document.createElement('script');
+          script.src = src;
+          script.onload = resolve;
+          script.onerror = reject;
+          document.head.appendChild(script);
+        });
+      }
+
+      Promise.all([
+        loadScript('https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.62.0/codemirror.min.js'),
+        loadScript('https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.62.0/mode/xml/xml.min.js'),
+        loadScript('https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.62.0/mode/javascript/javascript.min.js'),
+        loadScript('https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.62.0/mode/css/css.min.js'),
+        loadScript('https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.62.0/mode/htmlmixed/htmlmixed.min.js'),
+        loadScript('https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.62.0/addon/edit/matchtags.min.js')
+      ]).then(() => {
+        const editor = document.getElementById("code");
+        const codeMirror = CodeMirror.fromTextArea(editor, {
+          lineNumbers: true,
+          mode: "htmlmixed",
+          theme: "dracula",
+          htmlMode: true,
+          matchTags: { bothTags: true },
+          autoCloseTags: true,
+          autoCloseBrackets: true
+        });
+      }).catch((error) => {
+        console.error(`Error loading CodeMirror: ${error}`);
+      });
+    </script>
+  </body>
+</html>
