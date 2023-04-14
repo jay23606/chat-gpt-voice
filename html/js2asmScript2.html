@@ -1,0 +1,28 @@
+<!-- https://jay23606.github.io/chat-gpt-voice/html/js2asmScript2.html -->
+
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8">
+    <title>JavaScript to AssemblyScript</title>
+  </head>
+  <body>
+    <script src="https://cdn.jsdelivr.net/npm/assemblyscript/dist/assemblyscript.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/as-bind/dist/as-bind.js"></script>
+    <script type="text/javascript">
+      // Define a simple JavaScript function
+      const add = (a, b) => a + b;
+
+      // Use as-bind to compile the function to AssemblyScript
+      const wasmBytes = AsBind.instantiate(`
+        export function add(a: i32, b: i32): i32 {
+          return a + b;
+        }
+      `).exports;
+
+      // Call the compiled function with the arguments 2 and 3
+      const addResult = wasmBytes.add(2, 3);
+      console.log(`Result: ${addResult}`);
+    </script>
+  </body>
+</html>
