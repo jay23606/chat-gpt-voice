@@ -1,0 +1,28 @@
+<!-- https://jay23606.github.io/chat-gpt-voice/html/compile-web-asm2A.html -->
+
+<script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emscripten-core/emscripten@2.0.21/dist/emscripten.js"></script>
+<script type="text/javascript">
+
+  // Initialize the Module object
+  const Module = {
+    preRun: [],
+    postRun: [],
+    print: (text) => { console.log(text) },
+    printErr: (text) => { console.error(text) },
+    wasmBinaryFile: 'path/to/your/wasm/binary/file.wasm'
+  };
+
+  // Define your C++ code
+  const src = `
+    #include <emscripten.h>
+
+    EMSCRIPTEN_KEEPALIVE
+    int add(int a, int b) {
+      return a + b;
+    }
+  `;
+
+  // Compile the code to WebAssembly and create a new WebAssembly module
+  const wasmModule = new WebAssembly.Module(Module['asm'](src));
+
+</script>
