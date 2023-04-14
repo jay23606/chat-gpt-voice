@@ -5,13 +5,13 @@
     <!--<link rel="manifest" href="manifest.json" /> already in tabs.html-->
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <link href="https://fonts.cdnfonts.com/css/perfect-dos-vga-437" rel="stylesheet">
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.62.0/codemirror.min.css" rel="stylesheet">
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.62.0/theme/dracula.min.css" rel="stylesheet">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.62.0/codemirror.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.62.0/mode/xml/xml.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.62.0/mode/javascript/javascript.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.62.0/mode/css/css.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.62.0/mode/htmlmixed/htmlmixed.min.js"></script>
+    <link defer href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.62.0/codemirror.min.css" rel="stylesheet">
+    <link defer href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.62.0/theme/dracula.min.css" rel="stylesheet">
+    <script defer src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.62.0/codemirror.min.js"></script>
+    <script defer src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.62.0/mode/xml/xml.min.js"></script>
+    <script defer src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.62.0/mode/javascript/javascript.min.js"></script>
+    <script defer src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.62.0/mode/css/css.min.js"></script>
+    <script defer src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.62.0/mode/htmlmixed/htmlmixed.min.js"></script>
     <style>
         body,html{margin:0;height:100%;font:large 'Perfect DOS VGA 437',sans-serif;background:black;color:white}
         textarea{font:large 'Perfect DOS VGA 437',sans-serif;background-color:#B3C0B7}
@@ -68,7 +68,7 @@
         //submit also called by clicking on body while Voice checked (after recognition complete) and from fixIt button
         submitBtn.on('click', async () => {
             cancelSpeaking();
-            openaiOutput.innerHTML = `Waiting for response from OpenAI completions endpoint..<div style="text-align:center"><img src="loading.gif"/></div>`;
+            openaiOutput.innerHTML = `Waiting for response from OpenAI completions endpoint..<div style="text-align:center"><img async src="loading.gif"/></div>`;
             codeOutput.textContent = gpLink.textContent = '', saveDiv.style.display = 'none';
             body.style.background = promptInput.value.split(' ').length < 3 && promptInput.value.split(' ').join(''); //easter egg for my son
             let token = localStorage.getItem('OPENAI_API_KEY') || (prompt("Please input OpenAI API key (stored in browser cache)", "") || '').trim();
@@ -76,11 +76,11 @@
             await openAiSend(promptInput, openaiOutput, token);
             history.push({ role: 'user', content: promptInput.value }, { role: 'assistant', content: openaiOutput.textContent });
             history.length > 4 && (history.shift(), history.shift());
-            handleCode(codeOutput);
+            await handleCode(codeOutput);
         });
-        saveCode.on('click', () => handleCode(codeOutput, true));
+        saveCode.on('click', async () => await handleCode(codeOutput, true));
         //sets up the code editor section and gets/sets github credentials if fromSave && confirmed
-        const handleCode = (div, fromSave = false) => {
+        const handleCode = async (div, fromSave = false) => {
             if (!codeCbx.checked) return saveDiv.style.display = 'none';
             saveDiv.style.display = 'block', div.style.background = 'white', div.style.color = 'black', div.innerHTML = '';
             const r = codeMirror && fromSave ? codeMirror.getValue() : openaiOutput.textContent.match(/```(?:html)?([\s\S]*?)```/i)?.[1] || openaiOutput.textContent;
@@ -88,25 +88,25 @@
             codeMirror.setValue(r);
             let iframe = document.createElement('iframe');
             iframe.width = '99%', iframe.height = `${innerHeight >> 1}`, iframe.srcdoc = r, errors = [], $('errors').innerHTML = '';
-            div.appendChild(iframe); iframe.contentWindow.onerror = showErrors;
+            div.appendChild(iframe);
+            iframe.contentWindow.onerror = showErrors;
             if (!fromSave || !confirm("Press OK to also push to GitHub")) return;
             let token2 = localStorage.getItem('GITHUB_API_KEY') || prompt("Please input GitHub API key (requires repo permissions)", "")?.trim();
             if (token2 && token2.length >= 10) localStorage.setItem('GITHUB_API_KEY', token2);
             let path = prompt("Provide a path (uses gh-pages branch)", localStorage.getItem('GITHUB_PATH')?.replace('null', '') || "jay23606/chat-gpt-voice/contents/html/test.html");
             localStorage.setItem('GITHUB_PATH', path);
             let p = path.replace('contents/', '').split('/'), gp = `https://${p[0]}.github.io/${p[1]}/${p.slice(2).join('/')}`, data = btoa(`<!-- ${gp} -->\n${r}`), branch = 'gh-pages';
+            let response = await fetch(`https://api.github.com/repos/${path}?ref=${branch}`);
+            let etag = response.status === 404 ? null : response.headers.get('ETag');
             let init = {
                 method: 'PUT', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token2}` },
                 body: { message: "gpt-voice commit", committer: { name: "gpt-voice", email: "gpt-voice@mail.com" }, content: data, branch: branch }
             };
-            fetch(`https://api.github.com/repos/${path}?ref=${branch}`, { method: 'HEAD' })
-                .then(response => response.status === 404 ? Promise.resolve() : response.headers.get('ETag'))
-                .then(etag => {
-                    if (etag) init.body.sha = etag.substring(3, etag.length - 1);
-                    init.body = JSON.stringify(init.body);
-                    fetch(`https://api.github.com/repos/${path}`, init).then(() => { gpLink.href = gp; gpLink.textContent = "Open in GitHub Pages"; });
-                });
-        }
+            if (etag) init.body.sha = etag.substring(3, etag.length - 1);
+            init.body = JSON.stringify(init.body);
+            response = await fetch(`https://api.github.com/repos/${path}`, init);
+            gpLink.href = gp, gpLink.textContent = "Open in GitHub Pages";
+        };
         //handles voice recognition
         const recognition = (input, btn, lang = 'en-US') => {
             var SpeechRecognition = SpeechRecognition || webkitSpeechRecognition;
