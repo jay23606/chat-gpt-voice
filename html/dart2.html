@@ -1,0 +1,33 @@
+<!-- https://jay23606.github.io/chat-gpt-voice/html/dart2.html -->
+
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>My Dart App</title>
+    <script type="application/dart">
+      void main() async {
+        var myString = 'Hello';
+        String? nullableString;
+        int myInt = 10;
+        double myDouble = 3.14;
+        List<String> myList = ['apple', 'banana', 'orange'];
+        Map<String, dynamic> myMap = {'name': 'John', 'age': 30, 'city': 'New York'};
+        
+        print(myString);
+        print(nullableString);
+        print(myInt);
+        print(myDouble);
+        print(myList);
+        print(myMap);
+        
+        await Future.delayed(Duration(seconds: 1));
+        
+        print('1 second has passed');
+      }
+    </script>
+    <script src="https://dart.dev/web-components/webcomponents.min.js"></script>
+  </head>
+  <body>
+    <h1>Welcome to my Dart app</h1>
+  </body>
+</html>
