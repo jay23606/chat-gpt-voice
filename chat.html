@@ -15,14 +15,15 @@
     <style>
         body,html{margin:0;height:100%;font:large 'Perfect DOS VGA 437',sans-serif;background:black;color:white}
         textarea{font:large 'Perfect DOS VGA 437',sans-serif;background-color:#B3C0B7}
-        button,.btn{font:'Perfect DOS VGA 437',sans-serif}
+        button,.btn{font:'Perfect DOS VGA 437',sans-serif;background:gray;color:white;cursor:pointer}
         .btn{width:50vw;text-align:center;height:2.5em}
-        legend{text-align:left;cursor:pointer;user-select:none}
-        legend:hover{color:aqua}
+        legend{text-align:left;cursor:pointer;user-select:none;color:aqua}
+        legend:hover,.btn:hover,#resizer:hover{color: aqua}
         #editor-wrapper{position:relative;height:100%;width:100%}
         #editor{height:100%;width:100%}
         #resizer{position:absolute;bottom:0;left:0;height:5px;width:100%;background:gray;cursor:row-resize}
-        #resizer:hover {background:aqua}
+        #resizer:hover {background: aqua}
+        fieldset,input[type="checkbox"],button,textarea {border-radius: 10px}
     </style>
 </head>
 <body>
