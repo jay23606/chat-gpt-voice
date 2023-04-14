@@ -1,0 +1,14 @@
+<!-- https://jay23606.github.io/chat-gpt-voice/html/compile-web-asm2.html -->
+
+<script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emscripten-core/emscripten@2.0.21/dist/emscripten.js"></script>
+<script type="text/javascript">
+  const src = `
+    #include <emscripten.h>
+
+    EMSCRIPTEN_KEEPALIVE
+    int add(int a, int b) {
+      return a + b;
+    }
+  `;
+  const wasmModule = new WebAssembly.Module(Module['asm'](src));
+</script>
