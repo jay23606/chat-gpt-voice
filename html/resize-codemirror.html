@@ -1,0 +1,65 @@
+<!-- https://jay23606.github.io/chat-gpt-voice/html/resize-codemirror.html -->
+
+<!DOCTYPE html>
+<html>
+  <head>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.60.0/codemirror.css" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.60.0/codemirror.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.60.0/mode/javascript/javascript.js"></script>
+    <style>
+      #editor-wrapper {
+        position: relative;
+        height: 100%;
+        width: 100%;
+      }
+      #editor {
+        height: 100%;
+        width: 100%;
+      }
+      #resizer {
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        height: 5px;
+        width: 100%;
+        background-color: gray;
+        cursor: row-resize;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="editor-wrapper">
+      <div id="editor"></div>
+      <div id="resizer"></div>
+    </div>
+    <script>
+      const editor = CodeMirror(document.getElementById("editor"), {
+        value: "function helloWorld() {\n  console.log('Hello World!');\n}",
+        mode: "javascript",
+        lineNumbers: true,
+      });
+
+      let mouseDown = false;
+      let startY;
+      let startHeight;
+      const resizer = document.getElementById("resizer");
+
+      resizer.addEventListener("mousedown", event => {
+        mouseDown = true;
+        startY = event.clientY;
+        startHeight = editor.getWrapperElement().clientHeight;
+      });
+
+      window.addEventListener("mousemove", event => {
+        if (mouseDown) {
+          const newHeight = startHeight + (event.clientY - startY);
+          editor.setSize(null, newHeight);
+        }
+      });
+
+      window.addEventListener("mouseup", () => {
+        mouseDown = false;
+      });
+    </script>
+  </body>
+</html>
