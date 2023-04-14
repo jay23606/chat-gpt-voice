@@ -112,7 +112,11 @@
             var SpeechRecognition = SpeechRecognition || webkitSpeechRecognition;
             let recognition = new SpeechRecognition();
             recognition.lang = lang;
-            body.onclick = e => ((e.target === body || e.target.id === 'openai-output') && enableVoice.checked) ? ((cancelSpeaking()) ? '' : recognition.start()) : '';
+            //body.onclick = e => ((e.target === body || e.target.id === 'openai-output') && enableVoice.checked) ? ((cancelSpeaking()) ? '' : recognition.start()) : '';
+
+            body.onclick = e => ((e.target === body || e.target.id === 'openai-output') && enableVoice.checked && !cancelSpeaking()) ? recognition.start(): '';
+
+
             recognition.onresult = e => { input.value = e.results[0][0].transcript; if (btn) btn.click() }
             recognition.onspeechend = () => recognition.stop();
         }
