@@ -1,0 +1,35 @@
+<!-- https://jay23606.github.io/chat-gpt-voice/html/js2asmScript2asm.html -->
+
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>JavaScript to AssemblyScript to WebAssembly Example</title>
+  </head>
+  <body>
+    <script>
+      // Define the JavaScript code
+      const javascript = `
+        const add = (a, b) => a + b;
+      `;
+
+      // Use TypeScript to transpile the JavaScript to AssemblyScript
+      const typescript = ts.transpileModule(javascript, { compilerOptions: { module: ts.ModuleKind.None } }).outputText;
+
+      // Use AssemblyScript to compile the transpiled code to WebAssembly
+      const assemblyScript = `
+        ${typescript}
+
+        export function add(a: i32, b: i32): i32 {
+          return add_js(a, b);
+        }
+      `;
+      const module = new WebAssembly.Module(new Uint8Array(asc.toBinary(assemblyScript)), { });
+      const instance = new WebAssembly.Instance(module, { });
+
+      // Call the add function in the WebAssembly module
+      const result = instance.exports.add(2, 3);
+      console.log(result); // 5
+    </script>
+  </body>
+</html>
