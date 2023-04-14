@@ -45,7 +45,7 @@ Added [CodeMirror](https://codemirror.net) for the code editor after exploring o
 
 ![screenshot](screenshot3.png)
 
-I've also added [fieldset](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/fieldset) elements that act as [accordians](https://en.wikipedia.org/wiki/Accordion_(GUI)) for the "ChatGPT Response", "Code Editor", and "Output Web Application" sections and have included error information in red for the latter so one does not have to go hunting in devtools to determine the cause of a script error
+I've also added [fieldset](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/fieldset) elements that act as [accordians](https://en.wikipedia.org/wiki/Accordion_(GUI)) for the "ChatGPT Response", "Code Editor", and "Output Web Application" sections and have included error information in red for the latter so one does not have to go hunting in devtools to determine the cause of a script error. I've added a button that will then send errors if there are any back to ChatGPT for a resolution.
 
 If you look under the html folder in the gh-pages branch you will find some apps this app has written
 
