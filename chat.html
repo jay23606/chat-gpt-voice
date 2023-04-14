@@ -76,9 +76,9 @@
             await openAiSend(promptInput, openaiOutput, token);
             history.push({ role: 'user', content: promptInput.value }, { role: 'assistant', content: openaiOutput.textContent });
             history.length > 4 && (history.shift(), history.shift());
-            await handleCode(codeOutput);
+            await saveCode.click(); //also saves scroll position
         });
-        saveCode.on('click', async () => await handleCode(codeOutput, true));
+        saveCode.on('click', async () => { const pos = { x: scrollX, y: scrollY }; await handleCode(codeOutput, true); scrollTo(pos.x, pos.y); });
         //sets up the code editor section and gets/sets github credentials if fromSave && confirmed
         const handleCode = async (div, fromSave = false) => {
             if (!codeCbx.checked) return saveDiv.style.display = 'none';
