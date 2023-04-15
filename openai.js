@@ -82,10 +82,14 @@ function createAI(options) {
   return { model, temperature, codeCbx, enableSentences, stopStreaming, timer, history, sentences, StreamCompletions };
 }
 
-Could you write me a test page to test out my AI class which is written in openai.js so that it is instantiated twice and that when we enter 2 separate prompts into 2 separate textareas that the output is then streamed to 2 separate DIVs.
-
-
-
+Could you write me a test page to test out my AI class which is written in openai.js so that it is instantiated twice and 
+that when we enter 2 separate prompts into 2 separate textareas that the output is then streamed to 2 separate DIVs.
+We can create the instances like this:
+let ai1 = new AI();
+ai1.StreamCompletions(textarea1, div1, localStorage.getItem('OPENAI_API_KEY'))
+let ai2 = new AI();
+ai2.StreamCompletions(textarea2, div2, localStorage.getItem('OPENAI_API_KEY'))
+==>AVAILABLE UNDER gh-pages branch html/openaijs-test.html
 
 USAGE:
 const options = {
@@ -95,17 +99,19 @@ const options = {
     voice: true,
     timer: myTimerInstance // replace with an actual timer instance fo
 };
-let ai = new AI(options);
+let ai = new AI();
 */
 class AI {
     constructor(options) {
-        this.model = options.model || "gpt-3.5-turbo";
-        this.temperature = options.temperature || 0.8;
-        this.system = options.system || null;
+        this.model = options?.model ?? "gpt-3.5-turbo";
+        this.temperature = options?.temperature ?? 0.8;
+        this.system = options?.system ?? null;
         this.stopStreaming = false;
-        this.enableSentences = options.enableSentences || false;
-        this.timer = options.timer || null;
-        this.history = [], this.sentences = [], this.sentences.index = 0; 
+        this.enableSentences = options?.enableSentences ?? false;
+        this.timer = options?.timer ?? null;
+        this.history = [];
+        this.sentences = [];
+        this.sentences.index = 0;
     }
     async StreamCompletions(input, output, token) {
         let system = [];
