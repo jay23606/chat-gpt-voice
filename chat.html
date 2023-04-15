@@ -109,26 +109,15 @@
         };
         //This allows other languages to be supported when uploading files to github
         const convertToUtf8Base64 = (string) => {
-            const codePoints = Array.from(string).map((char) => char.codePointAt(0)), utf8Array = new Uint8Array(codePoints.length * 4);
-            let offset = 0;
-            codePoints.forEach((codePoint) => {
-                if (codePoint <= 0x7f) utf8Array[offset++] = codePoint;
-                else if (codePoint <= 0x7ff) {
-                    utf8Array[offset++] = 0xc0 | (codePoint >> 6);
-                    utf8Array[offset++] = 0x80 | (codePoint & 0x3f);
-                } else if (codePoint <= 0xffff) {
-                    utf8Array[offset++] = 0xe0 | (codePoint >> 12);
-                    utf8Array[offset++] = 0x80 | ((codePoint >> 6) & 0x3f);
-                    utf8Array[offset++] = 0x80 | (codePoint & 0x3f);
-                } else {
-                    utf8Array[offset++] = 0xf0 | (codePoint >> 18);
-                    utf8Array[offset++] = 0x80 | ((codePoint >> 12) & 0x3f);
-                    utf8Array[offset++] = 0x80 | ((codePoint >> 6) & 0x3f);
-                    utf8Array[offset++] = 0x80 | (codePoint & 0x3f);
-                }
+            const codePoints = Array.from(string).map((char) => char.codePointAt(0)), arr = new Uint8Array(codePoints.length * 4);
+            let i = 0;
+            codePoints.forEach((p) => {
+                if (p <= 0x7f) arr[i++] = p;
+                else if (p <= 0x7ff) (arr[i++] = 0xc0 | (p >> 6), arr[i++] = 0x80 | (p & 0x3f));
+                else if (p <= 0xffff) (arr[i++] = 0xe0 | (p >> 12), arr[i++] = 0x80 | ((p >> 6) & 0x3f), arr[i++] = 0x80 | (p & 0x3f));
+                else (arr[i++] = 0xf0 | (p >> 18), arr[i++] = 0x80 | ((p >> 12) & 0x3f), arr[i++] = 0x80 | ((p >> 6) & 0x3f), arr[i++] = 0x80 | (p & 0x3f));
             });
-            const utf8ArrayTrimmed = utf8Array.slice(0, offset), base64String = btoa(String.fromCharCode(...utf8ArrayTrimmed));
-            return base64String;
+            return btoa(String.fromCharCode.apply(null, arr.slice(0, i)));
         }
         //handles voice recognition
         const recognition = (input, btn, lang = 'en-US') => {
