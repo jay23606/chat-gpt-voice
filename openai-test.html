@@ -73,11 +73,13 @@
             _resolveOutput = (text, output) => typeof output === 'function' ? output(text) : ((output && output.textContent !== undefined) ? output.textContent = text : (output && (output.value = text)));
         }
 
-        const $ = id => document.getElementById(id);
-        const token = localStorage.getItem('OPENAI_API_KEY') || (prompt("Please input OpenAI API key (stored in browser cache)", "") || '').trim();
-        const ai1 = new OpenAI(token), ai2 = new OpenAI(token);
-        ai1.chat($('input1').value, $('output1'));
-        //ai2.chat($('input2').value, $('output2'));
+        (async () => {
+            const $ = id => document.getElementById(id);
+            const token = localStorage.getItem('OPENAI_API_KEY') || (prompt("Please input OpenAI API key (stored in browser cache)", "") || '').trim();
+            const ai1 = new OpenAI(token), ai2 = new OpenAI(token);
+            await ai1.chat($('input1').value, $('output1'));
+            //ai2.chat($('input2').value, $('output2'));
+        })();
     </script>
 </body>
 </html>
