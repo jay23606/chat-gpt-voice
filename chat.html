@@ -76,7 +76,7 @@
             await openAiSend(promptInput, openaiOutput, token);
             history.push({ role: 'user', content: promptInput.value }, { role: 'assistant', content: openaiOutput.textContent });
             history.length > 4 && (history.shift(), history.shift());
-            await saveCode.click(); //also saves scroll position
+            await handleCode(codeOutput);
         });
         saveCode.on('click', async () => { const pos = { x: scrollX, y: scrollY }; await handleCode(codeOutput, true); scrollTo(pos.x, pos.y); });
         //sets up the code editor section and gets/sets github credentials if fromSave && confirmed
@@ -95,7 +95,7 @@
             if (token2 && token2.length >= 10) localStorage.setItem('GITHUB_API_KEY', token2);
             let path = prompt("Provide a path (uses gh-pages branch)", localStorage.getItem('GITHUB_PATH')?.replace('null', '') || "jay23606/chat-gpt-voice/contents/html/test.html");
             localStorage.setItem('GITHUB_PATH', path);
-            let p = path.replace('contents/', '').split('/'), gp = `https://${p[0]}.github.io/${p[1]}/${p.slice(2).join('/')}`, data = btoa(`<!-- ${gp} -->\n${r}`), branch = 'gh-pages';
+            let p = path.replace('contents/', '').split('/'), gp = `https://${p[0]}.github.io/${p[1]}/${p.slice(2).join('/')}`, data = convertToUtf8Base64(`<!-- ${gp} -->\n${r}`), branch = 'gh-pages'; // "data:text/plain;base64," +
             let response = await fetch(`https://api.github.com/repos/${path}?ref=${branch}`);
             let etag = response.status === 404 ? null : response.headers.get('ETag');
             let init = {
@@ -107,16 +107,35 @@
             response = await fetch(`https://api.github.com/repos/${path}`, init);
             gpLink.href = gp, gpLink.textContent = "Open in GitHub Pages";
         };
+        //This allows other languages to be supported when uploading files to github
+        const convertToUtf8Base64 = (string) => {
+            const codePoints = Array.from(string).map((char) => char.codePointAt(0)), utf8Array = new Uint8Array(codePoints.length * 4);
+            let offset = 0;
+            codePoints.forEach((codePoint) => {
+                if (codePoint <= 0x7f) utf8Array[offset++] = codePoint;
+                else if (codePoint <= 0x7ff) {
+                    utf8Array[offset++] = 0xc0 | (codePoint >> 6);
+                    utf8Array[offset++] = 0x80 | (codePoint & 0x3f);
+                } else if (codePoint <= 0xffff) {
+                    utf8Array[offset++] = 0xe0 | (codePoint >> 12);
+                    utf8Array[offset++] = 0x80 | ((codePoint >> 6) & 0x3f);
+                    utf8Array[offset++] = 0x80 | (codePoint & 0x3f);
+                } else {
+                    utf8Array[offset++] = 0xf0 | (codePoint >> 18);
+                    utf8Array[offset++] = 0x80 | ((codePoint >> 12) & 0x3f);
+                    utf8Array[offset++] = 0x80 | ((codePoint >> 6) & 0x3f);
+                    utf8Array[offset++] = 0x80 | (codePoint & 0x3f);
+                }
+            });
+            const utf8ArrayTrimmed = utf8Array.slice(0, offset), base64String = btoa(String.fromCharCode(...utf8ArrayTrimmed));
+            return base64String;
+        }
         //handles voice recognition
         const recognition = (input, btn, lang = 'en-US') => {
             var SpeechRecognition = SpeechRecognition || webkitSpeechRecognition;
             let recognition = new SpeechRecognition();
             recognition.lang = lang;
-            //body.onclick = e => ((e.target === body || e.target.id === 'openai-output') && enableVoice.checked) ? ((cancelSpeaking()) ? '' : recognition.start()) : '';
-
             body.onclick = e => ((e.target === body || e.target.id === 'openai-output') && enableVoice.checked && !cancelSpeaking()) ? recognition.start(): '';
-
-
             recognition.onresult = e => { input.value = e.results[0][0].transcript; if (btn) btn.click() }
             recognition.onspeechend = () => recognition.stop();
         }
