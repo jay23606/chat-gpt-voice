@@ -1,0 +1,27 @@
+<!-- https://jay23606.github.io/chat-gpt-voice/html/openaijs-test.html -->
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>OpenAI Stream Test</title>
+</head>
+<body>
+  <h1>OpenAI Stream Test</h1>
+  <textarea id="input1" rows="4" cols="50" placeholder="Tell me a joke about peanuts"></textarea>
+  <div id="output1"></div>
+  <br>
+  <textarea id="input2" rows="4" cols="50" placeholder="Tell me a joke about hotdogs"></textarea>
+  <div id="output2"></div>
+
+  <script src="openai.js"></script>
+  <script>
+    const $ = id => document.getElementById(id);
+    const apiKey = localStorage.getItem('OPENAI_API_KEY');
+    const ai1 = new openai.AI();
+    const ai2 = new openai.AI();
+    ai1.StreamCompletions($('input1'), $('output1'), apiKey);
+    ai2.StreamCompletions($('input2'), $('output2'), apiKey);
+  </script>
+</body>
+</html>
