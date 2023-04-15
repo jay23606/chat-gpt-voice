@@ -14,7 +14,7 @@
   <textarea id="input2" rows="4" cols="50">Tell me a joke about hotdogs</textarea>
   <div id="output2"></div>
 
-  <script src="openai.js"></script>
+  <!--<script src="openai.js"></script>-->
   <script>
     class AI {
     constructor(options) {
@@ -70,8 +70,8 @@
     
     const $ = id => document.getElementById(id);
     const apiKey = localStorage.getItem('OPENAI_API_KEY');
-    const ai1 = new openai.AI();
-    const ai2 = new openai.AI();
+    const ai1 = new AI();
+    const ai2 = new AI();
     ai1.StreamCompletions($('input1'), $('output1'), apiKey);
     ai2.StreamCompletions($('input2'), $('output2'), apiKey);
   </script>
