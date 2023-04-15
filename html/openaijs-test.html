@@ -16,6 +16,58 @@
 
   <script src="openai.js"></script>
   <script>
+    class AI {
+    constructor(options) {
+        this.model = options?.model ?? "gpt-3.5-turbo";
+        this.temperature = options?.temperature ?? 0.8;
+        this.system = options?.system ?? null;
+        this.stopStreaming = false;
+        this.enableSentences = options?.enableSentences ?? false;
+        this.timer = options?.timer ?? null;
+        this.history = [];
+        this.sentences = [];
+        this.sentences.index = 0;
+    }
+    async StreamCompletions(input, output, token) {
+        let system = [];
+        if (this.system) system.push({ "role": "system", "content": this.system });
+        const prompt = input?.value ?? input?.textContent ?? input ?? '';
+        const response = await fetch('https://api.openai.com/v1/chat/completions', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+            body: JSON.stringify({ model: this.model, temperature: this.temperature, stream: true, messages: [...system, ...this.history, { role: "user", content: prompt }] })
+        });
+        let arr = [], arr2 = [], reader = response.body.getReader();
+        reader.onerror = err => this.timer && this.timer.cancelSpeaking();
+        this.timer && this.timer.enableSpeaking();
+        for (; ;) {
+            const { done, value } = await reader.read();
+            if (done) return;
+            const decoder = new TextDecoder(), chunk = decoder.decode(value, { stream: true }), lines = chunk.split('\n');
+            for (const line of lines) {
+                if (this.stopStreaming) return;
+                if (line.length === 0 || line.startsWith(':')) continue;
+                if (line === 'data: [DONE]') {
+                    if (this.enableSentences) this.sentences.push(arr);
+                    this.history.push({ role: 'user', content: prompt }, { role: 'assistant', content: arr2.join('') });
+                    if (history.length > (options?.history ?? 2) << 1) (history.shift(), history.shift());
+                    return;
+                }
+                const { choices } = JSON.parse(line.substring(6));
+                if (!choices) continue;
+                const word = choices[0].delta.content || '';
+                arr.push(word); arr2.push(word);
+                if (/[.;!?]$/.test(word.trimEnd())) { this.sentences.push(arr); arr = []; }
+                if (typeof output === "object" && output !== null) output?.textContent ?? (output.value !== undefined && (output.value = arr2.join('')));
+                else if (typeof output === "function") output(arr2.join(''));
+            }
+        }
+    }
+}
+    
+    
+    
+    
     const $ = id => document.getElementById(id);
     const apiKey = localStorage.getItem('OPENAI_API_KEY');
     const ai1 = new openai.AI();
