@@ -162,7 +162,7 @@
                 if (done) return;
                 const decoder = new TextDecoder(), chunk = decoder.decode(value, { stream: true }), lines = chunk.split('\n');
                 for (const line of lines) {
-                    if (stopStreaming) return;
+                if (stopStreaming) return;
                     if (line.length === 0 || line.startsWith(':')) continue;
                     if (line === 'data: [DONE]') {
                         if (!enableVoice.checked) return;
@@ -198,6 +198,7 @@
             codeMirror.setSize(null, newHeight);
         });
         window.addEventListener("mouseup", e => mouseDown = false);
+
     </script>
 </body>
 </html>
