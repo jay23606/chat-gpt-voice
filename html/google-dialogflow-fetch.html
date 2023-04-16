@@ -1,0 +1,56 @@
+<!-- https://jay23606.github.io/chat-gpt-voice/html/google-dialogflow-fetch.html -->
+<!--
+To use this HTML page, you'll need to:
+
+1. Obtain an access token for the Dialogflow API by creating a new service account and generating a key. Replace the `<YOUR_ACCESS_TOKEN>` placeholder in the JavaScript code with your access token.
+
+2. Replace the `<YOUR_SESSION_ID>` and `<YOUR_PROJECT_ID>` placeholders in the JavaScript code with the actual values for your session and project.
+
+3. Open the HTML file in a web browser and enter a request. The response from the Dialogflow API will be displayed on the page.
+
+This example uses `fetch` to send a request to the Dialogflow API, and then processes the response using JavaScript. Note that this example assumes that you have a valid and active session for your agent. If you don't have a session yet, you can create one by sending an initial request to the API with an empty query.
+-->
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Google Dialogflow API Example</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+</head>
+<body>
+  <h1>Google Dialogflow API Example</h1>
+  <p>Enter your request:</p>
+  <input id="request" type="text">
+  <button onclick="sendRequest()">Send</button>
+  <p id="response"></p>
+
+  <script>
+    function sendRequest() {
+      const request = document.getElementById('request').value;
+      const session_id = 'YOUR_SESSION_ID';
+      const project_id = 'YOUR_PROJECT_ID';
+
+      fetch(`https://dialogflow.googleapis.com/v2/projects/${project_id}/agent/sessions/${session_id}:detectIntent`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer YOUR_ACCESS_TOKEN',
+        },
+        body: JSON.stringify({
+          queryInput: {
+            text: {
+              text: request,
+              languageCode: 'en-US',
+            },
+          },
+        }),
+      })
+      .then(response => response.json())
+      .then(data => {
+        const transcript = data.queryResult.fulfillmentText;
+        document.getElementById('response').innerHTML = transcript;
+      })
+      .catch(error => console.error(error));
+    }
+  </script>
+</body>
+</html>
