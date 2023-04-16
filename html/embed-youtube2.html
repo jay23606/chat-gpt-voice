@@ -15,26 +15,30 @@
   <div id="videoIds"></div>
   
   <script>
-    document.addEventListener('DOMContentLoaded', function() {
+    document.addEventListener('DOMContentLoaded', () => {
       // Set up the click event handler for the search button
-      document.getElementById('searchButton').addEventListener('click', function() {
+      document.getElementById('searchButton').addEventListener('click', () => {
         // Get the search query from the textarea
-        var searchQuery = document.getElementById('searchQuery').value;
+        const searchQuery = document.getElementById('searchQuery').value;
 
         // Call the search API using fetch with the Cors-Anywhere proxy server
-        fetch('https://cors-anywhere.herokuapp.com/https://www.youtube.com/results?search_query=' + encodeURIComponent(searchQuery))
+        fetch(`https://cors-anywhere.herokuapp.com/https://www.youtube.com/results?search_query=${encodeURIComponent(searchQuery)}`)
           .then(response => response.text())
           .then(data => {
             // Extract the video IDs from the search results using regex
-            var videoIds = [];
-            var regex = /"videoId":"([^"]+)"/g;
-            var match;
+            const videoIds = new Set();
+            const regex = /"videoId":"([^"]+)"/g;
+            let match;
             while (match = regex.exec(data)) {
-              videoIds.push(match[1]);
+              // Add the video ID to the set if it doesn't already exist
+              if (!videoIds.has(match[1])) {
+                videoIds.add(match[1]);
+              }
             }
 
-            // Display the video IDs in the div
-            document.getElementById('videoIds').innerHTML = videoIds.join('<br>');
+            // Display the unique video IDs in the div
+            const uniqueIds = Array.from(videoIds);
+            document.getElementById('videoIds').innerHTML = uniqueIds.join('<br>');
           })
           .catch(error => {
             console.log('Error:', error);
