@@ -7,11 +7,13 @@
     <link href="https://fonts.cdnfonts.com/css/perfect-dos-vga-437" rel="stylesheet">
     <link defer href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.62.0/codemirror.min.css" rel="stylesheet">
     <link defer href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.62.0/theme/dracula.min.css" rel="stylesheet">
+    <link defer href="youtube.css" rel="stylesheet">
     <script defer src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.62.0/codemirror.min.js"></script>
     <script defer src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.62.0/mode/xml/xml.min.js"></script>
     <script defer src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.62.0/mode/javascript/javascript.min.js"></script>
     <script defer src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.62.0/mode/css/css.min.js"></script>
     <script defer src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.62.0/mode/htmlmixed/htmlmixed.min.js"></script>
+    <script defer src="youtube.js"></script>
     <style>
         body,html{margin:0;height:100%;font:large 'Perfect DOS VGA 437',sans-serif;background:black;color:white}
         textarea{font:large 'Perfect DOS VGA 437',sans-serif;background-color:#B3C0B7}
@@ -23,15 +25,18 @@
         #editor,.CodeMirror{height:100%;width:100%}
         fieldset,input[type="checkbox"],button,textarea {border-radius: 10px}
     </style>
+
 </head>
 <body>
     <textarea id="prompt-input" style="width:100%;box-sizing: border-box;height:4em;font-size:large;word-wrap:break-word" placeholder="Enter prompt or touch screen for voice prompt"></textarea>
 
     <div style="text-align:right">
+        <input type="checkbox" id="youtube-cbx" style="width:2em;height:2em"><label for="code-cbx">YouTube</label>
         <input type="checkbox" id="code-cbx" style="width:2em;height:2em"><label for="code-cbx">Code</label>
         <input checked type="checkbox" id="enable-voice" style="width:2em;height:2em"><label for="enable-voice">Voice</label>
         <button id="submit-button" class="btn">Submit</button>
     </div>
+    <div class="videos"></div>
     <fieldset>
         <legend>ChatGPT Response</legend>
         <div id="openai-output" spellcheck="false" style="white-space:pre-wrap;color:white"></div>
@@ -53,18 +58,30 @@
             <div id="code-output"></div>
         </fieldset>
     </div>
+
     <script>
         const body = document.body, $ = id => document.getElementById(id), $$ = s => document.querySelectorAll(s), $el = el => document.createElement(el);
         HTMLElement.prototype.on = function (e, fn) { this.addEventListener(e, fn) }
         const cancelSpeaking = () => { let wasSpeaking = speechSynthesis.speaking; timer.disableSpeaking(); stopStreaming = true; speechSynthesis.cancel(); return wasSpeaking; }
         body.on('beforeunload', () => this.cancelSpeaking());
-        let enableVoice = $('enable-voice'), codeCbx = $('code-cbx'), submitBtn = $('submit-button'), promptInput = $('prompt-input'), openaiOutput = $('openai-output'), editor = $('editor'),
-            codeOutput = $('code-output'), saveCode = $('save-code'), saveDiv = $('save-div'), gpLink = $('gp-link'), stopStreaming = false, history = [], sentences = [], sIndex = 0, codeMirror = null;
-        promptInput.focus(); enableVoice.disabled = false;
-        enableVoice.on('change', e => localStorage.setItem('ENABLE_VOICE', e.target.checked));
-        enableVoice.checked = (localStorage.getItem('ENABLE_VOICE') ?? "true") === "true";
+        let voiceCbx = $('enable-voice'), codeCbx = $('code-cbx'), youtubeCbx = $('youtube-cbx'), submitBtn = $('submit-button'), promptInput = $('prompt-input'),
+            openaiOutput = $('openai-output'), editor = $('editor'), codeOutput = $('code-output'), saveCode = $('save-code'), saveDiv = $('save-div'),
+            gpLink = $('gp-link'), stopStreaming = false, history = [], sentences = [], sIndex = 0, codeMirror = null, youtube = null;
+        promptInput.focus(); voiceCbx.disabled = false;
+        voiceCbx.on('change', e => localStorage.setItem('ENABLE_VOICE', e.target.checked));
+        voiceCbx.checked = (localStorage.getItem('ENABLE_VOICE') ?? "true") === "true";
         //submit also called by clicking on body while Voice checked (after recognition complete) and from fixIt button
+        let videos = $$('.videos')[0];
+        videos.style.display = 'none';
         submitBtn.on('click', async () => {
+            if (youtubeCbx.checked) {
+                videos.style.display = 'none';
+                if (!youtube) youtube = new YouTube('.videos', 5);
+                youtube.search(promptInput.value, () => videos.style.display = 'flex');
+            } else {
+                videos.innerHTML = '';
+                videos.style.display = 'none';
+            }
             cancelSpeaking();
             openaiOutput.innerHTML = `Waiting for response from OpenAI completions endpoint..<div style="text-align:center"><img async src="loading.gif"/></div>`;
             codeOutput.textContent = gpLink.textContent = '', saveDiv.style.display = 'none';
@@ -85,7 +102,7 @@
             if (!codeMirror) codeMirror = CodeMirror(editor, { lineNumbers: true, mode: "htmlmixed", theme: "dracula", htmlMode: true, matchTags: { bothTags: true }, autoCloseTags: true, autoCloseBrackets: true });
             codeMirror.setValue(r);
             let iframe = $el('iframe'), ifs = iframe.style;
-            ifs.border = 0, ifs.width = '100%', iframe.height = `${innerHeight*.9}`, iframe.srcdoc = r, errors = [], $('errors').innerHTML = '';
+            ifs.border = 0, ifs.width = '100%', iframe.height = `${innerHeight * .9}`, iframe.srcdoc = r, errors = [], $('errors').innerHTML = '';
             div.appendChild(iframe);
             iframe.contentWindow.onerror = showErrors;
             if (!fromSave || !confirm("Press OK to also push to GitHub")) return;
@@ -122,7 +139,11 @@
             var SpeechRecognition = SpeechRecognition || webkitSpeechRecognition;
             let recognition = new SpeechRecognition();
             recognition.lang = lang;
-            body.onclick = e => ((e.target === body || e.target.id === 'openai-output') && enableVoice.checked && !cancelSpeaking()) ? recognition.start() : '';
+            //body.onclick = e => ((e.target === body || e.target.id === 'openai-output') && voiceCbx.checked && !cancelSpeaking()) ? recognition.start() : '';
+            body.onclick = e => {
+                if (e.target === body || e.target.id === 'openai-output') 
+                    if (voiceCbx.checked && !cancelSpeaking()) recognition.start(); else stopStreaming = true;
+            };
             recognition.onresult = e => { input.value = e.results[0][0].transcript; if (btn) btn.click() }
             recognition.onspeechend = () => recognition.stop();
         }
@@ -133,7 +154,7 @@
             enableSpeaking: function () {
                 this.disableSpeaking();
                 this.iid = setInterval(() => {
-                    if (!enableVoice.checked) return;
+                    if (!voiceCbx.checked) return;
                     if (!speechSynthesis.speaking && sentences.length > 0 && sentences.length > sIndex) {
                         var utter = new SpeechSynthesisUtterance();
                         utter.text = sentences[sIndex].join(''), utter.lang = 'en-AU', utter.rate = 1.4;
@@ -163,7 +184,7 @@
                     if (stopStreaming) return;
                     if (line.length === 0 || line.startsWith(':')) continue;
                     if (line === 'data: [DONE]') {
-                        if (!enableVoice.checked) return;
+                        if (!voiceCbx.checked) return;
                         if (arr.length) sentences.push(arr);
                         return;
                     }
