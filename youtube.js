@@ -47,8 +47,8 @@ class YouTube {
             iframe.src = `https://www.youtube.com/embed/${videoId}`;
             iframe.frameborder = '0';
             //iframe.allowfullscreen = 'true';
-
-            iframe.setAttribute('allowfullscreen', '');       videoDiv.appendChild(iframe);
+            iframe.setAttribute('allowfullscreen', 'true');
+            videoDiv.appendChild(iframe);
             videosDiv.appendChild(videoDiv);
         }
     }
