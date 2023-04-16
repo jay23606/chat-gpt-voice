@@ -12,12 +12,9 @@ class YouTube {
         this.renderVideos = this.renderVideos.bind(this);
     }
     //possible alternatives
-    //crossorigin.me, allorigins.win, heroku-cors-proxy, anyorigin.com, crossorigin.net, crossorigin.tech
-    //cors-proxy.htmldriven.com, cors.axelfox.workers.dev, cors.bridged.cc, cors.io, anyorigin.com
-    //allow-any-origin.appspot.com, corsproxy.github.io, cors-anywhere.nhlakeside.repl.co, anyorigin.com
-    //yacdn.org/serve, cors.zme.ink, cors.universal.workers.dev, crossorigin.me, allorigins.win
+    //cors.zme.ink, cors-anywhere.herokuapp.com
     search(searchQuery, done) {
-        fetch(`https://cors-anywhere.herokuapp.com/https://www.youtube.com/results?search_query=${encodeURIComponent(searchQuery)}`)
+        fetch(`https://cors.zme.ink/https://www.youtube.com/results?search_query=${encodeURIComponent(searchQuery)}`)
             .then(response => response.text())
             .then(data => {
                 // Extract the video IDs from the search results using regex
