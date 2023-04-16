@@ -1,34 +1,46 @@
 <!-- https://jay23606.github.io/chat-gpt-voice/html/embed-youtube2.html -->
-javascript
-$(document).ready(function() {
-  // Set up the click event handler for the search button
-  $('#searchButton').click(function() {
-    // Get the search query from the textarea
-    var searchQuery = $('#searchQuery').val();
 
-    // Call the search API using JSONP
-    $.ajax({
-      url: 'https://www.youtube.com/results',
-      data: {
-        search_query: searchQuery
-      },
-      dataType: 'html',
-      method: 'GET',
-      success: function(data) {
-        // Extract the video IDs from the search results using regex
-        var videoIds = [];
-        var regex = /"videoId":"([^"]+)"/g;
-        var match;
-        while (match = regex.exec(data)) {
-          videoIds.push(match[1]);
-        }
+<!DOCTYPE html>
+<html>
+<head>
+  <title>YouTube Search</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+<body>
+  <h1>YouTube Search</h1>
+  <p>Enter a search query below and click the search button to find videos on YouTube.</p>
+  <textarea id="searchQuery" rows="3" cols="50"></textarea><br>
+  <button id="searchButton">Search</button><br>
+  <div id="videoIds"></div>
+  
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      // Set up the click event handler for the search button
+      document.getElementById('searchButton').addEventListener('click', function() {
+        // Get the search query from the textarea
+        var searchQuery = document.getElementById('searchQuery').value;
 
-        // Display the video IDs in the div
-        $('#videoIds').html(videoIds.join('<br>'));
-      },
-      error: function(xhr, status, error) {
-        console.log('Error:', error);
-      }
+        // Call the search API using fetch with the Cors-Anywhere proxy server
+        fetch('https://cors-anywhere.herokuapp.com/https://www.youtube.com/results?search_query=' + encodeURIComponent(searchQuery))
+          .then(response => response.text())
+          .then(data => {
+            // Extract the video IDs from the search results using regex
+            var videoIds = [];
+            var regex = /"videoId":"([^"]+)"/g;
+            var match;
+            while (match = regex.exec(data)) {
+              videoIds.push(match[1]);
+            }
+
+            // Display the video IDs in the div
+            document.getElementById('videoIds').innerHTML = videoIds.join('<br>');
+          })
+          .catch(error => {
+            console.log('Error:', error);
+          });
+      });
     });
-  });
-});
+  </script>
+</body>
+</html>
