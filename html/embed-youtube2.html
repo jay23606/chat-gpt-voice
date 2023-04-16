@@ -1,0 +1,27 @@
+<!-- https://jay23606.github.io/chat-gpt-voice/html/embed-youtube2.html -->
+<textarea id="searchQuery"></textarea>
+<button id="searchButton">Search</button>
+<div id="videoIds"></div>
+<script src="https://code.jquery.com/jquery-3.1.0.js"></script>
+<script>
+$(document).ready(function() {
+  // Set up the click event handler for the search button
+  $('#searchButton').click(function() {
+    // Get the search query from the textarea
+    var searchQuery = $('#searchQuery').val();
+
+    // Call the search API using JSONP
+    $.getJSON('https://www.youtube.com/results?search_query=' + encodeURIComponent(searchQuery) + '&callback=?', function(data) {
+      // Parse the JSON response and extract the video IDs
+      var videoIds = [];
+      $(data).find('.yt-lockup-video').each(function() {
+        var videoId = $(this).find('.yt-lockup-title > a').attr('href').match(/\/watch\?v=(.*)/)[1];
+        videoIds.push(videoId);
+      });
+
+      // Display the video IDs in the div
+      $('#videoIds').html(videoIds.join('<br>'));
+    });
+  });
+});
+</script>
