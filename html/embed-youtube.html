@@ -1,0 +1,27 @@
+<!-- https://jay23606.github.io/chat-gpt-voice/html/embed-youtube.html -->
+
+<!DOCTYPE html>
+<html>
+<head>
+	<title>YouTube Embed</title>
+</head>
+<body>
+	<h1>YouTube Embed</h1>
+	<div id="video-container"></div>
+
+	<script>
+		const videoContainer = document.querySelector('#video-container');
+		const videoId = 'dQw4w9WgXcQ';
+		const oEmbedUrl = `https://www.youtube.com/oembed?url=https://www.youtube.com/watch?v=${videoId}&format=json`;
+
+		fetch(oEmbedUrl)
+			.then(response => response.json())
+			.then(data => {
+				videoContainer.innerHTML = data.html;
+			})
+			.catch(error => {
+				console.error(error);
+			});
+	</script>
+</body>
+</html>
