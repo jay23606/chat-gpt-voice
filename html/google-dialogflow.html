@@ -1,0 +1,27 @@
+<!-- https://jay23606.github.io/chat-gpt-voice/html/google-dialogflow.html -->
+<!--
+To use this HTML page, you'll need to:
+
+1. Obtain an agent ID for your Dialogflow agent from the Dialogflow Console, and replace the `<YOUR_AGENT_ID>` placeholder in the HTML code with your agent ID.
+
+2. Open the HTML file in a web browser. The Dialogflow Messenger widget will appear on the page, allowing users to chat with your bot and receive responses from your agent. Note that you will need to have a valid and active agent to receive responses.
+
+This example uses the Dialogflow Messenger widget, which provides a simple and customizable chat interface for your agent. You can customize the appearance and behavior of the widget by adjusting the various properties of the `df-messenger` tag. For more information, see the Dialogflow Messenger documentation.
+-->
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Google Dialogflow API Example</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <script src="https://www.gstatic.com/dialogflow-console/fast/messenger/bootstrap.js?v=1"></script>
+  <script src="https://www.gstatic.com/dialogflow-console/fast/messenger/form.js?v=1"></script>
+</head>
+<body>
+  <h1>Google Dialogflow API Example</h1>
+  <df-messenger
+    chat-title="My Chatbot"
+    agent-id="YOUR_AGENT_ID"
+    language-code="en"
+  ></df-messenger>
+</body>
+</html>
