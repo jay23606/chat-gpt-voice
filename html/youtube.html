@@ -1,0 +1,93 @@
+<!-- https://jay23606.github.io/chat-gpt-voice/html/youtube.html -->
+
+<!DOCTYPE html>
+<html>
+<head>
+  <title>YouTube Search</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    .videos {
+      display: flex;
+      flex-wrap: nowrap;
+      width: 100vw;
+      height: 180px;
+      overflow-x: auto;
+      margin-right: -10px;
+      margin-left: -10px;
+    }
+    .video {
+      flex: 0 0 auto;
+      width: 270px;
+      height: 133px;
+      margin: 10px;
+    }
+  </style>
+</head>
+<body>
+  <h1>YouTube Search</h1>
+  <p>Enter a search query below and click the search button to find videos on YouTube.</p>
+  <textarea id="searchQuery" rows="3" cols="50"></textarea><br>
+  <button id="searchButton">Search</button><br>
+  <div class="videos"></div>
+  <script>
+    class YouTube {
+      constructor(videosSelector, numVideos) {
+        this.videosSelector = videosSelector || '';
+        this.numVideos = numVideos || 5;
+        this.search = this.search.bind(this);
+        this.renderVideos = this.renderVideos.bind(this);
+      }
+      search(searchQuery) {
+        fetch(`https://cors-anywhere.herokuapp.com/https://www.youtube.com/results?search_query=${encodeURIComponent(searchQuery)}`)
+          .then(response => response.text())
+          .then(data => {
+            // Extract the video IDs from the search results using regex
+            const videoIds = [];
+            const regex = /"videoId":"([^"]+)"/g;
+            let match, count = 0;
+            while (match = regex.exec(data)) {
+              // Add the video ID to the array if it doesn't already exist,
+              // and skip the first video ID
+              if (!videoIds.includes(match[1])) {
+                count++;
+                if (count > 1) {
+                  videoIds.push(match[1]);
+                }
+              }
+              if (videoIds.length >= this.numVideos) {
+                break;
+              }
+            }
+            this.renderVideos(videoIds);
+          })
+          .catch(error => {
+            console.log('Error:', error);
+          });
+      }
+
+      renderVideos(videoIds) {
+        // Embed the videos horizontally in the div
+        const videosDiv = document.querySelector(this.videosSelector);
+        videosDiv.innerHTML = '';
+        for (const videoId of videoIds) {
+          const videoDiv = document.createElement('div');
+          videoDiv.classList.add('video');
+          const iframe = document.createElement('iframe');
+          iframe.src = `https://www.youtube.com/embed/${videoId}`;
+          iframe.frameborder = '0';
+          iframe.allowfullscreen = 'true';
+          videoDiv.appendChild(iframe);
+          videosDiv.appendChild(videoDiv);
+        }
+      }
+    }
+    document.addEventListener('DOMContentLoaded', () => {
+      const youtube = new YouTube('.videos', 5);
+      document.getElementById('searchButton').addEventListener('click', () => {
+        youtube.search(document.getElementById('searchQuery').value);
+      });
+    });
+  </script>
+</body>
+</html>
