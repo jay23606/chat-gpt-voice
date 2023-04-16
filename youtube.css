@@ -1,0 +1,15 @@
+.videos {
+      display: flex;
+      flex-wrap: nowrap !important;
+      width: 100vw;
+      height: 185px;
+      overflow-x: auto;
+      margin-right: -10px;
+      margin-left: -10px;
+    }
+    .video {
+      flex: 0 0 auto;
+      width: 270px;
+      height: 133px;
+      margin: 10px;
+    }
