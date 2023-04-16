@@ -53,5 +53,26 @@ class OpenAI {
             }
         }
     }
+    async listen(btn, output) {
+        const devices = navigator.mediaDevices;
+        if (!devices.getUserMedia) return;
+        let chunks = [];
+        let onSuccess = async stream => {
+            const recorder = new MediaRecorder(stream);
+            btn.onclick = () => btn.textContent === 'Stop' ? (recorder.stop(), btn.textContent = 'Start') : (recorder.start(), btn.textContent = 'Stop');
+            recorder.onstop = async e => {
+                const data = new FormData();
+                data.append('file', new Blob(chunks, { 'type': 'audio/webm' }), "listen.webm")
+                data.append('model', 'whisper-1');
+                const opts = { method: 'POST', headers: { 'Authorization': `Bearer ${this.apiKey}` }, body: data };
+                chunks = [];
+                try { this._resolveOutput((await (await fetch('https://api.openai.com/v1/audio/transcriptions', opts)).json()).text, output); }
+                catch (err) { console.log(err) }
+            }
+            recorder.ondataavailable = e => chunks.push(e.data)
+        }
+        let onError = err => console.log('The following error occured: ' + err)
+        devices.getUserMedia({ audio: true }).then(onSuccess, onError);
+    }
     _resolveOutput = (text, output) => typeof output === 'function' ? output(text) : ((output && output.textContent !== undefined) ? output.textContent = text : (output && (output.value = text)));
 }
