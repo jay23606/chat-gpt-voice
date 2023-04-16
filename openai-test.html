@@ -7,12 +7,12 @@
 </head>
 <body>
     <h1>OpenAI Stream Test</h1>
-    <textarea id="input1" rows="4" cols="50">Tell me a joke about peanuts</textarea>
+    <textarea id="input1" style="width:100%"></textarea>
+    <button id="btn1" style="width:25%">Record</button>
     <div id="output1"></div>
-    <br>
+    <!--<br>
     <textarea id="input2" rows="4" cols="50">Tell me a joke about hotdogs</textarea>
-    <div id="output2"></div>
-
+    <div id="output2"></div>-->
     <!--<script src="openai.js"></script>-->
     <script>
         class OpenAI {
@@ -70,15 +70,40 @@
                     }
                 }
             }
+            async listen(btn, output) {
+                const devices = navigator.mediaDevices;
+                if (!devices.getUserMedia) return;
+                let chunks = [];
+                let onSuccess = async stream => {
+                    const recorder = new MediaRecorder(stream);
+                    btn.onclick = () => btn.textContent === 'Stop' ? (recorder.stop(), btn.textContent = 'Start') : (recorder.start(), btn.textContent = 'Stop');
+                    recorder.onstop = async e => {
+                        const data = new FormData();
+                        data.append('file', new Blob(chunks, { 'type': 'audio/webm' }), "listen.webm")
+                        data.append('model', 'whisper-1');
+                        const opts = { method: 'POST', headers: { 'Authorization': `Bearer ${this.apiKey}` }, body: data };
+                        chunks = [];
+                        try { this._resolveOutput((await (await fetch('https://api.openai.com/v1/audio/transcriptions', opts)).json()).text, output); }
+                        catch (err) { console.log(err) }
+                    }
+                    recorder.ondataavailable = e => chunks.push(e.data)
+                }
+                let onError = err => console.log('The following error occured: ' + err)
+                devices.getUserMedia({ audio: true }).then(onSuccess, onError);
+            }
             _resolveOutput = (text, output) => typeof output === 'function' ? output(text) : ((output && output.textContent !== undefined) ? output.textContent = text : (output && (output.value = text)));
         }
 
         (async () => {
-            const $ = id => document.getElementById(id);
             const token = localStorage.getItem('OPENAI_API_KEY') || (prompt("Please input OpenAI API key (stored in browser cache)", "") || '').trim();
-            const ai1 = new OpenAI(token), ai2 = new OpenAI(token);
-            await ai1.chat($('input1').value, $('output1'));
-            //ai2.chat($('input2').value, $('output2'));
+            const $ = id => document.getElementById(id);
+
+            const ai = new OpenAI(token);
+            await ai.listen($('btn1'), async (spokenText) => {
+                let input1 = $('input1');
+                input1.value = spokenText;
+                ai.chat(input1.value, $('output1'))
+            });
         })();
     </script>
 </body>

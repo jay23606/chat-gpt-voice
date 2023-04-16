@@ -9,30 +9,35 @@
     <button id="record">Record</button>
     <div id="output"></div>
     <script>
-        (() => {
-            const $ = id => document.getElementById(id), record = $('record'), devices = navigator.mediaDevices, constraints = { audio: true };
+        //STT using whisper endpoint, will add to openai.js and the test
+        const listen = async (btn, output) => { 
+            const devices = navigator.mediaDevices;
             if (!devices.getUserMedia) return;
             let chunks = [];
-            let onSuccess = (stream) => {
+            let onSuccess = async stream => {
                 const recorder = new MediaRecorder(stream);
-                record.onclick = () => record.textContent === 'Stop' ? (recorder.stop(), record.textContent = 'Start') : (recorder.start(), record.textContent = 'Stop');
-                recorder.onstop = e => {
-                    if (!(token = localStorage.getItem('OPENAI_API_KEY'))) 
-                        localStorage.setItem('OPENAI_API_KEY', token = prompt("Please input OpenAI API key (stored in browser cache)", ""))
+                btn.onclick = () => btn.textContent === 'Stop' ? (recorder.stop(), btn.textContent = 'Start') : (recorder.start(), btn.textContent = 'Stop');
+                recorder.onstop = async e => {
                     const data = new FormData();
                     data.append('file', new Blob(chunks, { 'type': 'audio/webm' }), "test.webm")
                     data.append('model', 'whisper-1');
                     const opts = { method: 'POST', headers: { 'Authorization': `Bearer ${token}` }, body: data };
                     chunks = [];
-                    fetch('https://api.openai.com/v1/audio/transcriptions', opts)
-                        .then(response => response.json())
-                        .then(data => $('output').textContent = data.text)
-                        .catch(error => console.log('Error:', error));
+                    try { output.textContent = (await (await fetch('https://api.openai.com/v1/audio/transcriptions', opts)).json()).text; }
+                    catch(err) { console.log(err) }
                 }
                 recorder.ondataavailable = e => chunks.push(e.data)
             }
             let onError = err => console.log('The following error occured: ' + err)
-            devices.getUserMedia(constraints).then(onSuccess, onError);
+            devices.getUserMedia({ audio: true }).then(onSuccess, onError);
+        }
+        (async () => {
+            const $ = id => document.getElementById(id), btn = $('record'), output = $('output');
+            window.token = null;
+            if (!(token = localStorage.getItem('OPENAI_API_KEY')))
+                localStorage.setItem('OPENAI_API_KEY', token = prompt("Please input OpenAI API key (stored in browser cache)", ""))
+
+            await listen(btn, output);
         })();
     </script>
 </body>
