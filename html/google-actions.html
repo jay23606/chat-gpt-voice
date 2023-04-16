@@ -1,0 +1,66 @@
+<!-- https://jay23606.github.io/chat-gpt-voice/html/google-actions.html -->
+<!--
+To use this HTML page, you'll need to:
+
+1. Obtain an API key for the Google Actions API from the Google Cloud Console, and replace the `<YOUR_API_KEY>` placeholder in the JavaScript code with your API key.
+
+2. Replace the `<YOUR_USER_ID>`, `<YOUR_CONVERSATION_ID>`, and `<YOUR_CONVERSATION_TOKEN>` placeholders in the JavaScript code with the actual values for your user and conversation.
+
+3. Open the HTML file in a web browser and enter a request. The response from the Google Actions API will be displayed on the page. Note that you will need to have a valid and active conversation to receive a response.
+-->
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Google Actions API Example</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <script src="https://apis.google.com/js/api.js"></script>
+</head>
+<body>
+  <h1>Google Actions API Example</h1>
+  <p>Enter your request:</p>
+  <input id="request" type="text">
+  <button onclick="sendRequest()">Send</button>
+  <p id="response"></p>
+
+  <script>
+    function sendRequest() {
+      const request = document.getElementById('request').value;
+      const user_id = 'YOUR_USER_ID';
+      const conversation_id = 'YOUR_CONVERSATION_ID';
+      const conversation_token = 'YOUR_CONVERSATION_TOKEN';
+
+      gapi.load('client', () => {
+        gapi.client.init({
+          apiKey: 'YOUR_API_KEY',
+          discoveryDocs: ['https://actions.googleapis.com/$discovery/rest?version=v2'],
+        }).then(() => {
+          return gapi.client.request({
+            path: 'https://actions.googleapis.com/v2/conversations:send',
+            method: 'POST',
+            body: {
+              customPushMessage: {
+                userNotification: {
+                  title: 'My Action',
+                  text: request,
+                },
+                target: {
+                  userId: user_id,
+                  intent: '',
+                  locale: '',
+                },
+              },
+              conversationId: conversation_id,
+              conversationToken: conversation_token,
+            },
+          });
+        }).then((response) => {
+          const transcript = response.result.customPushMessage.userNotification.text;
+          document.getElementById('response').innerHTML = transcript;
+        }, (error) => {
+          console.error(error);
+        });
+      });
+    }
+  </script>
+</body>
+</html>
