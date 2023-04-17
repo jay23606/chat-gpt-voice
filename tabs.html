@@ -63,8 +63,17 @@
 </head>
 <body>
     <div style="float:right;background:black">
-        <a class="nilla" href="#">Voice</a><br/>
-        <button onclick="localStorage.clear();alert('localStorage has been cleared')">Logout</button>
+        <button onclick="if(confirm('Click OK if you are sure')){localStorage.clear();alert('localStorage has been cleared')}">Clear localStorage</button>
+        <br />
+        <select class="tab-sel" title="Choose tab for '+' press.">
+            <option value="chat.html">VoiceGPT</option>
+            <option value="nilla.html">NillaGPT</option>
+            <option value="https://en.wikipedia.org">Wiki</option>
+            <option value="https://www.wolframalpha.com">Wolfram</option>
+            <option value="https://netquake.io">Quake</option>
+            <option value="https://krunker.io">Krunker</option>
+        </select>
+        <b style="color:white" title="Only iframe-compatible sites available">tab</b>
     </div>
     <ul class="tabs">
         <li class="tab-sub">-</li>
@@ -81,21 +90,26 @@
         document.addEventListener('selectstart', e => e.preventDefault());
         const proto = HTMLElement.prototype;
         proto.click = function (cb) { this.addEventListener('click', cb) }
+        proto.change = function (cb) { this.addEventListener('change', cb) }
+        
         const $one = sel => document.querySelector(sel);
-        const rand = max => Math.floor(Math.random() * max);
-        let nilla = $one('.nilla');
-        let src = `chat.html?x=${rand(9999)}`, src2 = src;
-        nilla.click(e => {
-            if (nilla.textContent == "Nilla") {
-                nilla.textContent = "Voice";
-                src = src2;
-            } else {
-                nilla.textContent = "Nilla";
-                src = "nilla.html"
-            }
-        });
-        //const $all = sel => document.querySelectorAll(sel);
-        //const $id = id => document.getElementById(id);
+        let src = 'chat.html';
+
+        $one('.tab-sel').change(function(){src = this.options[this.selectedIndex].value});
+
+        //const rand = max => Math.floor(Math.random() * max);
+        //let nilla = $one('.nilla');
+        //let src = `chat.html?x=${rand(9999)}`, src2 = src;
+        //nilla.click(e => {
+        //    if (nilla.textContent == "Nilla") {
+        //        nilla.textContent = "Voice";
+        //        src = src2;
+        //    } else {
+        //        nilla.textContent = "Nilla";
+        //        src = "nilla.html"
+        //    }
+        //});
+
         const tabs = $one('.tabs');
         const iframes = $one('.iframes');
         let params = new URLSearchParams(window.location.search);
