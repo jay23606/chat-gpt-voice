@@ -24,7 +24,8 @@ class YouTube {
                 // Extract the video IDs from the search results using regex
                 const videoIds = [];
                 let regex = /"videoId":"([^"]+)"/g;
-                if (isMobile) regex = /\\x22videoId\\x22:\\x22([^\\x22]+)\\x22/g;
+                if (isMobile) //regex = /\\x22videoId\\x22:\\x22([^\\x22]+)\\x22/g;
+                    regex = /\\x22videoId\\x22:\\x22(\w+)\\x22/g;
                 let match, count = 0;
                 while (match = regex.exec(data)) {
                     // Add the video ID to the array if it doesn't already exist,
