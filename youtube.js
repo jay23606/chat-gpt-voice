@@ -5,28 +5,33 @@
 //    youtube.search(document.getElementById('searchQuery').value);
 //});
 class YouTube {
+
     constructor(videosSelector, numVideos) {
         this.videosSelector = videosSelector || '';
         this.numVideos = numVideos || 5;
         this.search = this.search.bind(this);
         this.renderVideos = this.renderVideos.bind(this);
+        this.isMobile = (/android|webos|iphone|ipad|ipod|blackberry|iemobile|opera mini/i.test(navigator.userAgent.toLowerCase()));
     }
-    //possible alternatives
+    //these seem to work but may create my own proxy
     //cors.zme.ink, cors-anywhere.herokuapp.com
     search(searchQuery, done) {
+        let url = "https://cors.zme.ink/https://www.youtube.com/results?search_query=";
+        if (isMobile) url = "https://cors.zme.ink/https://m.youtube.com/results?search_query="
         fetch(`https://cors.zme.ink/https://www.youtube.com/results?search_query=${encodeURIComponent(searchQuery)}`)
             .then(response => response.text())
             .then(data => {
                 // Extract the video IDs from the search results using regex
                 const videoIds = [];
-                const regex = /"videoId":"([^"]+)"/g;
+                let regex = /"videoId":"([^"]+)"/g;
+                if (isMobile) regex = /\\x22videoId\\x22:\\x22([^\\x22]+)\\x22/g;
                 let match, count = 0;
                 while (match = regex.exec(data)) {
                     // Add the video ID to the array if it doesn't already exist,
                     // and skip the first video ID
                     if (!videoIds.includes(match[1])) {
                         count++;
-                        if (count > 1) videoIds.push(match[1]); // 1st video might be trash
+                        if (count > 1) videoIds.push(match[1]); // 1st video might be trash??
                     }
                     if (videoIds.length >= this.numVideos) break;
                 }
