@@ -58,10 +58,12 @@
             <div id="code-output"></div>
         </fieldset>
     </div>
-
     <script>
-        const body = document.body, $ = id => document.getElementById(id), $$ = s => document.querySelectorAll(s), $el = el => document.createElement(el);
+        const body = document.body, $ = id => document.getElementById(id), $$ = s => document.querySelectorAll(s), $el = el => document.createElement(el),
+            $attr = (a, v) => document.querySelector(`[${a}=${v}]`), videos = $$('.videos')[0],
+            isMobile = (/android|webos|iphone|ipad|ipod|blackberry|iemobile|opera mini/i.test(navigator.userAgent.toLowerCase()));
         HTMLElement.prototype.on = function (e, fn) { this.addEventListener(e, fn) }
+        HTMLElement.prototype.attr = (attribute, value) => value === undefined ? this.getAttribute(attribute) : (this.setAttribute(attribute, value), this);
         const cancelSpeaking = () => { let wasSpeaking = speechSynthesis.speaking; timer.disableSpeaking(); stopStreaming = true; speechSynthesis.cancel(); return wasSpeaking; }
         body.on('beforeunload', () => this.cancelSpeaking());
         let voiceCbx = $('enable-voice'), codeCbx = $('code-cbx'), youtubeCbx = $('youtube-cbx'), submitBtn = $('submit-button'), promptInput = $('prompt-input'),
@@ -70,8 +72,7 @@
         promptInput.focus(); voiceCbx.disabled = false;
         voiceCbx.on('change', e => localStorage.setItem('ENABLE_VOICE', e.target.checked));
         voiceCbx.checked = (localStorage.getItem('ENABLE_VOICE') ?? "true") === "true";
-        //submit also called by clicking on body while Voice checked (after recognition complete) and from fixIt button
-        let videos = $$('.videos')[0];
+        if (isMobile) $attr('for', 'code-cbx').style.display = youtubeCbx.style.display = 'none';
         videos.style.display = 'none';
         submitBtn.on('click', async () => {
             if (youtubeCbx.checked) {
@@ -194,7 +195,7 @@
                     arr.push(word); arr2.push(word);
                     if (/[.;!?]$/.test(word.trimEnd())) { sentences.push(arr); arr = []; }
                     output.textContent = arr2.join('');
-                    window.scrollTo(0, document.body.scrollHeight); //auto scroll while loading
+                    if (!isMobile) window.scrollTo(0, document.body.scrollHeight); //auto scroll while loading
                 }
             }
         } //add accordian-like thingy with using fieldsets/legends
