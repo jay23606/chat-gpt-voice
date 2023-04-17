@@ -41,22 +41,6 @@ class YouTube {
             .catch(error => { console.log('Error:', error) });
     }
 
-    //renderVideos(videoIds) {
-    //    // Embed the videos horizontally in the div
-    //    const videosDiv = document.querySelector(this.videosSelector);
-    //    videosDiv.innerHTML = '';
-    //    for (const videoId of videoIds) {
-    //        const videoDiv = document.createElement('div');
-    //        videoDiv.classList.add('video');
-    //        const iframe = document.createElement('iframe');
-    //        iframe.src = `https://www.youtube.com/embed/${videoId}`;
-    //        iframe.frameborder = '0';
-    //        //iframe.allowfullscreen = 'true';
-    //        iframe.setAttribute('allowfullscreen', 'true');
-    //        videoDiv.appendChild(iframe);
-    //        videosDiv.appendChild(videoDiv);
-    //    }
-    //}
     renderVideos(videoIds) {
         const videosDiv = document.querySelector(this.videosSelector);
         videosDiv.innerHTML = '';
