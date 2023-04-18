@@ -7,7 +7,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <style>
         body { margin: 0; font-size: larger; }
-        iframe { border: none; width: 100%; height: 100vh; }
+        iframe { border: none; width: 100% }
         .tabs { list-style: none; background: black; margin: 0; padding: 0; }
         .tabs li { display: inline-block; padding: 1em 1.5em; background: black; color: #fff; border: 0; border-bottom: 0px !important; border-right: .2em inset #353535; color: #fff; border-radius: 1.1em 1.1em 0 0; cursor: pointer; }
         .tabs li:hover { color: aqua; }
@@ -39,7 +39,6 @@
         <li class="tab-add">+</li>
     </ul>
     <div></div>
-
     <div class="iframes">
         <iframe class="v1"></iframe>
     </div>
@@ -57,6 +56,7 @@
         let params = new URLSearchParams(window.location.search);
         if (params.has("src")) src = params.get("src");
         iframes.children[0].src = src;
+        iframes.children[0].style.height = `calc(100vh - ${$one('.tabs').getBoundingClientRect().bottom + 6}px)`;
         tabs.children[1].style.background = tabFg;
         tabs.click(e => {
             let tab = e.target;
@@ -72,6 +72,7 @@
                 ifrs.forEach(ifr => ifr.style.display = 'none');
                 let ifr = document.createElement('iframe');
                 ifr.className = `v${len}`; ifr.src = src;
+                ifr.style.height = `calc(100vh - ${$one('.tabs').getBoundingClientRect().bottom + 6}px)`;
                 iframes.appendChild(ifr);
             } else if (tab.className === 'tab-sub') {
                 if (len < 3) return;

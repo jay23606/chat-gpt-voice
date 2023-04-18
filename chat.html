@@ -15,16 +15,16 @@
     <script defer src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.62.0/mode/htmlmixed/htmlmixed.min.js"></script>
     <script defer src="youtube.js"></script>
     <style>
-        body,html{margin:0;height:100%;font:large 'Perfect DOS VGA 437',sans-serif;background:black;color:white}
-        label{font-size:medium}
-        textarea{font:large 'Perfect DOS VGA 437',sans-serif;background-color:#B3C0B7}
-        button,.btn{font:'Perfect DOS VGA 437',sans-serif;background:gray;color:white;cursor:pointer}
-        .btn{width:33vw;text-align:center;height:2.5em}
-        legend{text-align:left;cursor:pointer;user-select:none;color:aqua}
-        legend:hover,.btn:hover,#resizer:hover{color: aqua}
-        #editor-wrapper{position:relative;max-height:90vh;overflow:auto;width:100%;max-width:calc(100vw - 50px)}
-        #editor,.CodeMirror{height:100%;width:100%}
-        fieldset,input[type="checkbox"],button,textarea {border-radius: 10px}
+        body, html { margin: 0; height: 100%; font: large 'Perfect DOS VGA 437',sans-serif; background: black; color: white }
+        label { font-size: medium }
+        textarea { font: large 'Perfect DOS VGA 437',sans-serif; background-color: #B3C0B7 }
+        button, .btn { font: 'Perfect DOS VGA 437',sans-serif; background: gray; color: white; cursor: pointer }
+        .btn { width: 33vw; text-align: center; height: 2.5em }
+        legend { text-align: left; cursor: pointer; user-select: none; color: aqua }
+        legend:hover, .btn:hover, #resizer:hover { color: aqua }
+        #editor-wrapper { position: relative; max-height: 90vh; overflow: auto; width: 100%; max-width: calc(100vw - 50px) }
+        #editor, .CodeMirror { height: 100%; width: 100% }
+        fieldset, input[type="checkbox"], button, textarea { border-radius: 10px }
     </style>
 
 </head>
@@ -73,7 +73,6 @@
         promptInput.focus(); voiceCbx.disabled = false;
         voiceCbx.on('change', e => localStorage.setItem('ENABLE_VOICE', e.target.checked));
         voiceCbx.checked = (localStorage.getItem('ENABLE_VOICE') ?? "true") === "true";
-        //if (isMobile) $attr('for', 'code-cbx').style.display = youtubeCbx.style.display = 'none';
         videos.style.display = 'none';
         submitBtn.on('click', async () => {
             if (youtubeCbx.checked) {
@@ -105,8 +104,7 @@
             codeMirror.setValue(r);
             let iframe = $el('iframe'), ifs = iframe.style;
             ifs.border = 0, ifs.width = '100%', iframe.height = `${innerHeight * .9}`, iframe.srcdoc = r, errors = [], $('errors').innerHTML = '';
-            div.appendChild(iframe);
-            iframe.contentWindow.onerror = showErrors;
+            div.appendChild(iframe); iframe.contentWindow.onerror = showErrors;
             if (!fromSave || !confirm("Press OK to also push to GitHub")) return;
             let token2 = localStorage.getItem('GITHUB_API_KEY') || prompt("Please input GitHub API key (requires repo permissions)", "")?.trim();
             if (token2 && token2.length >= 10) localStorage.setItem('GITHUB_API_KEY', token2);
@@ -143,7 +141,7 @@
             recognition.lang = lang;
             //body.onclick = e => ((e.target === body || e.target.id === 'openai-output') && voiceCbx.checked && !cancelSpeaking()) ? recognition.start() : '';
             body.onclick = e => {
-                if (e.target === body || e.target.id === 'openai-output') 
+                if (e.target === body || e.target.id === 'openai-output')
                     if (voiceCbx.checked && !cancelSpeaking()) recognition.start(); else stopStreaming = true;
             };
             recognition.onresult = e => { input.value = e.results[0][0].transcript; if (btn) btn.click() }
