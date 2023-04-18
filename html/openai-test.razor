@@ -1,0 +1,239 @@
+<!-- https://jay23606.github.io/chat-gpt-voice/html/openai-test.razor -->
+Sorry about that. Here is the Blazor WASM code with the JavaScript code converted to C#:
+
+@page "/"
+@using System.Net.Http.Json;
+@using System.Text.Json.Serialization;
+@using System.Threading.Tasks;
+
+<h1>OpenAI Class Test</h1>
+<textarea @bind="@InputText" style="width:100%"></textarea>
+<button @onclick="@Listen" style="width:25%">Record</button>
+<div id="output1">@OutputText</div>
+
+@code {
+    private string InputText { get; set; }
+    private string OutputText { get; set; }
+
+    private class ChatRequest
+    {
+        [JsonPropertyName("model")]
+        public string Model { get; set; }
+        
+        [JsonPropertyName("temperature")]
+        public double Temperature { get; set; }
+        
+        [JsonPropertyName("stream")]
+        public bool Stream { get; set; }
+        
+        [JsonPropertyName("messages")]
+        public Message[] Messages { get; set; }
+    }
+
+    private class Message
+    {
+        [JsonPropertyName("role")]
+        public string Role { get; set; }
+        
+        [JsonPropertyName("content")]
+        public string Content { get; set; }
+    }
+
+    private class ChatResponse
+    {
+        [JsonPropertyName("choices")]
+        public Choice[] Choices { get; set; }
+    }
+
+    private class Choice
+    {
+        [JsonPropertyName("text")]
+        public string Text { get; set; }
+    }
+
+    private async Task Listen()
+    {
+        var apiKey = localStorage.GetItem<string>("OPENAI_API_KEY") ?? (await JSRuntime.InvokeAsync<string>("prompt", "Please input OpenAI API key (stored in browser cache)", "")).Trim();
+
+        var ai = new OpenAI(apiKey);
+        await ai.Listen(async (spokenText) =>
+        {
+            InputText = spokenText;
+            OutputText = await ai.Chat(InputText);
+            StateHasChanged();
+        });
+    }
+
+    private class OpenAI
+    {
+        private readonly string _apiKey;
+        private readonly string _baseUrl = "https://api.openai.com/v1";
+        private readonly string _model = "gpt-3.5-turbo";
+        private readonly bool _stream = true;
+        private readonly double _temp = 0.8;
+        private readonly int _maxHistory = 2;
+        private readonly bool _stopStreaming = true;
+        private readonly bool _enableSentences = true;
+        private readonly string[] _system = new string[0];
+        private readonly string[] _history = new string[0];
+        private readonly string[] _sentences = new string[0];
+
+        public OpenAI(string apiKey)
+        {
+            _apiKey = apiKey;
+        }
+
+        public async Task<string> Chat(string inputText)
+        {
+            var request = new ChatRequest()
+            {
+                Model = _model,
+                Temperature = _temp,
+                Stream = _stream,
+                Messages = new Message[] { new Message() { Role = "user", Content = inputText } },
+            };
+
+            var headers = new Dictionary<string, string>()
+            {
+                { "Content-Type", "application/json" },
+                { "Authorization", $"Bearer {_apiKey}" },
+            };
+            if (_stream)
+            {
+                headers.Add("Transfer-Encoding", "chunked");
+            }
+
+            using var client = new HttpClient();
+            using var response = await client.PostAsJsonAsync($"{_baseUrl}/chat/completions", request, headers);
+            response.EnsureSuccessStatusCode();
+            var responseBody = await response.Content.ReadAsStringAsync();
+
+            if (!_stream)
+            {
+                var chatResponse = JsonSerializer.Deserialize<ChatResponse>(responseBody);
+                return chatResponse.Choices[0].Text;
+            }
+
+            var outputText = new StringBuilder();
+            var lines = responseBody.Split('\n');
+            foreach (var line in lines)
+            {
+                if (_stopStreaming)
+                {
+                    break;
+                }
+                if (string.IsNullOrWhiteSpace(line) || line.StartsWith(":"))
+                {
+                    continue;
+                }
+                if (line.StartsWith("data: [DONE]"))
+                {
+                    if (_enableSentences)
+                    {
+                        _sentences.Append(_history);
+                    }
+                    _history.Append(new Message() { Role = "user", Content = inputText });
+                    _history.Append(new Message() { Role = "assistant", Content = outputText.ToString() });
+                    while (_history.Length > _maxHistory << 1)
+                    {
+                        _history.RemoveAt(0);
+                        _history.RemoveAt(0);
+                    }
+                    return outputText.ToString();
+                }
+
+                var chatResponse = JsonSerializer.Deserialize<ChatResponse>(line.Substring(6));
+                if (chatResponse?.Choices?.Length > 0)
+                {
+                    var text = chatResponse.Choices[0].Text ?? "";
+                    if (!string.IsNullOrWhiteSpace(text))
+                    {
+                        if (_enableSentences)
+                        {
+                            _sentences.Append(text);
+                        }
+                        _history.Append(text);
+                        if (_enableSentences && text.TrimEnd().EndsWithAny('.', ';', '!', '?'))
+                        {
+                            _sentences.Append(_history);
+                            _history.Clear();
+                        }
+                        outputText.Append(text);
+                    }
+                }
+            }
+
+            return outputText.ToString();
+        }
+
+        public async Task Listen(Func<string, Task> onResult)
+        {
+            var apiKey = localStorage.GetItem<string>("OPENAI_API_KEY") ?? (await JSRuntime.InvokeAsync<string>("prompt", "Please input OpenAI API key (stored in browser cache)", "")).Trim();
+
+            var constraints = new MediaStreamConstraints() { Audio = true };
+            var stream = await JSRuntime.InvokeAsync<MediaStream>("navigator.mediaDevices.getUserMedia", constraints);
+
+            await using var audioStream = new MediaRecorder(stream);
+            var button = await JSRuntime.InvokeAsync<ElementReference>("eval", "document.getElementById('btn1')");
+            button.SetProperty("textContent", "Start");
+
+            void HandleDataAvailable(DelegateRuntimeHandle handle, object[] args)
+            {
+                var data = (byte[])args[0];
+                audioStream.Chunks.Add(data);
+            }
+
+            void HandleStop(DelegateRuntimeHandle handle, object[] args)
+            {
+                var formData = new FormData();
+                formData.Append("file", new Blob(audioStream.Chunks.ToArray(), "audio/webm"), "listen.webm");
+                formData.Append("model", "whisper-1");
+
+                var headers = new Dictionary<string, string>()
+                {
+                    { "Authorization", $"Bearer {_apiKey}" },
+                };
+
+                using var client = new HttpClient();
+                using var response = await client.PostAsync($"{_baseUrl}/audio/transcriptions", new StreamContent(formData), headers);
+                response.EnsureSuccessStatusCode();
+                var responseBody = await response.Content.ReadAsStringAsync();
+                var chatResponse = JsonSerializer.Deserialize<ChatResponse>(responseBody);
+                await onResult(chatResponse.Choices[0].Text);
+            }
+
+            var dataAvailableHandle = DotNetObjectReference.Create(this).Value;
+            var stopHandle = DotNetObjectReference.Create(this).Value;
+            await JSRuntime.InvokeAsync<object>("audio.initRecorder", button, HandleDataAvailable, dataAvailableHandle, HandleStop, stopHandle);
+        }
+
+        private class MediaRecorder
+        {
+            public List<byte[]> Chunks { get; } = new List<byte[]>();
+
+            private readonly MediaStream _stream;
+            private readonly MediaRecorderOptions _options;
+
+            public MediaRecorder(MediaStream stream, MediaRecorderOptions options = null)
+            {
+                _stream = stream;
+                _options = options;
+            }
+
+            public void Start()
+            {
+                _stream.StartRecording(_options);
+            }
+
+            public void Stop()
+            {
+                _stream.StopRecording();
+            }
+        }
+
+        private class MediaRecorderOptions
+        {
+            public string MimeType { get; set; } = "audio/webm";
+        }
+    }
+}
