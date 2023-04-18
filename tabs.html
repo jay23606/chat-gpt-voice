@@ -6,58 +6,15 @@
     <link rel="manifest" href="manifest.json" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <style>
-        body {
-            margin: 0;
-            font-size: larger;
-        }
-
-        iframe {
-            border: none;
-            width: 100%;
-            height: 100vh;
-        }
-
-        .tabs {
-            list-style: none;
-            background: black;
-            margin: 0;
-            padding: 0;
-        }
-
-            .tabs li {
-                display: inline-block;
-                padding: 1em 1.5em;
-                background: black;
-                color: #fff;
-                border: 0;
-                border-bottom: 0px !important;
-                border-right: .2em inset #353535;
-                color: #fff;
-                border-radius: 1.1em 1.1em 0 0;
-                cursor: pointer;
-            }
-
-                .tabs li:hover {
-                    color: aqua;
-                }
-
-        .text, .wiki {
-            display: none;
-        }
-
-        .tab-add, .tab-sub {
-            border-right: 0 !important;
-        }
-
-        .tabs li b {
-            float: right
-        }
-
-        .nilla {
-            text-decoration: none;
-            color: white;
-            font-size: large;
-        }
+        body { margin: 0; font-size: larger; }
+        iframe { border: none; width: 100%; height: 100vh; }
+        .tabs { list-style: none; background: black; margin: 0; padding: 0; }
+        .tabs li { display: inline-block; padding: 1em 1.5em; background: black; color: #fff; border: 0; border-bottom: 0px !important; border-right: .2em inset #353535; color: #fff; border-radius: 1.1em 1.1em 0 0; cursor: pointer; }
+        .tabs li:hover { color: aqua; }
+        .text, .wiki { display: none; }
+        .tab-add, .tab-sub { border-right: 0 !important; }
+        .tabs li b { float: right }
+        .nilla { text-decoration: none; color: white; font-size: large; }
     </style>
     <link rel="icon" href="data:,">
 </head>
@@ -72,6 +29,7 @@
             <option value="https://www.wolframalpha.com">Wolfram</option>
             <option value="https://netquake.io">Quake</option>
             <option value="https://krunker.io">Krunker</option>
+            <option value="https://instant.io">File Transfer</option>
         </select>
         <b style="color:white" title="Only iframe-compatible sites available">tab</b>
     </div>
@@ -91,25 +49,9 @@
         const proto = HTMLElement.prototype;
         proto.click = function (cb) { this.addEventListener('click', cb) }
         proto.change = function (cb) { this.addEventListener('change', cb) }
-        
         const $one = sel => document.querySelector(sel);
         let src = 'chat.html';
-
         $one('.tab-sel').change(function(){src = this.options[this.selectedIndex].value});
-
-        //const rand = max => Math.floor(Math.random() * max);
-        //let nilla = $one('.nilla');
-        //let src = `chat.html?x=${rand(9999)}`, src2 = src;
-        //nilla.click(e => {
-        //    if (nilla.textContent == "Nilla") {
-        //        nilla.textContent = "Voice";
-        //        src = src2;
-        //    } else {
-        //        nilla.textContent = "Nilla";
-        //        src = "nilla.html"
-        //    }
-        //});
-
         const tabs = $one('.tabs');
         const iframes = $one('.iframes');
         let params = new URLSearchParams(window.location.search);
