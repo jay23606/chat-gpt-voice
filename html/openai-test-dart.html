@@ -1,0 +1,32 @@
+<!-- https://jay23606.github.io/chat-gpt-voice/html/openai-test-dart.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>OpenAI Class Test</title>
+</head>
+<body>
+    <h1>OpenAI Class Test</h1>
+    <textarea id="input1" style="width:100%"></textarea>
+    <button id="btn1" style="width:25%">Record</button>
+    <div id="output1"></div>
+    <script src="openai.js"></script>
+    <script>
+      void (() async {
+        final apiKey = window.localStorage.getItem('OPENAI_API_KEY') ??
+            (window.prompt(
+                    'Please input OpenAI API key (stored in browser cache)',
+                    '') ??
+                '')
+                .trim();
+        final element = (id) => document.getElementById(id);
+        final openAI = OpenAI(apiKey);
+        await openAI.listen(element('btn1'), (t) async {
+          final input = element('input1');
+          input.value = t;
+          element("output1").innerHtml = await openAI.chat(input.value);
+        });
+      })();
+    </script>
+</body>
+</html>
