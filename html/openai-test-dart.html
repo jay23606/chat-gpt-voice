@@ -10,15 +10,180 @@
     <textarea id="input1" style="width:100%"></textarea>
     <button id="btn1" style="width:25%">Record</button>
     <div id="output1"></div>
-    <script src="openai.js"></script>
+    <!--<script src="openai.js"></script>-->
+    <script src="https://dart-sdk.appspot.com/stable/dart_sdk.js"></script>
+    <script src="https://dart-sdk.appspot.com/stable/dart_library.js"></script>
     <script>
-      void (() async {
+        import 'dart:convert';
+        import 'dart:html' as html;
+
+        class OpenAI {
+          String apiKey;
+          String baseUrl;
+          Map<String, String> headers;
+          String model;
+          bool stream;
+          double temp;
+          int maxHistory;
+          bool stopStreaming;
+          bool enableSentences;
+          List<dynamic> system;
+          List<dynamic> history;
+          List<dynamic> sentences;
+
+          OpenAI(this.apiKey,
+              {this.baseUrl = 'https://api.openai.com/v1',
+              this.headers,
+              this.model = 'gpt-3.5-turbo',
+              this.stream = false,
+              this.temp = 0.8,
+              this.maxHistory = 2,
+              this.stopStreaming = false,
+              this.enableSentences = false,
+              this.system = const [],
+              this.history = const [],
+              this.sentences = const []});
+
+          Future<dynamic> models() async {
+            final response =
+                await html.HttpRequest.request('${baseUrl}/models', method: 'GET', headers: headers);
+            final data = jsonDecode(response.responseText);
+            return data['data'];
+          }
+
+          Future<dynamic> chat(String t) async {
+            final messages = [
+              ...system,
+              ...history,
+              {'role': 'user', 'content': t}
+            ];
+
+            final body = {
+              'model': model,
+              'temperature': temp,
+              'stream': stream,
+              'messages': messages,
+            };
+
+            final response = await html.HttpRequest.request('${baseUrl}/chat/completions',
+                method: 'POST',
+                headers: {
+                  ...headers,
+                  if (stream) 'Transfer-Encoding': 'chunked',
+                },
+                sendData: jsonEncode(body));
+
+            if (!stream) {
+              final choices = jsonDecode(response.responseText)['choices'] as List<dynamic>;
+              return choices[0]['text'];
+            }
+
+            final n = <dynamic>[];
+            final a = <dynamic>[];
+            final reader = response.response.body.getReader();
+
+            reader.onError((t) => html.window.console.log(t));
+
+            while (true) {
+              final result = await reader.read();
+              if (result.done) return;
+
+              final decoder = utf8.decoder;
+              final text = decoder.convert(result.value, allowMalformed: true);
+              final chunks = text.split('\n');
+
+              for (final chunk in chunks) {
+                if (stopStreaming) return;
+                if (chunk.isEmpty || chunk.startsWith(':')) continue;
+                if (chunk == 'data: [DONE]') {
+                  if (enableSentences) sentences.add(n);
+                  history.addAll([
+                    {'role': 'user', 'content': t},
+                    {'role': 'assistant', 'content': a.join()}
+                  ]);
+                  if (history.length > (maxHistory << 1)) {
+                    history.removeAt(0);
+                    history.removeAt(0);
+                  }
+                  return;
+                }
+                final json = jsonDecode(chunk.substring(6));
+                final choices = json['choices'] as List<dynamic>;
+                if (choices.isEmpty) continue;
+                final delta = choices[0]['delta'];
+                final u = delta == null ? '' : delta['content'] ?? '';
+                if (u.isEmpty) continue;
+                if (enableSentences) n.add(u);
+                a.add(u);
+                if (enableSentences && RegExp(r'[.;!?]$').hasMatch(u.trimRight())) {
+                  sentences.add(n);
+                  n.clear();
+                }
+              }
+            }
+          }
+
+          Future<dynamic> listen(html.ButtonElement t, Function e) async {
+            final s = html.window.navigator.mediaDevices;
+            if (s.getUserMedia == null) return;
+
+            final i = <List<int>>[];
+
+            void n(html.MediaStream s) async {
+              final n = html.MediaRecorder(s);
+              t.onClick.listen((_) {
+                if (t.text == 'Stop') {
+                  n.stop();
+                  t.text = 'Start';
+                } else {
+                  n.start();
+                  t.text = 'Stop';
+                }
+              });
+
+              n.onStop.listen((t) async {
+                final formData = html.FormData();
+                formData.appendBlob('file', html.Blob(i, 'audio/webm'), 'listen.webm');
+                formData.append('model', 'whisper-1');
+                final response = await html.HttpRequest.request(
+                    'https://api.openai.com/v1/audio/transcriptions',
+                    method: 'POST',
+                    headers: {'Authorization': 'Bearer $apiKey'},
+                    sendData: formData);
+
+                final data = jsonDecode(response.responseText);
+                e(data['text']);
+              });
+
+              n.onData.listen((t) => i.add(t.data));
+            }
+
+            void a(html.MediaStreamError t) {
+              html.window.console.log('The following error occured: $t');
+            }
+
+            try {
+              final stream = await s.getUserMedia(audio: true);
+              n(stream);
+            } catch (error) {
+              html.window.console.log(error);
+            }
+          }
+
+          void _resolveOutput(t, e) {
+            if (e is Function) {
+              e(t);
+            } else if (e is html.Element && e.nodeType == html.Node.ELEMENT_NODE) {
+              e.innerHtml = t;
+            } else if (e is html.TextAreaElement) {
+              e.value = t;
+            }
+          }
+        }
+
+        void (() async {
         final apiKey = window.localStorage.getItem('OPENAI_API_KEY') ??
-            (window.prompt(
-                    'Please input OpenAI API key (stored in browser cache)',
-                    '') ??
-                '')
-                .trim();
+            (window.prompt('Please input OpenAI API key (stored in browser cache)','') ?? '').trim();
         final element = (id) => document.getElementById(id);
         final openAI = OpenAI(apiKey);
         await openAI.listen(element('btn1'), (t) async {
@@ -26,7 +191,7 @@
           input.value = t;
           element("output1").innerHtml = await openAI.chat(input.value);
         });
-      })();
+        })();
     </script>
 </body>
 </html>
