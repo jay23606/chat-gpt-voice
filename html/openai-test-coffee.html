@@ -1,0 +1,154 @@
+<!-- https://jay23606.github.io/chat-gpt-voice/html/openai-test-coffee.html -->
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>OpenAI Class Test</title>
+</head>
+<body>
+    <h1>OpenAI Class Test</h1>
+    <textarea id="input1" style="width:100%"></textarea>
+    <button id="btn1" style="width:25%">Record</button>
+    <div id="output1"></div>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/coffee-script/1.9.2/coffee-script.min.js"></script>
+    <script type="text/coffeescript">
+      class OpenAI
+        constructor: (apiKey, options={}) ->
+          @apiKey = apiKey
+          @baseUrl = options.baseUrl || "https://api.openai.com/v1"
+          @headers = options.headers || {"Content-Type": "application/json", Authorization: `Bearer #{@apiKey}`}
+          @model = options.model || "gpt-3.5-turbo"
+          @stream = options.stream !== false
+          @temp = options.temp || 0.8
+          @max_history = options.max_history || 2
+          @stopStreaming = options.stopStreaming || false
+          @enableSentences = options.enableSentences || false
+          @system = options.system || []
+          @history = []
+          @sentences = []
+
+        models: async () ->
+          t = await fetch("#{@baseUrl}/models", method: "GET", headers: @headers)
+          return await t.json().data
+
+        chat: async (input, outputCallback=(t) -> console.log t) ->
+          body = JSON.stringify(
+            model: @model,
+            temperature: @temp,
+            stream: @stream,
+            messages: [...@system, ...@history, role: "user", content: input]
+          )
+          res = await fetch("#{@baseUrl}/chat/completions", method: "POST", headers:
+            {...@headers, ...(@stream ? {"Transfer-Encoding": "chunked"} : {})},
+            body: body
+          )
+          
+          if !@stream
+            return await res.json().choices[0].text
+
+          chunks = []
+          output = []
+          reader = res.body.getReader()
+
+          reader.onerror = (err) ->
+            console.log err
+
+          while true
+            {done, value} = await reader.read()
+            if done
+              if @enableSentences
+                @sentences.push(chunks)
+
+              @history.push({role: "user", content: input}, {role: "assistant", content: output.join("")})
+
+              if @history.length > (@max_history << 1)
+                @history.shift()
+                @history.shift()
+
+              return
+
+            textDecoder = new TextDecoder
+            chunk = textDecoder.decode(value, stream: true)
+            lines = chunk.split("\n")
+
+            for line in lines
+              continue if line.length === 0 or line.startsWith(":")
+              if line === "data: [DONE]"
+                if @enableSentences
+                  @sentences.push(chunks)
+
+                @history.push({role: "user", content: input}, {role: "assistant", content: output.join("")})
+
+                if @history.length > (@max_history << 1)
+                  @history.shift()
+                  @history.shift()
+
+                @_resolveOutput(output.join(""), outputCallback)
+                return
+
+              data = JSON.parse(line.substring(6)).choices?.[0]?.delta?.content || ""
+              if data.length > 0
+                chunks.push(data)
+
+                if @enableSentences and /[.;!?]$/.test(data.trimEnd())
+                  @sentences.push(chunks)
+                  chunks = []
+
+                output.push(data)
+                @_resolveOutput(output.join(""), outputCallback)
+
+        listen: async (btn, outputCallback=(t) -> console.log t) ->
+          mediaDevices = navigator.mediaDevices
+          return if mediaDevices.getUserMedia is undefined
+
+          chunks = []
+          handleData = (event) ->
+            chunks.push(event.data)
+
+          startRecording = () ->
+            if btn.textContent === "Stop"
+              recorder.stop()
+              btn.textContent = "Start"
+            else
+              chunks = []
+              mediaDevices.getUserMedia(audio: true).then((stream) ->
+                recorder = new MediaRecorder(stream)
+                recorder.onstop = async (event) ->
+                  formData = new FormData
+                  formData.append("file", new Blob(chunks, type: "audio/webm"), "listen.webm")
+                  formData.append("model", "whisper-1")
+                  options = method: "POST", headers: {Authorization: `Bearer #{@apiKey}`}, body: formData
+
+                  try
+                    @_resolveOutput((await (await fetch("#{@baseUrl}/audio/transcriptions", options)).json()).text, outputCallback)
+                  catch (error)
+                    console.log error
+                recorder.start()
+                btn.textContent = "Stop"
+              ).catch((error) ->
+                console.log "The following error occured: #{error}"
+              )
+
+          btn.onclick = startRecording
+          
+        _resolveOutput: (text, output) ->
+          if typeof output === "function"
+            output(text)
+          else if output?.textContent?
+            output.textContent = text
+          else if output?
+            output.value = text
+
+      (async () ->
+        apiKey = localStorage.getItem("OPENAI_API_KEY") || (prompt("Please input OpenAI API key (stored in browser cache)", "") || "").trim()
+        openai = new OpenAI(apiKey)
+        await openai.listen(document.getElementById("btn1"), async (text) ->
+          input = document.getElementById("input1")
+          input.value = text
+          await openai.chat(input.value, document.getElementById("output1"))
+        )
+      )()
+    </script>
+</body>
+</html>
