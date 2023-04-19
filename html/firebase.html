@@ -1,0 +1,86 @@
+<!-- https://jay23606.github.io/chat-gpt-voice/html/firebase.html -->
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Firebase Authentication and Database Example</title>
+</head>
+<body>
+
+  <h1>Welcome to our website</h1>
+
+  <!-- Sign in with Google button -->
+  <button onclick="signInWithGoogle()">Sign in with Google</button>
+
+  <!-- User profile form -->
+  <div id="profile-form" style="display: none;">
+    <h2>Complete your profile</h2>
+    <label for="name">Name:</label>
+    <input type="text" id="name">
+    <br>
+    <label for="like-cookies">Do you like cookies?</label>
+    <input type="checkbox" id="like-cookies">
+    <br>
+    <button onclick="saveUserProfile()">Save Profile</button>
+  </div>
+
+  <!-- Firebase SDK -->
+  <script src="https://www.gstatic.com/firebasejs/8.6.1/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.6.1/firebase-auth.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.6.1/firebase-database.js"></script>
+
+  <script>
+    var firebaseConfig = {
+      // Your Firebase configuration
+    };
+    firebase.initializeApp(firebaseConfig);
+
+    // Authentication
+    function signInWithGoogle() {
+      var provider = new firebase.auth.GoogleAuthProvider();
+      firebase.auth().signInWithPopup(provider)
+      .then(function(result) {
+        var user = result.user;
+        console.log("Signed in as " + user.displayName);
+
+        // Show user profile form
+        document.getElementById("profile-form").style.display = "block";
+      })
+      .catch(function(error) {
+        console.log(error);
+      });
+    }
+
+    // User profile form
+    function saveUserProfile() {
+      var user = firebase.auth().currentUser;
+      var name = document.getElementById("name").value;
+      var likeCookies = document.getElementById("like-cookies").checked;
+
+      // Save user profile to database
+      firebase.database().ref('users/' + user.uid).set({
+        name: name,
+        likeCookies: likeCookies
+      })
+      .then(function() {
+        console.log("Profile saved successfully");
+      })
+      .catch(function(error) {
+        console.log(error);
+      });
+    }
+
+    // Listen for authentication state changes
+    firebase.auth().onAuthStateChanged(function(user) {
+      if (user) {
+        console.log("Signed in as " + user.displayName);
+
+        // Show user profile form
+        document.getElementById("profile-form").style.display = "block";
+      }
+    });
+  </script>
+
+</body>
+</html>
