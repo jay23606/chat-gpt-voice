@@ -31,9 +31,18 @@
   <script src="https://www.gstatic.com/firebasejs/8.6.1/firebase-database.js"></script>
 
   <script>
+    const apiKey = localStorage.getItem('FIREBASE_API_KEY') || (prompt("Please input firebase API key (stored in browser cache)", "") || '').trim();
+            
     var firebaseConfig = {
-      // Your Firebase configuration
+      apiKey: apiKey,
+      authDomain: "jay23606-d5163.firebaseapp.com",
+      projectId: "jay23606-d5163",
+      storageBucket: "jay23606-d5163.appspot.com",
+      messagingSenderId: "666593974590",
+      appId: "1:666593974590:web:f8074232120884ba41b46f",
+      measurementId: "G-J7Z78DJS0R"
     };
+    
     firebase.initializeApp(firebaseConfig);
 
     // Authentication
