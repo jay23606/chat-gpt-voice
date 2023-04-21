@@ -4,7 +4,7 @@
 <html>
   <head>
     <meta charset="UTF-8" />
-    <title>React Todo List with Delete</title>
+    <title>React Todo List with Delete and Edit</title>
   </head>
   <body>
     <div id="root"></div>
@@ -15,9 +15,12 @@
       class TodoList extends React.Component {
         constructor(props) {
           super(props);
-          this.state = { todos: [], newTodo: "" };
+          this.state = { todos: [], newTodo: "", editingTodo: false, editIndex: null };
           this.handleAddTodo = this.handleAddTodo.bind(this);
           this.handleDeleteTodo = this.handleDeleteTodo.bind(this);
+          this.handleEditTodo = this.handleEditTodo.bind(this);
+          this.handleSaveTodo = this.handleSaveTodo.bind(this);
+          this.handleCancelEdit = this.handleCancelEdit.bind(this);
         }
 
         handleAddTodo() {
@@ -35,27 +38,83 @@
           this.setState({ todos: newTodos });
         }
 
+        handleEditTodo(index) {
+          const { todos } = this.state;
+          const editingTodo = true;
+          const editIndex = index;
+          const editTodo = todos[index];
+          this.setState({ newTodo: editTodo, editingTodo, editIndex });
+        }
+
+        handleSaveTodo() {
+          const { newTodo, todos, editIndex } = this.state;
+
+          if (newTodo.trim() !== "") {
+            const newTodos = [...todos];
+            newTodos[editIndex] = newTodo.trim();
+            this.setState({ todos: newTodos, newTodo: "", editingTodo: false, editIndex: null });
+          }
+        }
+
+        handleCancelEdit() {
+          this.setState({ newTodo: "", editingTodo: false, editIndex: null });
+        }
+
         render() {
-          const { todos, newTodo } = this.state;
+          const { todos, newTodo, editingTodo, editIndex } = this.state;
 
           return (
             <div>
               <h1>Todo List</h1>
-              <input
-                type="text"
-                value={newTodo}
-                onChange={(event) =>
-                  this.setState({ newTodo: event.target.value })
-                }
-              />
-              <button onClick={this.handleAddTodo}>Add</button>
+              {editingTodo ? (
+                <div>
+                  <input
+                    type="text"
+                    value={newTodo}
+                    onChange={(event) =>
+                      this.setState({ newTodo: event.target.value })
+                    }
+                  />
+                  <button onClick={this.handleSaveTodo}>Save</button>
+                  <button onClick={this.handleCancelEdit}>Cancel</button>
+                </div>
+              ) : (
+                <div>
+                  <input
+                    type="text"
+                    value={newTodo}
+                    onChange={(event) =>
+                      this.setState({ newTodo: event.target.value })
+                    }
+                  />
+                  <button onClick={this.handleAddTodo}>Add</button>
+                </div>
+              )}
               <ul>
                 {todos.map((todo, index) => (
                   <li key={index}>
-                    {todo}
-                    <button onClick={() => this.handleDeleteTodo(index)}>
-                      Delete
-                    </button>
+                    {editingTodo && index === editIndex ? (
+                      <input
+                        type="text"
+                        value={newTodo}
+                        onChange={(event) =>
+                          this.setState({ newTodo: event.target.value })
+                        }
+                      />
+                    ) : (
+                      <span>{todo}</span>
+                    )}
+                    {editingTodo && index === editIndex ? (
+                      <div>
+                        <button onClick={this.handleSaveTodo}>Save</button>
+                        <button onClick={this.handleCancelEdit}>Cancel</button>
+                      </div>
+                    ) : (
+                      <div>
+                        <button onClick={() => this.handleEditTodo(index)}>Edit</button>
+                        <button onClick={() => this.handleDeleteTodo(index)}>Delete</button>
+                      </div>
+                    )}
                   </li>
                 ))}
               </ul>
