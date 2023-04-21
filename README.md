@@ -49,7 +49,7 @@ I've also added [fieldset](https://developer.mozilla.org/en-US/docs/Web/HTML/Ele
 
 If you look under the html folder in the gh-pages branch you will find some apps this app has written
 
-If you click the YouTube checkbox, you can now embed five YouTube videos based on the prompt, in addition to the text and audio experience 
+If you click the YouTube checkbox, you can now embed five YouTube videos based on the prompt and I've also added a dropdown to allow a larger variety of tab destinations
 
 <strong>Inspiration:</strong>
 
