@@ -1,0 +1,58 @@
+<!-- https://jay23606.github.io/chat-gpt-voice/html/react-todo.html -->
+
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Todo List</title>
+</head>
+<body>
+  <div id="root"></div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@babel/standalone@7.15.0/babel.min.js"></script>
+  <script type="text/babel">
+    class TodoList extends React.Component {
+      constructor(props) {
+        super(props);
+        this.state = {
+          todos: [],
+          newTodo: ''
+        };
+        this.handleInputChange = this.handleInputChange.bind(this);
+        this.handleSubmit = this.handleSubmit.bind(this);
+      }
+
+      handleInputChange(event) {
+        this.setState({newTodo: event.target.value});
+      }
+
+      handleSubmit(event) {
+        event.preventDefault();
+        const newTodos = [...this.state.todos, this.state.newTodo];
+        this.setState({todos: newTodos, newTodo: ''});
+      }
+
+      render() {
+        const todos = this.state.todos.map((todo, index) => (
+          <li key={index}>{todo}</li>
+        ));
+
+        return (
+          <div>
+            <h1>Todo List</h1>
+            <form onSubmit={this.handleSubmit}>
+              <input type="text" value={this.state.newTodo} onChange={this.handleInputChange} />
+              <button type="submit">Add Todo</button>
+            </form>
+            <ul>
+              {todos}
+            </ul>
+          </div>
+        );
+      }
+    }
+
+    ReactDOM.render(<TodoList />, document.getElementById('root'));
+  </script>
+</body>
+</html>
