@@ -13,10 +13,12 @@
     <script defer src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.62.0/mode/javascript/javascript.min.js"></script>
     <script defer src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.62.0/mode/css/css.min.js"></script>
     <script defer src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.62.0/mode/htmlmixed/htmlmixed.min.js"></script>
+    <script defer src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.62.0/mode/jsx/jsx.min.js"></script>
+    <script defer src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.62.2/mode/clike/clike.js"></script>
     <script defer src="youtube.js"></script>
     <style>
         body, html { margin: 0; height: 100%; font: large 'Perfect DOS VGA 437',sans-serif; background: black; color: white }
-        label { font-size: medium }
+        label { font-size: medium; white-space: nowrap }
         textarea { font: large 'Perfect DOS VGA 437',sans-serif; background-color: #B3C0B7 }
         button, .btn { font: 'Perfect DOS VGA 437',sans-serif; background: gray; color: white; cursor: pointer }
         .btn { width: 33vw; text-align: center; height: 2.5em }
@@ -45,6 +47,36 @@
     <div id="save-div" style="display: none; text-align: right">
         <fieldset>
             <legend>Code Editor</legend>
+            <div style="text-align:left">
+                <table style="width:100%">
+                    <tr>
+                    <td style="width:10%">
+                        <table>
+                            <tr>
+                                <td>
+                                    <label>
+                                        <input type="radio" name="mode" value="htmlmixed" checked>HTML/JS
+                                    </label>
+                                </td>
+                                <td>
+                                    <label>
+                                        <input type="radio" name="mode" value="jsx">JSX
+                                    </label>
+                                </td>
+                                <td>
+                                    <label>
+                                        <input type="radio" name="mode" value="text/x-csharp">C#
+                                    </label>
+                                </td>
+                            </tr>
+                        </table>
+                    </td>
+                    <td style="width:95%">
+                        <input type="text" style="width:100%" value="Write html only,no explanation.Put script tag in body.Use lamdas to save space" id="system-input" />
+                    </td>
+                    </tr>
+                </table>
+            </div>
             <div id="editor-wrapper">
                 <div style="text-align: left; width: 100%; height:100%" id="editor"></div>
             </div>
@@ -166,7 +198,7 @@
         //streaming response from openAI completions endpoint
         const openAiSend = async (input, output, token) => {
             let system = [];
-            if (codeCbx.checked) system.push({ "role": "system", "content": "Write html only,no explanation.Put script tag in body.Use lamdas to save space" });
+            if (codeCbx.checked) system.push({ "role": "system", "content": $('system-input').value });
             const response = await fetch('https://api.openai.com/v1/chat/completions', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
@@ -209,6 +241,9 @@
             $('errors').innerHTML = `<div style="color:red;font-size:medium">${errors.join('<br>')}</div><button onclick="fixIt()">Fix it for me!</button>`;
         } //add button to quickly ask AI to fix the errors
         let fixIt = () => (promptInput.value = `Help! I am getting error(s):\n${errors.join('\n')}`, submitBtn.click());
+        //lets you change language syntax highlighting between html/js, jsx, and c# currently
+        $$('input[name="mode"]').forEach(radio => radio.addEventListener('change', event => codeMirror.setOption("mode", event.target.value)));
+
     </script>
 </body>
 </html>
