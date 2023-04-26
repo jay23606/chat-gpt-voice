@@ -1,0 +1,143 @@
+<!-- https://jay23606.github.io/chat-gpt-voice/html/hashset.html -->
+
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>HashSet Example</title>
+  </head>
+  <body>
+    <h1>HashSet Example</h1>
+    
+    <label for="input">Add a string to the HashSet:</label>
+    <input type="text" id="input">
+    <button onclick="addToHashSet()">Add to HashSet</button>
+    
+    <br><br>
+    
+    <label for="check">Check if a string is in the HashSet:</label>
+    <input type="text" id="check">
+    <button onclick="checkInHashSet()">Check in HashSet</button>
+    
+    <br><br>
+    
+    <p>HashSet contents:</p>
+    <ul id="hashSet"></ul>
+    
+    <script>
+      // Define the HashSet class
+      class HashSet {
+        constructor() {
+          // Initialize the hash table with 10 buckets
+          this.buckets = new Array(10).fill(null).map(() => []);
+          this.size = 0;
+        }
+        
+        // Adds an element to the HashSet
+        add(element) {
+          // Calculate the hash code for the element
+          const hashCode = this.getHashCode(element);
+          
+          // Find the bucket corresponding to the hash code
+          const bucket = this.buckets[hashCode % this.buckets.length];
+          
+          // Check if the element already exists in the bucket
+          for (const existingElement of bucket) {
+            if (existingElement === element) {
+              return;
+            }
+          }
+          
+          // Add the element to the bucket and increment the size
+          bucket.push(element);
+          this.size++;
+          
+          // Resize the hash table if the load factor exceeds 0.75
+          if (this.size > this.buckets.length * 0.75) {
+            this.resize();
+          }
+        }
+        
+        // Checks if an element is in the HashSet
+        has(element) {
+          // Calculate the hash code for the element
+          const hashCode = this.getHashCode(element);
+          
+          // Find the bucket corresponding to the hash code
+          const bucket = this.buckets[hashCode % this.buckets.length];
+          
+          // Search through the linked list in the bucket to find the element
+          for (const existingElement of bucket) {
+            if (existingElement === element) {
+              return true;
+            }
+          }
+          
+          // Return false if the element is not found
+          return false;
+        }
+        
+        // Gets the hash code for an element
+        getHashCode(element) {
+          let hashCode = 0;
+          
+          for (const char of element) {
+            // Multiply the current hash code by 31 and add the character code
+            hashCode = hashCode * 31 + char.charCodeAt(0);
+          }
+          
+          return hashCode;
+        }
+        
+        // Resizes the hash table by doubling the number of buckets
+        resize() {
+          const oldBuckets = this.buckets;
+          this.buckets = new Array(oldBuckets.length * 2).fill(null).map(() => []);
+          this.size = 0;
+          
+          for (const bucket of oldBuckets) {
+            for (const element of bucket) {
+              this.add(element);
+            }
+          }
+        }
+      }
+      
+      // Create a new HashSet instance
+      const hashSet = new HashSet();
+      
+      // Add a new element to the HashSet when the button is clicked
+      function addToHashSet() {
+        const input = document.getElementById('input');
+        const value = input.value;
+        input.value = '';
+        
+        hashSet.add(value);
+        
+        // Update the displayed HashSet contents
+        const hashSetList = document.getElementById('hashSet');
+        const listItem = document.createElement('li');
+        listItem.innerText = value;
+        hashSetList.appendChild(listItem);
+      }
+      
+      // Check if an element is in the HashSet when the button is clicked
+      function checkInHashSet() {
+        const check = document.getElementById('check');
+        const value = check.value;
+        check.value = '';
+        
+        const isInHashSet = hashSet.has(value);
+        
+        // Display the result of the search
+        const resultSpan = document.getElementById('searchResult');
+        if (isInHashSet) {
+          resultSpan.innerText = `${value} is in the HashSet.`;
+        } else {
+          resultSpan.innerText = `${value} is not in the HashSet.`;
+        }
+      }
+    </script>
+    
+    <p id="searchResult"></p>
+  </body>
+</html>
