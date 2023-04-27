@@ -1,0 +1,41 @@
+<!-- https://jay23606.github.io/chat-gpt-voice/html/RNN.html -->
+
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Simple RNN Example</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@3.1.0"></script>
+    <script>
+      // Define training data
+      const input = ["cat", "dog", "bird"];
+      const output = ["fish", "bone", "worm"];
+
+      // Define model architecture
+      const model = tf.sequential();
+      model.add(tf.layers.simpleRNN({
+        units: 3,
+        inputShape: [1, 3]
+      }));
+      model.add(tf.layers.dense({units: 1}));
+
+      // Compile the model
+      model.compile({
+        optimizer: "sgd",
+        loss: "meanSquaredError"
+      });
+
+      // Train the model
+      const xs = tf.tensor3d(input.map(word => [[word.charCodeAt(0)], [word.charCodeAt(1)], [word.charCodeAt(2)]]));
+      const ys = tf.tensor2d(output.map(word => [word.charCodeAt(0)]));
+      model.fit(xs, ys, {epochs: 100});
+
+      // Predict the next word
+      const inputWord = "fox";
+      const nextChar = String.fromCharCode(Math.round(model.predict(tf.tensor3d([[[inputWord.charCodeAt(0)], [inputWord.charCodeAt(1)], [inputWord.charCodeAt(2)]]])).dataSync()[0]));
+      console.log("Next word: " + inputWord + nextChar);
+    </script>
+  </head>
+  <body>
+    <h1>Simple RNN Example</h1>
+  </body>
+</html>
