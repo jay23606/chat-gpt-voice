@@ -8,7 +8,7 @@
     <script>
       // Define training data
       const input = ["cat", "dog", "bird"];
-      const output = ["fish", "bone", "worm"];
+      const output = ["f", "b", "w"];
 
       // Define model architecture
       const model = tf.sequential();
@@ -25,14 +25,21 @@
       });
 
       // Train the model
-      const xs = tf.tensor3d(input.map(word => [[word.charCodeAt(0)], [word.charCodeAt(1)], [word.charCodeAt(2)]]));
+      const xs = tf.transpose(tf.tensor3d(input.map(word => [[word.charCodeAt(0)], [word.charCodeAt(1)], [word.charCodeAt(2)]])), [1, 0, 2]);
       const ys = tf.tensor2d(output.map(word => [word.charCodeAt(0)]));
       model.fit(xs, ys, {epochs: 100});
 
       // Predict the next word
       const inputWord = "fox";
-      const nextChar = String.fromCharCode(Math.round(model.predict(tf.tensor3d([[[inputWord.charCodeAt(0)], [inputWord.charCodeAt(1)], [inputWord.charCodeAt(2)]]])).dataSync()[0]));
+      const inputWordCharCode = [[inputWord.charCodeAt(0)], [inputWord.charCodeAt(1)], [inputWord.charCodeAt(2)]];
+      const inputTensor = tf.tensor3d(inputWordCharCode, [1, 3, 1]);
+      const transposedInputTensor = tf.transpose(inputTensor, [0, 2, 1]);
+      const prediction = model.predict(transposedInputTensor);
+      const roundedPrediction = prediction.dataSync();
+      const nextCharCode = Math.round(roundedPrediction[0]);
+      const nextChar = String.fromCharCode(nextCharCode);
       console.log("Next word: " + inputWord + nextChar);
+
     </script>
   </head>
   <body>
