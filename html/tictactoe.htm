@@ -1,0 +1,151 @@
+<!-- https://jay23606.github.io/chat-gpt-voice/html/tictactoe.htm -->
+
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Tic Tac Toe</title>
+	<style>
+		body {
+			font-family: Arial, sans-serif;
+			text-align: center;
+		}
+
+		table {
+			margin: 20px auto;
+			border-collapse: collapse;
+		}
+
+		td {
+			width: 100px;
+			height: 100px;
+			text-align: center;
+			vertical-align: middle;
+			border: 2px solid black;
+			font-size: 50px;
+			cursor: pointer;
+		}
+
+		.x {
+			color: red;
+		}
+
+		.o {
+			color: blue;
+		}
+
+		.play-again {
+			display: none;
+			margin-top: 20px;
+			padding: 10px 20px;
+			background-color: green;
+			color: white;
+			font-size: 20px;
+			border: none;
+			cursor: pointer;
+		}
+	</style>
+</head>
+<body>
+	<h1>Tic Tac Toe</h1>
+	<table>
+		<tr>
+			<td></td>
+			<td></td>
+			<td></td>
+		</tr>
+		<tr>
+			<td></td>
+			<td></td>
+			<td></td>
+		</tr>
+		<tr>
+			<td></td>
+			<td></td>
+			<td></td>
+		</tr>
+	</table>
+	<div id="message"></div>
+	<button class="play-again">Play Again</button>
+	<script>
+		const cells = document.querySelectorAll('td');
+		const message = document.querySelector('#message');
+		const playAgainBtn = document.querySelector('.play-again');
+		let xTurn = true;
+		let gameEnded = false;
+
+		const checkWin = () => {
+			const board = [
+				cells[0].textContent, cells[1].textContent, cells[2].textContent,
+				cells[3].textContent, cells[4].textContent, cells[5].textContent,
+				cells[6].textContent, cells[7].textContent, cells[8].textContent
+			];
+
+			const winningCombos = [
+				[0, 1, 2],
+				[3, 4, 5],
+				[6, 7, 8],
+				[0, 3, 6],
+				[1, 4, 7],
+				[2, 5, 8],
+				[0, 4, 8],
+				[2, 4, 6]
+			];
+
+			for (let i = 0; i < winningCombos.length; i++) {
+				const [a, b, c] = winningCombos[i];
+				if (board[a] && board[a] === board[b] && board[b] === board[c]) {
+					return board[a];
+				}
+			}
+
+			if (board.every(cell => cell !== '')) {
+				return 'tie';
+			}
+
+			return null;
+		};
+
+		const endGame = (player) => {
+			gameEnded = true;
+			message.textContent = player ? `${player} wins!` : 'Tie game!';
+			playAgainBtn.style.display = 'block';
+		};
+
+		const handleClick = (e) => {
+			if (gameEnded) {
+				return;
+			}
+
+			if (e.target.textContent !== '') {
+				return;
+			}
+
+			e.target.textContent = xTurn ? 'X' : 'O';
+			e.target.classList.add(xTurn ? 'x' : 'o');
+
+			const winner = checkWin();
+			if (winner) {
+				endGame(winner);
+			} else {
+				xTurn = !xTurn;
+				message.textContent = `${xTurn ? 'X' : 'O'}'s turn`;
+			}
+		};
+
+		const resetGame = () => {
+			cells.forEach(cell => {
+				cell.textContent = '';
+				cell.classList.remove('x', 'o');
+			});
+
+			xTurn = true;
+			gameEnded = false;
+			playAgainBtn.style.display = 'none';
+			message.textContent = "X's turn";
+		};
+
+		cells.forEach(cell => cell.addEventListener('click', handleClick));
+		playAgainBtn.addEventListener('click', resetGame);
+	</script>
+</body>
+</html>
