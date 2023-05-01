@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width">
+  <title></title>
+  <style>
+    #gh-tbl{
+      height:25vh;
+      overflow:auto
+    }
+    #gh-file{
+      height:63vh;
+      width:100%
+    }
+    .gh #gh-input{width:100%}
+    .gh table{
+        width:100%
+    }
+  </style>
+  <script src="github.js"></script>
+</head>
+<body>
+    <div class="gh">
+        <table>
+            <tr>
+                <td><button id="gh-up-btn">â§</button></td>
+                <td style="width:99%">
+                    <input type="text" value="jay23606" id="gh-input" spellcheck="false" placeholder="Enter GitHub owner name and press enter" />
+                </td>
+            </tr>
+        </table>
+        <div id="gh-tbl">
+            <div id="gh-upload-div" style="display:none">
+                <input type="file" id="gh-upload-input" multiple />
+            </div>
+            <table></table>
+        </div>
+        <div id="gh-file-div">
+            <textarea id="gh-file" spellcheck="false"></textarea>
+            <button id="gh-file-del">Delete</button>
+            <button style="float:right" id="gh-file-save">Save</button>
+        </div>
+    </div>
+<script>
+    $ = id => document.getElementById(id), $el = (el, attrs = {}) => Object.assign(document.createElement(el), attrs);
+    $$ = sel => document.querySelectorAll(sel);
+    HTMLElement.prototype.on = function (e, fn) { this.addEventListener(e, fn) };
+    String.prototype.toPrettyDate = function(locale = 'en-US') {
+        const date = new Date(this);
+        const options = { month: 'numeric', day: 'numeric', year: 'numeric', hour: 'numeric', minute: 'numeric', hour12: true };
+        return date.toLocaleString(locale, options);
+    };
+
+    const ghInput = $('gh-input'), tbl = $$('#gh-tbl table')[0], ghFile = $('gh-file'), ghUpBtn = $('gh-up-btn'),
+        ghFileSave = $('gh-file-save'), ghFileDel = $('gh-file-del'), ghFileDiv = $('gh-file-div'),
+        ghUploadDiv = $('gh-upload-div'), ghUploadInput = $('gh-upload-input');
+
+    //lets get the tab key working the way we might expect it to
+    ghFile.on('keydown', (e) => {
+        if (e.key === 'Tab') {
+            e.preventDefault();
+            const start = ghFile.selectionStart;
+            const end = ghFile.selectionEnd;
+            const value = ghFile.value;
+            ghFile.value = value.substring(0, start) + '    ' + value.substring(end);
+            ghFile.selectionStart = ghFile.selectionEnd = start + 4;
+        }
+    });
+
+    ghInput.on('keydown', (e) => {
+        if(e.key==='Enter') handleEnter();
+    });
+
+    const handleEnter = () =>{
+        ghFile.value = '';
+        ghFileDiv.style.display = 'none';
+        const arr = ghInput.value.split('/');
+        const junk = arr.length===2 && arr[1].trim()=='';
+        if (arr.length === 1 || junk) {
+            if (junk) ghInput.value = arr[0];
+            fetchRepos()
+        } else fetchDirs();
+        
+    }
+
+    ghUpBtn.on('click', e => {
+        const arr = ghInput.value.split('/');
+        if (arr.length < 2) return;
+        ghInput.value = arr.slice(0, arr.length - 1).join('/');
+        handleEnter();
+    });
+
+    const parseGitHubInput = () => {
+        const token = localStorage.getItem('GITHUB_API_KEY') || (prompt("Please input GITHUB_API_KEY", "") || '').trim();
+        token && token.length >= 10 && localStorage.setItem('GITHUB_API_KEY', token);
+        const [owner, repo, ...pathArr] = ghInput.value.split('/');
+        const path = pathArr.join('/');
+        return { token, owner, repo, path };
+    };
+
+    const fetchRepos = () => {
+        ghUploadDiv.style.display = 'none';
+        clearGhTbl();
+        const { token, owner } = parseGitHubInput();
+        if (!owner) return;
+
+        const query = `
+      query {
+        user(login: "${owner}") {
+          repositories(first: 100, orderBy: {field: NAME, direction: ASC}) {
+            edges {
+              node {
+                name
+                updatedAt
+              }
+            }
+          }
+        }
+      }
+    `;
+        fetch("https://api.github.com/graphql", {
+            method: "POST",
+            headers: {Authorization: `Bearer ${token}`,"Content-Type": "application/json"},
+            body: JSON.stringify({ query })
+        })
+        .then(response => response.json()).then(data => {
+            const repos = data.data.user.repositories.edges;
+            repos.forEach(repo => {
+                repo = repo.node;
+                const newRow = tbl.insertRow();
+                let newCell = newRow.insertCell();
+                let newText = $el('A', {href: '#', textContent: repo.name});
+                newText.on('click', e => {
+                    ghInput.value += `/${repo.name}`; 
+                    fetchDirs();
+                }); 
+                newCell.appendChild(newText);
+                newCell = newRow.insertCell();
+                newText = document.createTextNode(repo.updatedAt.toPrettyDate());
+                newCell.appendChild(newText);
+            });
+        }).catch(error => console.error(error));
+    }
+
+    const clearGhTbl = () => $$('#gh-tbl table tr').forEach(r=>r.remove());
+
+    const fetchDirs = () => {
+        ghUploadDiv.style.display = 'block';
+        const { token, owner, repo, path } = parseGitHubInput();
+        console.log({ token, owner, repo, path });
+
+        const query = `
+    query($owner: String!, $repo: String!) {
+      repository(owner: $owner, name: $repo) {
+        nameWithOwner
+        object(expression: "HEAD:${path}") {
+          ... on Tree {
+            entries {
+              name
+              path
+              type
+              lineCount
+            }
+          }
+        }
+      }
+    }
+    `;
+      //console.log(query);
+        fetch('https://api.github.com/graphql', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json','Authorization': `Bearer ${token}`},
+            body: JSON.stringify({
+                query: query,
+                variables: { owner, repo }
+            })
+        }).then(response => response.json()).then(data => {
+            //console.log(data);
+            const entries = data.data.repository.object.entries;
+            entries.sort((a, b) => a.name.localeCompare(b.name));
+            const nameWithOwner = data.data.repository.nameWithOwner
+            //console.log(entries);
+            clearGhTbl();
+            entries.forEach(entry => {
+                const newRow = tbl.insertRow();
+                let newCell = newRow.insertCell();
+                let newText = $el('A', {href: '#', textContent: entry.name});
+                newText.on('click', e=>{
+                    ghInput.value = `${nameWithOwner}/${entry.path}`; 
+                    if (entry.type === 'blob') fetchFile();
+                    else if(entry.type === 'tree') fetchDirs();
+                });
+                newCell.appendChild(newText);
+                //show line count since modified date is hard to get here
+                newCell = newRow.insertCell();
+                newText = document.createTextNode(entry.lineCount);
+                newCell.appendChild(newText);
+            });
+        }).catch(error => {
+            //we must be trying to create a new file if this error is caught
+            ghFileDiv.style.display = 'block';
+            ghFile.focus();
+            ghFileSave.onclick = async () => {
+                const gh = new GitHub(token, owner, repo, 'main');
+                await gh.createOrUpdateFile(path, ghFile.value, "added using github-explorer");
+                ghUpBtn.click();
+            };
+            ghFileDel.onclick = async () => {
+                const gh = new GitHub(token, owner, repo, 'main');
+                await gh.deleteFile(path, "deleted using github-explorer");
+                ghUpBtn.click();
+            };
+        });
+
+    }
+
+    const fetchFile = () => {
+        const { token, owner, repo, path } = parseGitHubInput();
+
+        fetch(`https://api.github.com/repos/${owner}/${repo}/contents/${path}`, {headers: { Authorization: `Bearer ${token}` }})
+        .then(response => response.json()).then(data => {
+            ghFile.value = atob(data.content)
+            ghFile.focus();
+            ghFileDiv.style.display = 'block';
+            ghFileSave.onclick = async () => {
+                const gh = new GitHub(token, owner, repo, 'main');
+                await gh.createOrUpdateFile(path, ghFile.value, "updated using github-explorer");
+                ghUpBtn.click();
+            };
+            ghFileDel.onclick = async () => {
+                const gh = new GitHub(token, owner, repo, 'main');
+                await gh.deleteFile(path, "deleted using github-explorer");
+                ghUpBtn.click();
+            };
+        })
+        .catch(error => console.error(error));
+    }
+
+    const uploadFiles = async (input) => {
+        const { token, owner, repo, path } = parseGitHubInput();
+        const files = input.files;
+        for (const file of files) {
+            const reader = new FileReader();
+            reader.onload = async (e) => {
+                const contents = e.target.result;
+                const gh = new GitHub(token, owner, repo, 'main');
+                console.log((path === '') ? file.name : path + '/' + file.name)
+                await gh.createOrUpdateFile((path === '') ? file.name : path + '/' + file.name, contents, "uploaded using github-explorer");
+            };
+            reader.readAsBinaryString(file);
+            await new Promise(resolve => setTimeout(resolve, 150));
+        }
+        setTimeout(() => { input.value = ''; handleEnter() }, 150);
+    }
+    ghUploadInput.on('change', async () => await uploadFiles(ghUploadInput));
+    handleEnter();
+</script>
+</body>
+</html>
