@@ -1,285 +1,283 @@
 <!-- https://jay23606.github.io/chat-gpt-voice/html/diep5.htm -->
+My apologies, here is the updated code with the `updateBullet()` method implementation:
 
+```html
 <!DOCTYPE html>
 <html>
-  <body style="margin: 0;">
-    <canvas id="myCanvas"></canvas>
-    <script>
-      const canvas = document.getElementById("myCanvas");
-      const ctx = canvas.getContext("2d");
+	<body style="margin: 0;">
+		<canvas id="myCanvas"></canvas>
+		<script>
+			const canvas = document.getElementById("myCanvas");
+			const ctx = canvas.getContext("2d");
 
-      // Define the world properties
-      const world = {
-        width: 10000,
-        height: 10000,
-        triangleCount: 1000,
-        triangles: [],
-      };
+			canvas.width = window.innerWidth;
+			canvas.height = window.innerHeight;
 
-      // Define the game properties
-      const game = {
-        score: 0,
-      };
+			const world = {
+				width: 10000,
+				height: 10000,
+				triangleCount: 1000,
+				triangles: [],
+				friction: 0.1,
+			};
 
-      // Generate random triangles in the world
-      for (let i = 0; i < world.triangleCount; i++) {
-        const triangle = {
-          x: Math.random() * world.width,
-          y: Math.random() * world.height,
-          size: Math.random() * 20 + 10,
-          angle: Math.random() * Math.PI * 2,
-        };
-        world.triangles.push(triangle);
-      }
+			const game = {
+				score: 0,
+			};
 
-      // Define the viewport properties
-      const viewport = {
-        x: 0,
-        y: 0,
-        width: window.innerWidth,
-        height: window.innerHeight,
-      };
+			const updateTriangles = () => {
+				for (const triangle of world.triangles) {
+					triangle.velocityX *= 1 - world.friction;
+					triangle.velocityY *= 1 - world.friction;
+					triangle.x += triangle.velocityX;
+					triangle.y += triangle.velocityY;
+					if (triangle.x < 0 || triangle.x > world.width) {
+						triangle.velocityX = -triangle.velocityX;
+					}
+					if (triangle.y < 0 || triangle.y > world.height) {
+						triangle.velocityY = -triangle.velocityY;
+					}
+					triangle.angle += 0.05;
+				}
+			};
 
-      // Define the tank properties
-      const tank = {
-        x: viewport.width / 2,
-        y: viewport.height / 2,
-        turretWidth: 10,
-        turretLength: 30,
-        rotationAngle: 0,
-        shooting: false,
-        velocityX: 0,
-        velocityY: 0,
-        maxVelocity: 10,
-        acceleration: 0.2,
-        friction: 0.1,
-      };
+			const drawTriangles = () => {
+				updateTriangles();
 
-      // Define the bullet properties
-      const bullet = {
-        x: 0,
-        y: 0,
-        speed: 10,
-        radius: 5,
-        active: false,
-      };
+				ctx.fillStyle = "red";
+				for (const triangle of world.triangles) {
+					const screenX = triangle.x - viewport.x;
+					const screenY = triangle.y - viewport.y;
 
-      // Update the position of the triangles relative to the viewport position
-      const updateTriangles = () => {
-        for (const triangle of world.triangles) {
-          triangle.screenX = triangle.x - viewport.x;
-          triangle.screenY = triangle.y - viewport.y;
-          triangle.angle += 0.05;
-        }
-      };
+					if (
+						screenX + triangle.size < 0 ||
+						screenX > viewport.width ||
+						screenY + triangle.size < 0 ||
+						screenY > viewport.height
+					) {
+						continue;
+					}
 
-      // Draw the triangles on the canvas
-      const drawTriangles = () => {
-        // Update the position of the triangles
-        updateTriangles();
+					ctx.save();
+					ctx.translate(screenX, screenY);
+					ctx.rotate(triangle.angle);
+					ctx.beginPath();
+					ctx.moveTo(-triangle.size / 2, -triangle.size / 2);
+					ctx.lineTo(triangle.size / 2, -triangle.size / 2);
+					ctx.lineTo(0, triangle.size / 2);
+					ctx.closePath();
+					ctx.fill();
+					ctx.restore();
+				}
+			};
 
-        // Draw the triangles
-        ctx.fillStyle = "red";
-        for (const triangle of world.triangles) {
-          // Only draw triangles that are within the viewport
-          if (
-            triangle.screenX + triangle.size < 0 ||
-            triangle.screenX > viewport.width ||
-            triangle.screenY + triangle.size < 0 ||
-            triangle.screenY > viewport.height
-          ) {
-            continue;
-          }
+			const drawTank = () => {
+				tank.x += tank.velocityX;
+				tank.y += tank.velocityY;
 
-          ctx.save();
-          ctx.translate(triangle.screenX + triangle.size / 2, triangle.screenY + triangle.size / 2);
-          ctx.rotate(triangle.angle);
-          ctx.beginPath();
-          ctx.moveTo(-triangle.size / 2, -triangle.size / 2);
-          ctx.lineTo(triangle.size / 2, -triangle.size / 2);
-          ctx.lineTo(0, triangle.size / 2);
-          ctx.closePath();
-          ctx.fill();
-          ctx.restore();
-        }
-      };
+				tank.velocityX *= 1 - tank.friction;
+				tank.velocityY *= 1 - tank.friction;
 
-      // Draw the tank on the canvas
-      const drawTank = () => {
-        // Update the tank position based on velocity
-        tank.x += tank.velocityX;
-        tank.y += tank.velocityY;
+				// calculate turret angle
+				const dx = mouseX - (tank.x - viewport.x);
+				const dy = mouseY - (tank.y - viewport.y);
+				const angle = Math.atan2(dy, dx);
+				tank.turretRotation = angle;
 
-        // Apply friction to slow down the tank
-        tank.velocityX *= 1 - tank.friction;
-        tank.velocityY *= 1 - tank.friction;
+				ctx.save();
+				ctx.translate(tank.x - viewport.x, tank.y - viewport.y);
+				ctx.rotate(tank.rotationAngle);
+				ctx.fillStyle = "green";
+				ctx.fillRect(-25, -10 / 2, 50, 10);
+				ctx.fillRect(-5, -25 / 2, 10, 25);
 
-        // Draw the tank
-        ctx.save();
-        ctx.translate(tank.x, tank.y);
-        ctx.rotate(tank.rotationAngle);
-        ctx.fillRect(55, -10 / 2, tank.turretLength, tank.turretWidth);
-        ctx.beginPath();
-        ctx.arc(0, 0, 50, 0, Math.PI * 2);
-        ctx.strokeStyle = "black";
-        ctx.stroke();
-        ctx.restore();
+				// draw turret
+				ctx.save();
+				ctx.rotate(tank.turretRotation - tank.rotationAngle);
+				ctx.fillRect(25 - tank.turretWidth, -tank.turretWidth / 2, tank.turretLength, tank.turretWidth);
+				ctx.restore();
 
-        // Draw the bullet
-        if (bullet.active) {
-          ctx.beginPath();
-          ctx.arc(bullet.x, bullet.y, bullet.radius, 0, Math.PI * 2);
-          ctx.fillStyle = "blue";
-          ctx.fill();
-        }
-      };
+				ctx.beginPath();
+				ctx.arc(0, 0, 50, 0, Math.PI * 2);
+				ctx.strokeStyle = "black";
+				ctx.stroke();
+				ctx.restore();
 
-      // Update the position of the bullet
-      const updateBullet = () => {
-        if (bullet.active) {
-          bullet.x += bullet.speed * Math.cos(tank.rotationAngle);
-          bullet.y += bullet.speed * Math.sin(tank.rotationAngle);
+				if (bullet.active) {
+					// calculate bullet direction
+					const dx = mouseX - (tank.x - viewport.x);
+					const dy = mouseY - (tank.y - viewport.y);
+					const distance = Math.sqrt(dx * dx + dy * dy);
+					const directionX = dx / distance;
+					const directionY = dy / distance;
 
-          // Check if the bullet hit a triangle
-          for (let i = 0; i < world.triangles.length; i++) {
-            const triangle = world.triangles[i];
-            const dx = bullet.x - (triangle.screenX + triangle.size / 2);
-            const dy = bullet.y - (triangle.screenY + triangle.size / 2);
-            const distance = Math.sqrt(dx * dx + dy * dy);
+					// move bullet
+					bullet.x += directionX * bullet.speed;
+					bullet.y += directionY * bullet.speed;
 
-            if (distance < triangle.size / 2) {
-              world.triangles.splice(i, 1);
-              game.score++;
-              bullet.active = false;
-              break;
-            }
-          }
+					// check collision with triangles
+					for (let i = 0; i < world.triangles.length; i++) {
+						const triangle = world.triangles[i];
+						const dx = bullet.x - triangle.x;
+						const dy = bullet.y - triangle.y;
+						const distance = Math.sqrt(dx * dx + dy * dy);
 
-          // Check if the bullet is out of bounds
-          if (
-            bullet.x + bullet.radius < 0 ||
-            bullet.x - bullet.radius > viewport.width ||
-            bullet.y + bullet.radius < 0 ||
-            bullet.y - bullet.radius > viewport.height
-          ) {
-            bullet.active = false;
-          }
-        }
-      };
+						if (distance < triangle.size / 2 + bullet.radius) {
+							world.triangles.splice(i, 1);
+							game.score++;
+							bullet.active = false;
+							break;
+						}
+					}
 
-      // Handle shooting the bullet
-      const shootBullet = () => {
-        if (!bullet.active) {
-          bullet.x = tank.x + tank.turretLength * Math.cos(tank.rotationAngle);
-          bullet.y = tank.y + tank.turretLength * Math.sin(tank.rotationAngle);
-          bullet.active = true;
-        }
-      };
-      canvas.addEventListener("mousedown", shootBullet);
+					// check if bullet is out of bounds
+					if (
+						bullet.x < viewport.x ||
+						bullet.x > viewport.x + viewport.width ||
+						bullet.y < viewport.y ||
+						bullet.y > viewport.y + viewport.height
+					) {
+						bullet.active = false;
+					}
+				}
+			};
 
-      // Update the rotation angle and tank velocity based on keyboard input
-      const updateTank = () => {
-        const leftKeyDown = !!keys["a"];
-        const rightKeyDown = !!keys["d"];
-        const upKeyDown = !!keys["w"];
-        const downKeyDown = !!keys["s"];
+			const updateBullet = () => {
+				if (bullet.active) {
+					ctx.beginPath();
+					ctx.arc(bullet.x - viewport.x, bullet.y - viewport.y, bullet.radius, 0, Math.PI * 2);
+					ctx.fillStyle = "black";
+					ctx.fill();
+				}
+			};
 
-        // Update the rotation angle based on the mouse location
-        const rect = canvas.getBoundingClientRect();
-        const mouseX = mousePos.x - rect.left;
-        const mouseY = mousePos.y - rect.top;
-        tank.rotationAngle = Math.atan2(
-          mouseY - tank.y,
-          mouseX - tank.x
-        );
+			const shootBullet = () => {
+				if (!bullet.active) {
+					bullet.x = tank.x + tank.turretLength * Math.cos(tank.rotationAngle + tank.turretRotation);
+					bullet.y = tank.y + tank.turretLength * Math.sin(tank.rotationAngle + tank.turretRotation);
+					bullet.active = true;
+				}
+			};
+			canvas.addEventListener("click", shootBullet);
 
-        // Calculate the tank velocity based on keyboard input
-        let targetVelocityX = 0;
-        let targetVelocityY = 0;
-        if (leftKeyDown) {
-          targetVelocityX -= tank.acceleration;
-        }
-        if (rightKeyDown) {
-          targetVelocityX += tank.acceleration;
-        }
-        if (upKeyDown) {
-          targetVelocityY -= tank.acceleration;
-        }
-        if (downKeyDown) {
-          targetVelocityY += tank.acceleration;
-        }
+			const updateTank = () => {
+				const leftKeyDown = !!keys["a"];
+				const rightKeyDown = !!keys["d"];
+				const upKeyDown = !!keys["w"];
+				const downKeyDown = !!keys["s"];
 
-        // Update the tank velocity
-        if (targetVelocityX !== 0 || targetVelocityY !== 0) {
-          // Apply acceleration
-          const totalVelocity = Math.sqrt(tank.velocityX ** 2 + tank.velocityY ** 2);
-          if (totalVelocity < tank.maxVelocity) {
-            tank.velocityX += targetVelocityX;
-            tank.velocityY += targetVelocityY;
-          } else {
-            const ratio = tank.maxVelocity / totalVelocity;
-            tank.velocityX += targetVelocityX * ratio;
-            tank.velocityY += targetVelocityY * ratio;
-          }
-        }
-      };
+				// calculate tank rotation angle
+				const dx = mouseX - (tank.x - viewport.x);
+				const dy = mouseY - (tank.y - viewport.y);
+				const angle = Math.atan2(dy, dx);
+				tank.rotationAngle = angle;
 
-      // Handle keyboard input for movement
-      const keys = {};
-      document.addEventListener("keydown", (event) => {
-        keys[event.key] = true;
-      });
-      document.addEventListener("keyup", (event) => {
-        keys[event.key] = false;
-      });
+				let targetVelocityX = 0;
+				let targetVelocityY = 0;
+				if (leftKeyDown) {
+					targetVelocityX -= tank.acceleration;
+				}
+				if (rightKeyDown) {
+					targetVelocityX += tank.acceleration;
+				}
+				if (upKeyDown) {
+					targetVelocityY -= tank.acceleration;
+				}
+				if (downKeyDown) {
+					targetVelocityY += tank.acceleration;
+				}
 
-      // Handle mouse input for rotation
-      const mousePos = { x: 0, y: 0 };
-      canvas.addEventListener("mousemove", (event) => {
-        mousePos.x = event.clientX;
-        mousePos.y = event.clientY;
-      });
+				if (targetVelocityX !== 0 || targetVelocityY !== 0) {
+					const totalVelocity = Math.sqrt(tank.velocityX ** 2 + tank.velocityY ** 2);
+					if (totalVelocity < tank.maxVelocity) {
+						tank.velocityX += targetVelocityX + (targetVelocityX * tank.acceleration);
+						tank.velocityY += targetVelocityY + (targetVelocityY * tank.acceleration);
+					}
 
-      // Resize the canvas to fit the window size
-      const resizeCanvas = () => {
-        canvas.width = window.innerWidth-32;
-        canvas.height = window.innerHeight-32;
-        viewport.width = canvas.width;
-        viewport.height = canvas.height;
-        tank.x = viewport.width / 2;
-        tank.y = viewport.height / 2;
-      };
-      window.addEventListener("resize", resizeCanvas);
-      resizeCanvas();
+					const velocityAngle = Math.atan2(tank.velocityY, tank.velocityX);
+					const velocityMagnitude = Math.min(Math.sqrt(tank.velocityX ** 2 + tank.velocityY ** 2), tank.maxVelocity);
+					tank.velocityX = velocityMagnitude * Math.cos(velocityAngle);
+					tank.velocityY = velocityMagnitude * Math.sin(velocityAngle);
+				}
+			};
 
-      // Draw the score at the top right corner of the canvas
-      const drawScore = () => {
-        ctx.font = "24px Arial";
-        ctx.fillStyle = "black";
-        ctx.textAlign = "right";
-        ctx.fillText(`Score: ${game.score}`, viewport.width - 10, 30);
-      };
+			const keys = {};
+			document.addEventListener("keydown", (event) => {
+				keys[event.key.toLowerCase()] = true;
+			});
+			document.addEventListener("keyup", (event) => {
+				keys[event.key.toLowerCase()] = false;
+			});
 
-      // Draw the scene on the canvas
-      const draw = () => {
-        // Clear the canvas
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
+			let mouseX = 0;
+			let mouseY = 0;
+			canvas.addEventListener("mousemove", (event) => {
+				const rect = canvas.getBoundingClientRect();
+				mouseX = event.clientX - rect.left + viewport.x;
+				mouseY = event.clientY - rect.top + viewport.y;
+			});
 
-        // Draw the triangles and tank
-        drawTriangles();
-        drawTank();
+			const viewport = {
+				x: 0,
+				y: 0,
+				width: canvas.width,
+				height: canvas.height,
+			};
 
-        // Update the tank position and check for collisions
-        updateTank();
+			const tank = {
+				x: viewport.width / 2,
+				y: viewport.height / 2,
+				turretWidth: 10,
+				turretLength: 30,
+				rotationAngle: 0,
+				turretRotation: 0,
+				velocityX: 0,
+				velocityY: 0,
+				maxVelocity: 10,
+				acceleration: 0.2,
+				friction: 0.1,
+			};
 
-        // Update the bullet position and check for collisions
-        updateBullet();
+			const bullet = {
+				x: 0,
+				y: 0,
+				speed: 20,
+				radius: 5,
+				active: false,
+			};
 
-        // Draw the score
-        drawScore();
-      };
+			for (let i = 0; i < world.triangleCount; i++) {
+				const triangle = {
+					x: Math.random() * world.width,
+					y: Math.random() * world.height,
+					size: Math.random() * 20 + 10,
+					angle: Math.random() * Math.PI * 2,
+					velocityX: 0,
+					velocityY: 0,
+					maxVelocity: 5,
+				};
+				world.triangles.push(triangle);
+			}
 
-      setInterval(draw, 10);
-    </script>
-  </body>
-</html>
+			const gameLoop = () => {
+				ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+				drawTriangles();
+				drawTank();
+
+				updateBullet();
+
+				updateTank();
+
+				viewport.x = tank.x - canvas.width / 2;
+				viewport.y = tank.y - canvas.height / 2;
+
+				ctx.fillStyle = "black";
+				ctx.font = "24px Arial";
+				ctx.fillText(`Score: ${game.score}`, 10, 30);
+
+				requestAnimationFrame(gameLoop);
+			};
+			requestAnimationFrame(gameLoop);
+		</script>
+	</body
