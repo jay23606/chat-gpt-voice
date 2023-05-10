@@ -1,5 +1,5 @@
 <!-- https://jay23606.github.io/chat-gpt-voice/html/diep5.htm -->
-My apologies, here is the updated code with the `updateBullet()` method implementation:
+I apologize for the confusion. Here is an updated version that addresses those issues:
 
 ```html
 <!DOCTYPE html>
@@ -72,17 +72,16 @@ My apologies, here is the updated code with the `updateBullet()` method implemen
 			};
 
 			const drawTank = () => {
+				// calculate turret angle
+				const dx = mouseX - (tank.x - viewport.x);
+				const dy = mouseY - (tank.y - viewport.y);
+				tank.turretRotation = Math.atan2(dy, dx);
+
 				tank.x += tank.velocityX;
 				tank.y += tank.velocityY;
 
 				tank.velocityX *= 1 - tank.friction;
 				tank.velocityY *= 1 - tank.friction;
-
-				// calculate turret angle
-				const dx = mouseX - (tank.x - viewport.x);
-				const dy = mouseY - (tank.y - viewport.y);
-				const angle = Math.atan2(dy, dx);
-				tank.turretRotation = angle;
 
 				ctx.save();
 				ctx.translate(tank.x - viewport.x, tank.y - viewport.y);
@@ -93,8 +92,9 @@ My apologies, here is the updated code with the `updateBullet()` method implemen
 
 				// draw turret
 				ctx.save();
+				ctx.translate(25, 0);
 				ctx.rotate(tank.turretRotation - tank.rotationAngle);
-				ctx.fillRect(25 - tank.turretWidth, -tank.turretWidth / 2, tank.turretLength, tank.turretWidth);
+				ctx.fillRect(0, -tank.turretWidth / 2, tank.turretLength, tank.turretWidth);
 				ctx.restore();
 
 				ctx.beginPath();
@@ -104,16 +104,17 @@ My apologies, here is the updated code with the `updateBullet()` method implemen
 				ctx.restore();
 
 				if (bullet.active) {
-					// calculate bullet direction
-					const dx = mouseX - (tank.x - viewport.x);
-					const dy = mouseY - (tank.y - viewport.y);
-					const distance = Math.sqrt(dx * dx + dy * dy);
-					const directionX = dx / distance;
-					const directionY = dy / distance;
+					// calculate bullet direction only at the beginning
+					if (!bullet.direction) {
+						const dx = mouseX - (tank.x - viewport.x + 25 * Math.cos(tank.rotationAngle + tank.turretRotation));
+						const dy = mouseY - (tank.y - viewport.y + 25 * Math.sin(tank.rotationAngle + tank.turretRotation));
+						const distance = Math.sqrt(dx * dx + dy * dy);
+						bullet.direction = { x: dx / distance, y: dy / distance };
+					}
 
 					// move bullet
-					bullet.x += directionX * bullet.speed;
-					bullet.y += directionY * bullet.speed;
+					bullet.x += bullet.direction.x * bullet.speed;
+					bullet.y += bullet.direction.y * bullet.speed;
 
 					// check collision with triangles
 					for (let i = 0; i < world.triangles.length; i++) {
@@ -153,9 +154,10 @@ My apologies, here is the updated code with the `updateBullet()` method implemen
 
 			const shootBullet = () => {
 				if (!bullet.active) {
-					bullet.x = tank.x + tank.turretLength * Math.cos(tank.rotationAngle + tank.turretRotation);
-					bullet.y = tank.y + tank.turretLength * Math.sin(tank.rotationAngle + tank.turretRotation);
+					bullet.x = tank.x + 25 * Math.cos(tank.rotationAngle + tank.turretRotation);
+					bullet.y = tank.y + 25 * Math.sin(tank.rotationAngle + tank.turretRotation);
 					bullet.active = true;
+					bullet.direction = null;
 				}
 			};
 			canvas.addEventListener("click", shootBullet);
@@ -169,8 +171,7 @@ My apologies, here is the updated code with the `updateBullet()` method implemen
 				// calculate tank rotation angle
 				const dx = mouseX - (tank.x - viewport.x);
 				const dy = mouseY - (tank.y - viewport.y);
-				const angle = Math.atan2(dy, dx);
-				tank.rotationAngle = angle;
+				tank.rotationAngle = Math.atan2(dy, dx);
 
 				let targetVelocityX = 0;
 				let targetVelocityY = 0;
@@ -235,31 +236,35 @@ My apologies, here is the updated code with the `updateBullet()` method implemen
 				velocityY: 0,
 				maxVelocity: 10,
 				acceleration: 0.2,
-				friction: 0.1,
+				friction: 0.05,
 			};
 
 			const bullet = {
 				x: 0,
 				y: 0,
-				speed: 20,
 				radius: 5,
+				speed: 10,
 				active: false,
+				direction: null,
 			};
 
 			for (let i = 0; i < world.triangleCount; i++) {
 				const triangle = {
 					x: Math.random() * world.width,
 					y: Math.random() * world.height,
-					size: Math.random() * 20 + 10,
+					size: Math.random() * 50 + 10,
 					angle: Math.random() * Math.PI * 2,
 					velocityX: 0,
 					velocityY: 0,
-					maxVelocity: 5,
 				};
+				const speed = Math.random() * 5 + 1;
+				const angle = Math.random() * Math.PI * 2;
+				triangle.velocityX = speed * Math.cos(angle);
+				triangle.velocityY = speed * Math.sin(angle);
 				world.triangles.push(triangle);
 			}
 
-			const gameLoop = () => {
+			gameLoop = () => {
 				ctx.clearRect(0, 0, canvas.width, canvas.height);
 
 				drawTriangles();
@@ -280,4 +285,5 @@ My apologies, here is the updated code with the `updateBullet()` method implemen
 			};
 			requestAnimationFrame(gameLoop);
 		</script>
-	</body
+	</body>
+</html>
