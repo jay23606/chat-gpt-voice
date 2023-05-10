@@ -1,0 +1,59 @@
+<!-- https://jay23606.github.io/chat-gpt-voice/html/sanity.htm -->
+
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>Sanity.io Example</title>
+  </head>
+  <body>
+    <h1>Sanity.io Example</h1>
+    
+    <button id="createData">Create Data</button>
+    <button id="retrieveData">Retrieve Data</button>
+    
+    <ul id="dataList">
+    </ul>
+    
+    <script src="https://cdn.sanity.io/client/v2/latest.js"></script>
+    <script>
+      const client = sanityClient({
+        projectId: 'YOUR_PROJECT_ID',
+        dataset: 'YOUR_DATASET_NAME',
+        useCdn: true,
+        apiVersion: '2021-03-25'
+      });
+
+      const createButton = document.getElementById('createData');
+      const retrieveButton = document.getElementById('retrieveData');
+      const dataList = document.getElementById('dataList');
+
+      createButton.addEventListener('click', () => {
+        const newData = {
+          _type: 'myData',
+          title: 'My new data',
+          description: 'This is my new data'
+        };
+
+        client.create(newData).then(res => {
+          console.log(`Document was created with ID: ${res._id}`);
+        }).catch(err => {
+          console.error(`Error creating document: ${err.message}`);
+        });
+      });
+
+      retrieveButton.addEventListener('click', () => {
+        client.fetch('*[_type == "myData"]').then(data => {
+          dataList.innerHTML = '';
+          data.forEach(item => {
+            const li = document.createElement('li');
+            li.textContent = `${item.title}: ${item.description}`;
+            dataList.appendChild(li);
+          });
+        }).catch(err => {
+          console.error(`Error retrieving data: ${err.message}`);
+        });
+      });
+    </script>
+  </body>
+</html>
