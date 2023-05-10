@@ -1,3 +1,4 @@
+
 <!-- https://jay23606.github.io/chat-gpt-voice/html/sanity.htm -->
 
 <!DOCTYPE html>
@@ -15,14 +16,20 @@
     <ul id="dataList">
     </ul>
     
-    <script src="https://cdn.sanity.io/client/v2/latest.js"></script>
+    <script src="https://unpkg.com/@sanity/client/umd/sanityClient.js"></script>
     <script>
-      const client = sanityClient({
-        projectId: 'YOUR_PROJECT_ID',
-        dataset: 'YOUR_DATASET_NAME',
-        useCdn: true,
-        apiVersion: '2021-03-25'
-      });
+
+
+        const {createClient} = SanityClient
+
+        const client = createClient({
+            projectId: 'b3rj1ubh',
+            dataset: 'production',
+            useCdn: true, // set to `false` to bypass the edge cache
+            apiVersion: '2023-05-03', // use current date (YYYY-MM-DD) to target the latest API version
+        })
+
+        client.fetch(`count(*)`).then((data) => console.log(`Number of documents: ${data}`))
 
       const createButton = document.getElementById('createData');
       const retrieveButton = document.getElementById('retrieveData');
