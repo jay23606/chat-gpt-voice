@@ -1,0 +1,143 @@
+<!-- https://jay23606.github.io/chat-gpt-voice/html/diep3.htm -->
+
+<!DOCTYPE html>
+<html>
+  <body style="margin: 0;">
+    <canvas id="myCanvas"></canvas>
+    <script>
+      const canvas = document.getElementById("myCanvas");
+      const ctx = canvas.getContext("2d");
+
+      // Define the world properties
+      const world = {
+        width: 10000,
+        height: 10000,
+        triangleCount: 5,
+        triangles: [],
+      };
+
+      // Generate random triangles in the world
+      for (let i = 0; i < world.triangleCount; i++) {
+        const triangle = {
+          x: Math.random() * world.width,
+          y: Math.random() * world.height,
+          size: Math.random() * 20 + 10,
+        };
+        world.triangles.push(triangle);
+      }
+
+      // Define the viewport properties
+      const viewport = {
+        x: 0,
+        y: 0,
+        width: window.innerWidth,
+        height: window.innerHeight,
+      };
+
+      // Update the position of the triangles relative to the viewport position
+      const updateTriangles = () => {
+        for (const triangle of world.triangles) {
+          triangle.screenX = triangle.x - viewport.x;
+          triangle.screenY = triangle.y - viewport.y;
+        }
+      };
+
+      // Draw the triangles on the canvas
+      const drawTriangles = () => {
+        // Update the position of the triangles
+        updateTriangles();
+
+        // Draw the triangles
+        ctx.fillStyle = "red";
+        for (const triangle of world.triangles) {
+          // Only draw triangles that are within the viewport
+          if (
+            triangle.screenX + triangle.size < 0 ||
+            triangle.screenX > viewport.width ||
+            triangle.screenY + triangle.size < 0 ||
+            triangle.screenY > viewport.height
+          ) {
+            continue;
+          }
+
+          ctx.beginPath();
+          ctx.moveTo(triangle.screenX, triangle.screenY);
+          ctx.lineTo(triangle.screenX + triangle.size, triangle.screenY);
+          ctx.lineTo(
+            triangle.screenX + triangle.size / 2,
+            triangle.screenY + triangle.size
+          );
+          ctx.closePath();
+          ctx.fill();
+        }
+      };
+
+      // Draw the tank on the canvas
+      const drawTank = () => {
+        // Draw the tank
+        ctx.save();
+        ctx.translate(viewport.width / 2, viewport.height / 2);
+        ctx.rotate(rotationAngle);
+        ctx.fillRect(55, -10 / 2, 30, 10);
+        ctx.beginPath();
+        ctx.arc(0, 0, 50, 0, Math.PI * 2);
+        ctx.strokeStyle = "black";
+        ctx.stroke();
+        ctx.restore();
+      };
+
+      // Update the rotation angle based on the mouse location
+      let rotationAngle = 0;
+      canvas.addEventListener("mousemove", (event) => {
+        const rect = canvas.getBoundingClientRect();
+        const mouseX = event.clientX - rect.left;
+        const mouseY = event.clientY - rect.top;
+
+        rotationAngle = Math.atan2(
+          mouseY - viewport.height / 2,
+          mouseX - viewport.width / 2
+        );
+      });
+
+      // Handle keyboard input for movement
+      document.addEventListener("keydown", (event) => {
+        switch (event.key) {
+          case "a":
+            viewport.x -= 10;
+            break;
+          case "d":
+            viewport.x += 10;
+            break;
+          case "w":
+            viewport.y -= 10;
+            break;
+          case "s":
+            viewport.y += 10;
+            break;
+        }
+      });
+
+      // Resize the canvas to fit the window size
+      const resizeCanvas = () => {
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+        viewport.width = canvas.width;
+        viewport.height = canvas.height;
+      };
+      window.addEventListener("resize", resizeCanvas);
+      resizeCanvas();
+
+      // Draw the scene on the canvas
+      const draw = () => {
+        // Clear the canvas
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+        // Draw the triangles and tank
+        drawTriangles();
+        drawTank();
+      };
+
+      setInterval(draw, 10);
+    </script>
+  </body>
+</html>
