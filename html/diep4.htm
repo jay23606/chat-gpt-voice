@@ -12,8 +12,13 @@
       const world = {
         width: 10000,
         height: 10000,
-        triangleCount: 500,
+        triangleCount: 1000,
         triangles: [],
+      };
+
+      // Define the game properties
+      const game = {
+        score: 0,
       };
 
       // Generate random triangles in the world
@@ -131,6 +136,7 @@
 
             if (distance < triangle.size / 2) {
               world.triangles.splice(i, 1);
+              game.score++;
               bullet.active = false;
               break;
             }
@@ -200,6 +206,14 @@
       window.addEventListener("resize", resizeCanvas);
       resizeCanvas();
 
+      // Draw the score at the top right corner of the canvas
+      const drawScore = () => {
+        ctx.font = "24px Arial";
+        ctx.fillStyle = "black";
+        ctx.textAlign = "right";
+        ctx.fillText(`Score: ${game.score}`, viewport.width - 10, 30);
+      };
+
       // Draw the scene on the canvas
       const draw = () => {
         // Clear the canvas
@@ -211,6 +225,9 @@
 
         // Update the bullet position and check for collisions
         updateBullet();
+
+        // Draw the score
+        drawScore();
       };
 
       setInterval(draw, 10);
