@@ -1,0 +1,66 @@
+<!-- https://jay23606.github.io/chat-gpt-voice/html/diep1.htm -->
+
+<!DOCTYPE html>
+<html>
+  <body>
+    <canvas id="myCanvas" width="400" height="400"></canvas>
+    <script>
+      const canvas = document.getElementById("myCanvas");
+      const ctx = canvas.getContext("2d");
+
+      let x = canvas.width / 2;
+      let y = canvas.height / 2;
+      let rectWidth = 50;
+      let rectHeight = 10;
+
+      let rotationAngle = 0;
+
+      const draw = () => {
+        // Clear the canvas
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+        // Draw the circle
+        ctx.beginPath();
+        ctx.arc(x, y, 50, 0, Math.PI * 2);
+        ctx.strokeStyle = "black";
+        ctx.stroke();
+
+        // Draw the rectangle at the end of the circle
+        ctx.save();
+        ctx.translate(x, y);
+        ctx.rotate(rotationAngle);
+        ctx.fillRect(0, -rectHeight / 2, rectWidth, rectHeight);
+        ctx.restore();
+
+        // Update the rotation angle based on the mouse location
+        canvas.addEventListener("mousemove", (event) => {
+          let rect = canvas.getBoundingClientRect();
+          let mouseX = event.clientX - rect.left;
+          let mouseY = event.clientY - rect.top;
+
+          rotationAngle = Math.atan2(mouseY - y, mouseX - x);
+        });
+
+        // Handle keyboard input for movement
+        document.addEventListener("keydown", (event) => {
+          switch (event.key) {
+            case "a":
+              x -= 10;
+              break;
+            case "d":
+              x += 10;
+              break;
+            case "w":
+              y -= 10;
+              break;
+            case "s":
+              y += 10;
+              break;
+          }
+        });
+      };
+
+      setInterval(draw, 10);
+    </script>
+  </body>
+</html>
