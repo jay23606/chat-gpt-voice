@@ -1,0 +1,285 @@
+<!-- https://jay23606.github.io/chat-gpt-voice/html/diep5.htm -->
+
+<!DOCTYPE html>
+<html>
+  <body style="margin: 0;">
+    <canvas id="myCanvas"></canvas>
+    <script>
+      const canvas = document.getElementById("myCanvas");
+      const ctx = canvas.getContext("2d");
+
+      // Define the world properties
+      const world = {
+        width: 10000,
+        height: 10000,
+        triangleCount: 1000,
+        triangles: [],
+      };
+
+      // Define the game properties
+      const game = {
+        score: 0,
+      };
+
+      // Generate random triangles in the world
+      for (let i = 0; i < world.triangleCount; i++) {
+        const triangle = {
+          x: Math.random() * world.width,
+          y: Math.random() * world.height,
+          size: Math.random() * 20 + 10,
+          angle: Math.random() * Math.PI * 2,
+        };
+        world.triangles.push(triangle);
+      }
+
+      // Define the viewport properties
+      const viewport = {
+        x: 0,
+        y: 0,
+        width: window.innerWidth,
+        height: window.innerHeight,
+      };
+
+      // Define the tank properties
+      const tank = {
+        x: viewport.width / 2,
+        y: viewport.height / 2,
+        turretWidth: 10,
+        turretLength: 30,
+        rotationAngle: 0,
+        shooting: false,
+        velocityX: 0,
+        velocityY: 0,
+        maxVelocity: 10,
+        acceleration: 0.2,
+        friction: 0.1,
+      };
+
+      // Define the bullet properties
+      const bullet = {
+        x: 0,
+        y: 0,
+        speed: 10,
+        radius: 5,
+        active: false,
+      };
+
+      // Update the position of the triangles relative to the viewport position
+      const updateTriangles = () => {
+        for (const triangle of world.triangles) {
+          triangle.screenX = triangle.x - viewport.x;
+          triangle.screenY = triangle.y - viewport.y;
+          triangle.angle += 0.05;
+        }
+      };
+
+      // Draw the triangles on the canvas
+      const drawTriangles = () => {
+        // Update the position of the triangles
+        updateTriangles();
+
+        // Draw the triangles
+        ctx.fillStyle = "red";
+        for (const triangle of world.triangles) {
+          // Only draw triangles that are within the viewport
+          if (
+            triangle.screenX + triangle.size < 0 ||
+            triangle.screenX > viewport.width ||
+            triangle.screenY + triangle.size < 0 ||
+            triangle.screenY > viewport.height
+          ) {
+            continue;
+          }
+
+          ctx.save();
+          ctx.translate(triangle.screenX + triangle.size / 2, triangle.screenY + triangle.size / 2);
+          ctx.rotate(triangle.angle);
+          ctx.beginPath();
+          ctx.moveTo(-triangle.size / 2, -triangle.size / 2);
+          ctx.lineTo(triangle.size / 2, -triangle.size / 2);
+          ctx.lineTo(0, triangle.size / 2);
+          ctx.closePath();
+          ctx.fill();
+          ctx.restore();
+        }
+      };
+
+      // Draw the tank on the canvas
+      const drawTank = () => {
+        // Update the tank position based on velocity
+        tank.x += tank.velocityX;
+        tank.y += tank.velocityY;
+
+        // Apply friction to slow down the tank
+        tank.velocityX *= 1 - tank.friction;
+        tank.velocityY *= 1 - tank.friction;
+
+        // Draw the tank
+        ctx.save();
+        ctx.translate(tank.x, tank.y);
+        ctx.rotate(tank.rotationAngle);
+        ctx.fillRect(55, -10 / 2, tank.turretLength, tank.turretWidth);
+        ctx.beginPath();
+        ctx.arc(0, 0, 50, 0, Math.PI * 2);
+        ctx.strokeStyle = "black";
+        ctx.stroke();
+        ctx.restore();
+
+        // Draw the bullet
+        if (bullet.active) {
+          ctx.beginPath();
+          ctx.arc(bullet.x, bullet.y, bullet.radius, 0, Math.PI * 2);
+          ctx.fillStyle = "blue";
+          ctx.fill();
+        }
+      };
+
+      // Update the position of the bullet
+      const updateBullet = () => {
+        if (bullet.active) {
+          bullet.x += bullet.speed * Math.cos(tank.rotationAngle);
+          bullet.y += bullet.speed * Math.sin(tank.rotationAngle);
+
+          // Check if the bullet hit a triangle
+          for (let i = 0; i < world.triangles.length; i++) {
+            const triangle = world.triangles[i];
+            const dx = bullet.x - (triangle.screenX + triangle.size / 2);
+            const dy = bullet.y - (triangle.screenY + triangle.size / 2);
+            const distance = Math.sqrt(dx * dx + dy * dy);
+
+            if (distance < triangle.size / 2) {
+              world.triangles.splice(i, 1);
+              game.score++;
+              bullet.active = false;
+              break;
+            }
+          }
+
+          // Check if the bullet is out of bounds
+          if (
+            bullet.x + bullet.radius < 0 ||
+            bullet.x - bullet.radius > viewport.width ||
+            bullet.y + bullet.radius < 0 ||
+            bullet.y - bullet.radius > viewport.height
+          ) {
+            bullet.active = false;
+          }
+        }
+      };
+
+      // Handle shooting the bullet
+      const shootBullet = () => {
+        if (!bullet.active) {
+          bullet.x = tank.x + tank.turretLength * Math.cos(tank.rotationAngle);
+          bullet.y = tank.y + tank.turretLength * Math.sin(tank.rotationAngle);
+          bullet.active = true;
+        }
+      };
+      canvas.addEventListener("mousedown", shootBullet);
+
+      // Update the rotation angle and tank velocity based on keyboard input
+      const updateTank = () => {
+        const leftKeyDown = !!keys["a"];
+        const rightKeyDown = !!keys["d"];
+        const upKeyDown = !!keys["w"];
+        const downKeyDown = !!keys["s"];
+
+        // Update the rotation angle based on the mouse location
+        const rect = canvas.getBoundingClientRect();
+        const mouseX = mousePos.x - rect.left;
+        const mouseY = mousePos.y - rect.top;
+        tank.rotationAngle = Math.atan2(
+          mouseY - tank.y,
+          mouseX - tank.x
+        );
+
+        // Calculate the tank velocity based on keyboard input
+        let targetVelocityX = 0;
+        let targetVelocityY = 0;
+        if (leftKeyDown) {
+          targetVelocityX -= tank.acceleration;
+        }
+        if (rightKeyDown) {
+          targetVelocityX += tank.acceleration;
+        }
+        if (upKeyDown) {
+          targetVelocityY -= tank.acceleration;
+        }
+        if (downKeyDown) {
+          targetVelocityY += tank.acceleration;
+        }
+
+        // Update the tank velocity
+        if (targetVelocityX !== 0 || targetVelocityY !== 0) {
+          // Apply acceleration
+          const totalVelocity = Math.sqrt(tank.velocityX ** 2 + tank.velocityY ** 2);
+          if (totalVelocity < tank.maxVelocity) {
+            tank.velocityX += targetVelocityX;
+            tank.velocityY += targetVelocityY;
+          } else {
+            const ratio = tank.maxVelocity / totalVelocity;
+            tank.velocityX += targetVelocityX * ratio;
+            tank.velocityY += targetVelocityY * ratio;
+          }
+        }
+      };
+
+      // Handle keyboard input for movement
+      const keys = {};
+      document.addEventListener("keydown", (event) => {
+        keys[event.key] = true;
+      });
+      document.addEventListener("keyup", (event) => {
+        keys[event.key] = false;
+      });
+
+      // Handle mouse input for rotation
+      const mousePos = { x: 0, y: 0 };
+      canvas.addEventListener("mousemove", (event) => {
+        mousePos.x = event.clientX;
+        mousePos.y = event.clientY;
+      });
+
+      // Resize the canvas to fit the window size
+      const resizeCanvas = () => {
+        canvas.width = window.innerWidth-32;
+        canvas.height = window.innerHeight-32;
+        viewport.width = canvas.width;
+        viewport.height = canvas.height;
+        tank.x = viewport.width / 2;
+        tank.y = viewport.height / 2;
+      };
+      window.addEventListener("resize", resizeCanvas);
+      resizeCanvas();
+
+      // Draw the score at the top right corner of the canvas
+      const drawScore = () => {
+        ctx.font = "24px Arial";
+        ctx.fillStyle = "black";
+        ctx.textAlign = "right";
+        ctx.fillText(`Score: ${game.score}`, viewport.width - 10, 30);
+      };
+
+      // Draw the scene on the canvas
+      const draw = () => {
+        // Clear the canvas
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+        // Draw the triangles and tank
+        drawTriangles();
+        drawTank();
+
+        // Update the tank position and check for collisions
+        updateTank();
+
+        // Update the bullet position and check for collisions
+        updateBullet();
+
+        // Draw the score
+        drawScore();
+      };
+
+      setInterval(draw, 10);
+    </script>
+  </body>
+</html>
