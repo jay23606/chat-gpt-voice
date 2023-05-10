@@ -196,8 +196,8 @@
 
       // Resize the canvas to fit the window size
       const resizeCanvas = () => {
-        canvas.width = window.innerWidth;
-        canvas.height = window.innerHeight;
+        canvas.width = window.innerWidth-32;
+        canvas.height = window.innerHeight-32;
         viewport.width = canvas.width;
         viewport.height = canvas.height;
         tank.x = viewport.width / 2;
