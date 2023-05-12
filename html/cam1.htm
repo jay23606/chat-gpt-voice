@@ -1,0 +1,65 @@
+<!-- https://jay23606.github.io/chat-gpt-voice/html/cam1.htm -->
+
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Share Webcam with Simple Peer</title>
+  </head>
+  <body>
+    <h1>Share Webcam with Simple Peer</h1>
+    <video id="local-video" autoplay></video>
+    <video id="remote-video" autoplay></video>
+    
+    <script src="https://cdn.jsdelivr.net/npm/simple-peer@9.4.2/dist/simple-peer.min.js"></script>
+    <script>
+      const constraints = {
+        video: true,
+        audio: false
+      };
+
+      const localVideo = document.getElementById('local-video');
+      const remoteVideo = document.getElementById('remote-video');
+      let currentKeyIndex = 0;
+
+      navigator.mediaDevices.getUserMedia(constraints)
+        .then(function(stream) {
+          localVideo.srcObject = stream;
+
+          const keyList = ['key1', 'key2', 'key3', 'key4']; // add more keys as needed
+          let currentKey = keyList[currentKeyIndex];
+
+          const peer = new SimplePeer({
+            initiator: location.hash === `#${currentKey}`,
+            trickle: false,
+            stream: stream
+          });
+
+          peer.on('signal', function(data) {
+            document.getElementById('your-id').value = JSON.stringify(data);
+          });
+
+          document.getElementById('connect-button').addEventListener('click', function() {
+            const otherId = JSON.parse(document.getElementById('other-id').value);
+            peer.signal(otherId);
+          });
+
+          peer.on('stream', function(stream) {
+            remoteVideo.srcObject = stream;
+          });
+
+          peer.on('close', function() {
+            currentKeyIndex++;
+            if (currentKeyIndex >= keyList.length) {
+              currentKeyIndex = 0;
+            }
+            currentKey = keyList[currentKeyIndex];
+            location.hash = currentKey;
+            window.location.reload();
+          });
+        })
+        .catch(function(err) {
+          console.log(err);
+        });
+    </script>
+  </body>
+</html>
