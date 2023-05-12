@@ -1,0 +1,83 @@
+<!-- https://jay23606.github.io/chat-gpt-voice/html/cam2.htm -->
+
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Share Webcam with Simple Peer</title>
+  </head>
+  <body>
+    <h1>Share Webcam with Simple Peer</h1>
+    <p>Current Key: <span id="current-key"></span></p>
+    <video id="local-video" autoplay></video>
+    <video id="remote-video" autoplay></video>
+    
+    <script src="https://cdn.jsdelivr.net/npm/simple-peer@9.4.2/dist/simple-peer.min.js"></script>
+    <script>
+      const constraints = {
+        video: true,
+        audio: false
+      };
+
+      const currentKeyEle = document.getElementById('current-key');
+      const localVideo = document.getElementById('local-video');
+      const remoteVideo = document.getElementById('remote-video');
+      let currentKeyIndex = 0;
+
+      navigator.mediaDevices.getUserMedia(constraints)
+        .then(function(stream) {
+          localVideo.srcObject = stream;
+
+          const keyList = ['key1', 'key2', 'key3', 'key4']; // add more keys as needed
+          let currentKey = keyList[currentKeyIndex];
+          currentKeyEle.innerHTML = currentKey;
+
+          let peer = new SimplePeer({
+            initiator: location.hash === `#${currentKey}`,
+            trickle: false,
+            stream: stream
+          });
+
+          peer.on('signal', function(data) {
+            document.getElementById('your-id').value = JSON.stringify(data);
+          });
+
+          peer.on('stream', function(stream) {
+            remoteVideo.srcObject = stream;
+          });
+
+          peer.on('close', function() {
+            currentKeyIndex++;
+            if (currentKeyIndex >= keyList.length) {
+              currentKeyIndex = 0;
+            }
+            currentKey = keyList[currentKeyIndex];
+            location.hash = currentKey;
+            currentKeyEle.innerHTML = currentKey;
+            peer = new SimplePeer({
+              initiator: location.hash === `#${currentKey}`,
+              trickle: false,
+              stream: stream
+            });
+            peer.on('signal', function(data) {
+              document.getElementById('your-id').value = JSON.stringify(data);
+            });
+            peer.on('stream', function(stream) {
+              remoteVideo.srcObject = stream;
+            });
+            peer.on('error', function(err) {
+              console.log(err);
+              peer.destroy();
+            });
+          });
+
+          peer.on('error', function(err) {
+            console.log(err);
+            peer.destroy();
+          });
+        })
+        .catch(function(err) {
+          console.log(err);
+        });
+    </script>
+  </body>
+</html>
