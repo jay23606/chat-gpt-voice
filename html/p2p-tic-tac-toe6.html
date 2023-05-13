@@ -1,0 +1,275 @@
+<!-- https://jay23606.github.io/chat-gpt-voice/html/p2p-tic-tac-toe6.html -->
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <link rel="manifest" href="manifest.json" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=League+Gothic&display=swap">
+    <title>P2P Tic Tac Toe</title>
+    <style>
+      input, body {
+        background: black;
+        color: white;
+        font-family: 'League Gothic', sans-serif;
+        font-size: large;
+      }
+      #game-board {
+        display: flex;
+        flex-wrap: wrap;
+        width: 300px;
+        height: 300px;
+        margin: 0 auto;
+        border: 2px solid white;
+      }
+      #game-board div {
+        width: 100px;
+        height: 100px;
+        font-size: 80px;
+        text-align: center;
+        line-height: 100px;
+        cursor: pointer;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="game-board">
+      <div id="cell-0"></div>
+      <div id="cell-1"></div>
+      <div id="cell-2"></div>
+      <div id="cell-3"></div>
+      <div id="cell-4"></div>
+      <div id="cell-5"></div>
+      <div id="cell-6"></div>
+      <div id="cell-7"></div>
+      <div id="cell-8"></div>
+    </div>
+    
+    <div id="message"></div>
+    <p>&nbsp;</p>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/peerjs/1.3.2/peerjs.min.js"></script>
+    <script type="text/javascript">
+      const $ = id => document.getElementById(id);
+      const gameBoard = $("game-board");
+      const cells = Array.from(gameBoard.children);
+      const message = $("message");
+      const peer = new Peer(null, { debug: 2 });
+      const params = new URLSearchParams(location.search);
+
+      let game = null;
+      let conn = null;
+      let isOpen = false;
+      let lastPeerId = null;
+      let myTurn = false;
+
+      const TicTacToeGame = function() {
+        let board = ["", "", "", "", "", "", "", "", ""];
+        let mark = "";
+        let opponentMark = "";
+        let winner = null;
+        let turn = null;
+
+        const getMark = () => mark;
+        const getOpponentMark = () => opponentMark;
+        const getWinner = () => winner;
+        const isWaitingForOpponent = () => (conn !== null && conn.open === true && mark === "");
+        const isMyTurn = () => turn === mark;
+
+        const start = (conn_) => {
+          if (!isWaitingForOpponent()) return;
+          conn = conn_;
+          conn.on("data", onMessage);
+          conn.on("close", onConnectionClosed);
+        };
+
+        const onMessage = (data) => {
+          if (data.type === "mark") {
+            mark = data.mark;
+            opponentMark = (mark === "X") ? "O" : "X";
+            turn = "X";
+            message.textContent = `You are player "${mark}". Waiting for opponent to join...`;
+          } else if (data.type === "move") {
+            const i = data.index;
+            board[i] = data.mark;
+            cells[i].textContent = data.mark;
+            turn = opponentMark;
+            updateGameStatus();
+          } else if (data.type === "reset") {
+            reset();
+          }
+        };
+
+        const onConnectionClosed = () => {
+          message.textContent = "Opponent disconnected. Please refresh page.";
+        };
+
+        const makeMove = (i) => {
+          if (board[i] !== "" || !isMyTurn() || winner !== null) return;
+          board[i] = mark;
+          cells[i].textContent = mark;
+          turn = opponentMark;
+          updateGameStatus();
+          const data = {
+            type: "move",
+            index: i,
+            mark: mark
+          }
+          conn.send(data);
+        };
+
+        const updateGameStatus = () => {
+          winner = findWinner();
+          if (winner !== null) {
+            message.textContent = `Player "${winner}" wins!`;
+          } else if (board.every(cell => cell !== "")) {
+            message.textContent = "Tie game!";
+          } else if (isMyTurn()) {
+            message.textContent = "Your turn.";
+          } else {
+            message.textContent = "Waiting for opponent's move...";
+          }
+        };
+
+        const findWinner = () => {
+          const lines = [
+            [0, 1, 2],
+            [3, 4, 5],
+            [6, 7, 8],
+            [0, 3, 6],
+            [1, 4, 7],
+            [2, 5, 8],
+            [0, 4, 8],
+            [2, 4, 6]
+          ];
+          for (let i = 0; i < lines.length; i++) {
+            const [a, b, c] = lines[i];
+            if (board[a] !== "" && board[a] === board[b] && board[b] === board[c]) {
+              return board[a];
+            }
+          }
+          return null;
+        };
+
+        const reset = () => {
+          board = ["", "", "", "", "", "", "", "", ""];
+          mark = "";
+          opponentMark = "";
+          winner = null;
+          turn = null;
+          message.textContent = `You are player "${mark}".`;
+          cells.forEach(cell => cell.textContent = "");
+        };
+
+        return {
+          getMark,
+          getOpponentMark,
+          getWinner,
+          isWaitingForOpponent,
+          isMyTurn,
+          start,
+          makeMove,
+          reset
+        };
+      };
+
+      const generatePeerId = () => {
+        let id = "";
+        for (let i = 0; i < 8; i++) {
+          id += Math.floor(Math.random() * 10);
+        }
+        return id;
+      };
+
+      const startGame = (conn) => {
+        if (game) game.reset();
+        game = new TicTacToeGame();
+        game.start(conn);
+        document.querySelector("p").textContent = `You are player "${game.getMark()}".`;
+      };
+
+      peer.on("open", id => {
+        isOpen = true;
+        console.log("isOpen=" + isOpen);
+        if (peer.id === null) peer.id = lastPeerId;
+        else lastPeerId = peer.id;
+        console.log("ID: " + peer.id);
+      });
+
+  	  peer.on("connection", c => {
+        console.log("p.conn: " + c.peer);
+        if (game && !game.isWaitingForOpponent()) {
+          c.close();
+          return;
+        }
+        if (!game) {
+          const data = {
+            type: "mark",
+            mark: "X"
+          };
+          c.send(data);
+          startGame(c);
+        } else if (game.isWaitingForOpponent()) {
+          const data = {
+            type: "mark",
+            mark: "O"
+          };
+          c.send(data);
+          game.start(c);
+        } else {
+          c.close();
+        }
+      });
+
+      peer.on("disconnected", () => {
+        message.textContent = "Connection lost. Please refresh";
+        peer.id = lastPeerId;
+        peer._lastServerId = lastPeerId;
+        peer.reconnect();
+      });
+
+      peer.on("close", () => message.textContent = "Connection destroyed. Please refresh");
+
+      peer.on("error", (err) => message.textContent = `Error: ${err}`);
+
+      const connToPeer = (peerId) => {
+        if (game && !game.isWaitingForOpponent()) return;
+        const conn = peer.connect(peerId, { reliable: true });
+        if (game) {
+          startGame(conn);
+        } else {
+          game = new TicTacToeGame();
+          game.start(conn);
+        }
+        document.querySelector("p").textContent = `You are player "${game.getMark()}".`;
+      };
+
+      const resetGame = () => {
+        if (game) {
+          const data = {
+            type: "reset"
+          };
+          conn.send(data);
+          game.reset();
+        }
+      };
+
+      cells.forEach((cell, i) => {
+        cell.addEventListener("click", () => {
+          if (game) {
+            game.makeMove(i);
+          }
+        });
+      });
+
+      if (params.has("x")) {
+        connToPeer(params.get("x"));
+      } else {
+        message.textContent = `Your peer ID is: ${peer.id}`;
+        setInterval(() => {
+          const peerId = generatePeerId();
+          const url = `${location.origin}${location.pathname}?x=${peerId}`;
+          history.replaceState(null, null, url);
+        }, 5000);
+      }
+    </script>
+  </body>
+</html>
