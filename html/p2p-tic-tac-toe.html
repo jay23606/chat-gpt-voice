@@ -1,0 +1,95 @@
+<!-- https://jay23606.github.io/chat-gpt-voice/html/p2p-tic-tac-toe.html -->
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Tic Tac Toe - P2P</title>
+  </head>
+  <body>
+    <h1>Tic Tac Toe - P2P</h1>
+    <p>Share this URL with others to play: <strong><span id="url"></span></strong></p>
+    <p>Waiting for opponent...</p>
+    <table id="board">
+      <tr>
+        <td></td>
+        <td></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td></td>
+        <td></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td></td>
+        <td></td>
+        <td></td>
+      </tr>
+    </table>
+    <script src="https://cdn.jsdelivr.net/npm/peerjs@1.3.2/dist/peerjs.min.js"></script>
+    <script>
+      // Get the peer ID from the URL hash
+      const peerId = window.location.hash.slice(1);
+
+      // Create a new Peer object with the shared peer ID
+      const peer = new Peer(peerId, {
+        host: "localhost",
+        port: 9000,
+        path: "/peerjs"
+      });
+
+      // Display the URL to share with others
+      document.querySelector("#url").textContent = window.location.href;
+
+      // Tic Tac Toe game class
+      class TicTacToeGame {
+        constructor() {
+          // The game board
+          this.board = [
+            ["", "", ""],
+            ["", "", ""],
+            ["", "", ""]
+          ];
+
+          // The player's mark ("X" or "O")
+          this.mark = "";
+
+          // The connection to the opponent
+          this.conn = null;
+
+          // Set up the click handler for the board
+          const cells = document.querySelectorAll("#board td");
+          cells.forEach((cell, index) => {
+            cell.addEventListener("click", () => {
+              this.handleClick(index);
+            });
+          });
+        }
+
+        // Start the game with the given connection
+        start(conn) {
+          this.conn = conn;
+          this.mark = "X";
+          this.render();
+          this.conn.on("data", data => this.handleData(data));
+        }
+
+        // Check if the game is waiting for an opponent
+        isWaitingForOpponent() {
+          return !this.conn;
+        }
+
+        // Handle incoming data from the opponent
+        handleData(data) {
+          if (data.type === "move") {
+            const [row, col] = data.move;
+            this.board[row][col] = this.getOpponentMark();
+            this.mark = this.getMark();
+            this.render();
+            this.checkWinner();
+          } else if (data.type === "reject") {
+            alert("The game is already in progress.");
+            this.conn.close();
+          }
+        }
+
+        // Handle
