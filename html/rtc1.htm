@@ -1,0 +1,122 @@
+<!-- https://jay23606.github.io/chat-gpt-voice/html/rtc1.htm -->
+
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>WebRTC Example</title>
+    <script>
+      // Define some variables
+      let localPeer, remotePeer;
+      
+      // Create the local peer connection
+      localPeer = new RTCPeerConnection();
+
+      // Listen for ICE candidates on the local peer
+      localPeer.addEventListener('icecandidate', (event) => {
+        console.log('Local ICE candidate:', event.candidate);
+        if (event.candidate) {
+          remotePeer.addIceCandidate(event.candidate);
+        }
+      });
+
+      // Listen for data channel on the local peer
+      localPeer.addEventListener('datachannel', (event) => {
+        console.log('Local data channel connected:', event.channel);
+        event.channel.addEventListener('message', (message) => {
+          console.log('Received message:', message.data);
+        });
+      });
+
+      // Create a data channel on the local peer
+      const dataChannel = localPeer.createDataChannel('data');
+
+      // Listen for open event on the data channel
+      dataChannel.addEventListener('open', () => {
+        console.log('Local data channel opened');
+      });
+
+      // Listen for close event on the data channel
+      dataChannel.addEventListener('close', () => {
+        console.log('Local data channel closed');
+      });
+
+      // Listen for error event on the data channel
+      dataChannel.addEventListener('error', (event) => {
+        console.log('Local data channel error:', event.error);
+      });
+
+      // Listen for click event on the button
+      document.querySelector('#sendButton').addEventListener('click', () => {
+        const message = document.querySelector('#messageInput').value;
+        dataChannel.send(message);
+        console.log('Sent message:', message);
+      });
+
+      // Create the offer on the local peer
+      localPeer.createOffer().then((offer) => {
+        console.log('Local offer:', offer);
+        
+        // Set the local description on the local peer
+        localPeer.setLocalDescription(offer).then(() => {
+          console.log('Local description set');
+        }).catch((error) => {
+          console.log('Error setting local description:', error);
+        });
+
+        // Create the remote peer connection
+        remotePeer = new RTCPeerConnection();
+
+        // Listen for ICE candidates on the remote peer
+        remotePeer.addEventListener('icecandidate', (event) => {
+          console.log('Remote ICE candidate:', event.candidate);
+          if (event.candidate) {
+            localPeer.addIceCandidate(event.candidate);
+          }
+        });
+
+        // Listen for data channel on the remote peer
+        remotePeer.addEventListener('datachannel', (event) => {
+          console.log('Remote data channel connected:', event.channel);
+          event.channel.addEventListener('message', (message) => {
+            console.log('Received message:', message.data);
+          });
+        });
+
+        // Set the remote description on the remote peer
+        remotePeer.setRemoteDescription(offer).then(() => {
+          console.log('Remote description set');
+          
+          // Create the answer on the remote peer
+          remotePeer.createAnswer().then((answer) => {
+            console.log('Remote answer:', answer);
+
+            // Set the local description on the remote peer
+            remotePeer.setLocalDescription(answer).then(() => {
+              console.log('Remote description set');
+              
+              // Set the remote description on the local peer
+              localPeer.setRemoteDescription(answer).then(() => {
+                console.log('Local description set');
+              }).catch((error) => {
+                console.log('Error setting remote description on local peer:', error);
+              });
+            }).catch((error) => {
+              console.log('Error setting local description on remote peer:', error);
+            });
+          }).catch((error) => {
+            console.log('Error creating answer:', error);
+          });
+        }).catch((error) => {
+          console.log('Error setting remote description:', error);
+        });
+      }).catch((error) => {
+        console.log('Error creating offer:', error);
+      });
+    </script>
+  </head>
+  <body>
+    <label for="messageInput">Message:</label>
+    <input type="text" id="messageInput">
+    <button id="sendButton">Send</button>
+  </body>
+</html>
