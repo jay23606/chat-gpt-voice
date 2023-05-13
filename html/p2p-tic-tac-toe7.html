@@ -1,0 +1,212 @@
+<!-- https://jay23606.github.io/chat-gpt-voice/html/p2p-tic-tac-toe7.html -->
+
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8">
+    <title>Tic Tac Toe</title>
+    <style>
+      /* Game board styles */
+      .board {
+        display: flex;
+        flex-wrap: wrap;
+        width: 300px;
+        height: 300px;
+      }
+
+      .cell {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        width: 100px;
+        height: 100px;
+        font-size: 48px;
+        font-weight: bold;
+        cursor: pointer;
+        border: 1px solid #ccc;
+      }
+
+      .cell:hover {
+        background-color: #eee;
+      }
+
+      /* Status message styles */
+      #status {
+        margin-top: 20px;
+        font-size: 24px;
+        font-weight: bold;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="board">
+      <div class="cell"></div>
+      <div class="cell"></div>
+      <div class="cell"></div>
+      <div class="cell"></div>
+      <div class="cell"></div>
+      <div class="cell"></div>
+      <div class="cell"></div>
+      <div class="cell"></div>
+      <div class="cell"></div>
+    </div>
+    <div id="status"></div>
+
+    <script src="https://cdn.jsdelivr.net/npm/peerjs@1.3.2/dist/peerjs.min.js"></script>
+    <script>
+      const KEY = 'key1'; // Shared key
+
+      const peer = new Peer(KEY); // Create a new Peer instance with the shared key
+
+      // Connect to the other peer
+      const connectToPeer = (key) => {
+        const conn = peer.connect(key, { reliable: true });
+        conn.on('open', () => {
+          // Enable the game board
+          enableBoard();
+
+          // Display the status message
+          setStatusMessage('You are X. Waiting for opponent to move...');
+        });
+        conn.on('data', handleRemoteMove);
+      };
+
+      // Prompt the user to enter the shared key and connect to the other peer
+      const key = prompt('Enter the shared key:');
+      connectToPeer(key);
+
+      const boardEl = document.querySelector('.board');
+      const statusEl = document.querySelector('#status');
+      const cells = Array.from(document.querySelectorAll('.cell'));
+
+      let isMyTurn = false; // Whether it's the local player's turn
+      let mySymbol = 'X'; // The symbol used by the local player
+
+      // Enable the game board
+      const enableBoard = () => {
+        isMyTurn = true;
+        cells.forEach(cell => {
+          cell.addEventListener('click', handleMove);
+        });
+      };
+
+      // Disable the game board
+      const disableBoard = () => {
+        isMyTurn = false;
+        cells.forEach(cell => {
+          cell.removeEventListener('click', handleMove);
+        });
+      };
+
+      // Handle a move made by the local player
+      const handleMove = (event) => {
+        if (!isMyTurn) {
+          return;
+        }
+
+        const cell = event.target;
+        if (cell.textContent !== '') {
+          return;
+        }
+
+        cell.textContent = mySymbol;
+        disableBoard();
+
+        // Send the move to the other peer
+        const conn = peer.connections[key][0];
+        conn.send({
+          type: 'move',
+          index: cells.indexOf(cell),
+          symbol: mySymbol
+        });
+
+        // Check if the local player won
+        if (checkWin(mySymbol)) {
+          setStatusMessage('You win!');
+          disableBoard();
+          return;
+        }
+
+        // Check if the game is a tie
+        if (checkTie()) {
+          setStatusMessage('Tie game!');
+          disableBoard();
+          return;
+        }
+
+        setStatusMessage('Waiting for opponent to move...');
+      };
+
+      // Handle a move received from the other peer
+      function handleRemoteMove(data) {
+        const { index, symbol } = data;
+        const cell = cells[index];
+        cell.textContent = symbol;
+
+        // Check if the other player won
+        if (checkWin(symbol)) {
+          setStatusMessage('You lose!');
+          disableBoard();
+          return;
+        }
+
+        // Check if the game is a tie
+        if (checkTie()) {
+          setStatusMessage('Tie game!');
+          disableBoard();
+          return;
+        }
+
+        // Enable the game board
+        enableBoard();
+        setStatusMessage('Your turn!');
+      }
+
+      // Check if the specified symbol has won
+      const checkWin = (symbol) => {
+        // Check rows
+        for (let i = 0; i < 9; i += 3) {
+          if (cells[i].textContent === symbol &&
+              cells[i + 1].textContent === symbol &&
+              cells[i + 2].textContent === symbol) {
+            return true;
+          }
+        }
+
+        // Check columns
+        for (let i = 0; i < 3; i++) {
+          if (cells[i].textContent === symbol &&
+              cells[i + 3].textContent === symbol &&
+              cells[i + 6].textContent === symbol) {
+            return true;
+          }
+        }
+
+        // Check diagonals
+        if (cells[0].textContent === symbol &&
+            cells[4].textContent === symbol &&
+            cells[8].textContent === symbol) {
+          return true;
+        }
+
+        if (cells[2].textContent === symbol &&
+            cells[4].textContent === symbol &&
+            cells[6].textContent === symbol) {
+          return true;
+        }
+
+        return false;
+      };
+
+      // Check if the game is a tie
+      const checkTie = () => {
+        return cells.every(cell => cell.textContent !== '');
+      };
+
+      // Set the status message
+      const setStatusMessage = (message) => {
+        statusEl.textContent = message;
+      };
+    </script>
+  </body>
+</html>
