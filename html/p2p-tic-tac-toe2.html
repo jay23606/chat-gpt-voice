@@ -1,0 +1,249 @@
+<!-- https://jay23606.github.io/chat-gpt-voice/html/p2p-tic-tac-toe2.html -->
+
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Tic Tac Toe - P2P</title>
+  </head>
+  <body>
+    <h1>Tic Tac Toe - P2P</h1>
+    <p>Share this URL with others to play: <strong><span id="url"></span></strong></p>
+    <p>Waiting for opponent...</p>
+    <table id="board">
+      <tr>
+        <td></td>
+        <td></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td></td>
+        <td></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td></td>
+        <td></td>
+        <td></td>
+      </tr>
+    </table>
+    <script src="https://cdn.jsdelivr.net/npm/peerjs@1.3.2/dist/peerjs.min.js"></script>
+    <script>
+      // Get the most recent key ID from local storage
+      let keyId = parseInt(localStorage.getItem("keyId") || 0);
+
+      // Generate the next shared peer ID
+      function generatePeerId() {
+        keyId += 1;
+        localStorage.setItem("keyId", keyId);
+        return "key" + keyId;
+      }
+
+      // Create a new Peer object with the shared peer ID
+      const peer = new Peer(generatePeerId(), {
+        host: "localhost",
+        port: 9000,
+        path: "/peerjs"
+      });
+
+      // Display the URL to share with others
+      document.querySelector("#url").textContent = window.location.href;
+
+      // Tic Tac Toe game class
+      class TicTacToeGame {
+        constructor() {
+          // The game board
+          this.board = [
+            ["", "", ""],
+            ["", "", ""],
+            ["", "", ""]
+          ];
+
+          // The player's mark ("X" or "O")
+          this.mark = "";
+
+          // The connection to the opponent
+          this.conn = null;
+
+          // Set up the click handler for the board
+          const cells = document.querySelectorAll("#board td");
+          cells.forEach((cell, index) => {
+            cell.addEventListener("click", () => {
+              this.handleClick(index);
+            });
+          });
+        }
+
+        // Start the game with the given connection
+        start(conn) {
+          this.conn = conn;
+          this.mark = "X";
+          this.render();
+          this.conn.on("data", data => this.handleData(data));
+        }
+
+        // Check if the game is waiting for an opponent
+        isWaitingForOpponent() {
+          return !this.conn;
+        }
+
+        // Handle incoming data from the opponent
+        handleData(data) {
+          if (data.type === "move") {
+            const [row, col] = data.move;
+            this.board[row][col] = this.getOpponentMark();
+            this.mark = this.getMark();
+            this.render();
+            this.checkWinner();
+          } else if (data.type === "reject") {
+            alert("The game is already in progress.");
+            this.conn.close();
+          }
+        }
+
+        // Handle a click on a cell
+        handleClick(index) {
+          if (this.isWaitingForOpponent()) {
+            alert("Waiting for opponent...");
+            return;
+          }
+
+          const row = Math.floor(index / 3);
+          const col = index % 3;
+
+          if (this.board[row][col] !== "") {
+            alert("That spot is already taken.");
+            return;
+          }
+
+          this.board[row][col] = this.mark;
+          this.mark = this.getOpponentMark();
+          this.render();
+          this.conn.send({type: "move", move: [row, col]});
+          this.checkWinner();
+        }
+
+        // Check if the game has been won
+        checkWinner() {
+          const b = this.board;
+          let winner = "";
+
+          // Check rows
+          for (let i = 0; i < 3; i++) {
+            if (b[i][0] !== "" && b[i][0] === b[i][1] && b[i][1] === b[i][2]) {
+              winner = b[i][0];
+              break;
+            }
+          }
+
+          // Check columns
+          for (let j = 0; j < 3; j++) {
+            if (b[0][j] !== "" && b[0][j] === b[1][j] && b[1][j] === b[2][j]) {
+              winner = b[0][j];
+              break;
+            }
+          }
+
+          // Check diagonals
+          if (b[0][0] !== "" && b[0][0] === b[1][1] && b[1][1] === b[2][2]) {
+            winner = b[0][0];
+          } else if (b[0][2] !== "" && b[0][2] === b[1][1] && b[1][1] === b[2][0]) {
+            winner = b[0][2];
+          }
+
+          if (winner !== "") {
+            alert(winner + " wins!");
+            this.reset();
+          } else if (this.isBoardFull()) {
+            alert("Tie!");
+            this.reset();
+          }
+        }
+
+        // Render the game board
+        render() {
+          const cells = document.querySelectorAll("#board td");
+          this.board.forEach((row, rowIndex) => {
+            row.forEach((cell, colIndex) => {
+              const index = rowIndex * 3 + colIndex;
+              cells[index].textContent = cell;
+            });
+          });
+        }
+
+        // Reset the game board
+        reset() {
+          this.board = [
+            ["", "", ""],
+            ["", "", ""],
+            ["", "", ""]
+          ];
+
+          if (this.mark === "X") {
+            this.mark = "O";
+          } else {
+            this.mark = "X";
+          }
+
+          this.render();
+        }
+
+        // Get the mark for the current player
+        getMark() {
+          return this.mark;
+        }
+
+        // Get the mark for the opponent
+        getOpponentMark() {
+          if (this.mark === "X") {
+            return "O";
+          } else {
+            return "X";
+          }
+        }
+
+        // Check if the board is full
+        isBoardFull() {
+          for (let row of this.board) {
+            for (let cell of row) {
+              if (cell === "") {
+                return false;
+              }
+            }
+          }
+          return true;
+        }
+      }
+
+      // Listen for incoming connections
+      peer.on("connection", conn => {
+        // Pair players with shared peer IDs key1, key2, key3, etc.
+        if (conn.peer === peer.id) {
+          return;
+        }
+        const myKeyId = parseInt(peer.id.slice(3));
+        const theirKeyId = parseInt(conn.peer.slice(3));
+        if (myKeyId > theirKeyId) {
+          conn.close();
+          return;
+        }
+
+        // Start the game when a second player connects
+        if (game.isWaitingForOpponent()) {
+          game.start(conn);
+        } else {
+          // Reject the connection if the game is already in progress
+          conn.send({type: "reject"});
+          conn.close();
+        }
+      });
+
+      // Create a new tic-tac-toe game
+      const game = new TicTacToeGame();
+
+      // Start the game if there are already two peers connected
+      if (peer.connections.length > 0) {
+        game.start(peer.connections[0]);
+      }
+    </script>
+  </body>
+</html>
