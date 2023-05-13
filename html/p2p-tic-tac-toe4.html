@@ -1,4 +1,5 @@
 <!-- https://jay23606.github.io/chat-gpt-voice/html/p2p-tic-tac-toe4.html -->
+
 <!DOCTYPE html>
 <html>
   <head>
@@ -27,14 +28,11 @@
     </table>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/peerjs/1.3.2/peerjs.min.js"></script>
     <script>
-      // Get the most recent key ID from local storage
-      let keyId = parseInt(localStorage.getItem("keyId") || 0);
-
-      // Generate the next shared peer ID
+      // Generate a unique shared peer ID
+      let keyId = 0;
       function generatePeerId() {
         keyId += 1;
-        localStorage.setItem("keyId", keyId);
-        return "key" + keyId;
+        return `key${keyId}`;
       }
 
       // Create a new Peer object with the shared peer ID
@@ -200,7 +198,11 @@
       } else {
         // Wait for a connection to be made
         peer.on("connection", conn => {
-          startGame(conn);
+          if (!game || game.isWaitingForOpponent()) {
+            game = new TicTacToeGame();
+            game.start(conn);
+            document.querySelector("p").textContent = `You are player "${game.getMark()}".`;
+          }
         });
       }
     </script>
