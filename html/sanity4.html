@@ -1,0 +1,120 @@
+<!-- https://jay23606.github.io/chat-gpt-voice/html/sanity4.html -->
+Sure! Here's the updated code that fixes the issue with listing duplicate keys and allows you to store an object with key-value pairs:
+
+```html
+<!DOCTYPE html>
+<html>
+  <body>
+    <h1>Sanity.io Example</h1>
+    
+    <button id="setData">Set Data</button>
+    <button id="getData">Get Data</button>
+    <button id="removeData">Remove Data</button>
+    <button id="showKeys">Show Keys</button>
+    
+    <ul id="dataList">
+    </ul>
+
+    <ul id="keyList">
+    </ul>
+    
+    <script src="https://unpkg.com/@sanity/client/umd/sanityClient.js"></script>
+    <script>
+    	const { createClient } = SanityClient;
+
+        const client = createClient({
+          projectId: 'b3rj1ubh',
+          dataset: 'production',
+          token: 'skOzyD4VViJ88amMAqteATe2ebZRfoPsHN4U9u1bvC6a1swtKvSKqe25j2D96wKrB3TVnz7cLHR3Mkld5dyeDKw3HE9s0kcTDTcwsO1qKv6hMHUSoS9yOMkfevPS7vMxW1gqA2kXLzBAPoO4NiNqQ1OofngwJIVfkdN9UgE2TaYBltmLUVJw',
+          useCdn: true,
+          apiVersion: '2023-05-03',
+        });
+
+        const publicStorage = {
+          async getItem(key) {
+            const data = await client.fetch('*[_type == $type && key == $key]', {
+              type: 'publicData',
+              key,
+            });
+            return data[0]?.value;
+          },
+
+          async setItem(key, value) {
+            if (typeof value === 'object') {
+              for (const [k, v] of Object.entries(value)) {
+                await this.setItem(`${key}.${k}`, v);
+              }
+              return;
+            }
+            const newData = {
+              _type: 'publicData',
+              key,
+              value,
+            };
+            await client.create(newData);
+          },
+
+          async removeItem(key) {
+            const data = await client.fetch('*[_type == $type && key == $key]', {
+              type: 'publicData',
+              key,
+            });
+            for (const item of data) {
+              await client.delete(item._id);
+            }
+          },
+
+          async getAllKeys() {
+            const data = await client.fetch('*[_type == $type]', {
+              type: 'publicData',
+            });
+            const keys = new Set();
+            data.forEach(item => {
+              keys.add(item.key);
+            });
+            return Array.from(keys);
+          }
+        };
+    </script>
+    <script>
+      const setDataButton = document.getElementById('setData');
+      const getDataButton = document.getElementById('getData');
+      const removeDataButton = document.getElementById('removeData');
+      const showKeysButton = document.getElementById('showKeys');
+      const dataList = document.getElementById('dataList');
+      const keyList = document.getElementById('keyList');
+
+      setDataButton.addEventListener('click', async () => {
+        const dataStr = prompt('Enter a JSON object to store:');
+        if (dataStr) {
+          try {
+            const data = JSON.parse(dataStr);
+            await publicStorage.setItem('myKey', data);
+            alert('Value stored successfully!');
+          } catch (err) {
+            alert('Invalid input!');
+          }
+        }
+      });
+
+      getDataButton.addEventListener('click', async () => {
+        const value = await publicStorage.getItem('myKey');
+        if (value) {
+          dataList.innerHTML = `<li>${JSON.stringify(value)}</li>`;
+        } else {
+          dataList.innerHTML = '<li>No data found</li>';
+        }
+      });
+
+      removeDataButton.addEventListener('click', async () => {
+        await publicStorage.removeItem('myKey');
+        alert('Value removed successfully!');
+      });
+
+      showKeysButton.addEventListener('click', async () => {
+        const keys = await publicStorage.getAllKeys();
+        keyList.innerHTML = '';
+        keys.forEach(key => {
+          const li = document.createElement('li');
+          li.textContent = key;
+         
