@@ -75,7 +75,9 @@ async setItem(key, value) {
               key,
             });
             if (data[0]) {
-              await client.patch(data[0]._id).unset([`value.${key}`]).commit();
+              //await client.patch(data[0]._id).unset([`value.${key}`]).commit();
+                const docId = data[0]._id;
+                await client.delete(docId);
             }
           },
 
