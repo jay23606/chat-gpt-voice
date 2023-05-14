@@ -1,0 +1,33 @@
+<!-- https://jay23606.github.io/chat-gpt-voice/html/t2.htm -->
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8">
+    <title>Tab 2</title>
+  </head>
+  <body>
+    <h1>Tab 2</h1>
+    <p>Peer ID: <input id="peer-id" type="text"></p>
+    <p>Message: <input id="message" type="text"></p>
+    <button id="send-btn">Send</button>
+    <script src="https://cdn.jsdelivr.net/npm/simple-peer/simplepeer.min.js"></script>
+    <script>
+      const peer2 = new SimplePeer();
+      peer2.on('signal', data => {
+        console.log('Signal data:', data);
+        document.querySelector('#peer-id').value = JSON.stringify(data);
+      });
+      peer2.on('connect', () => {
+        console.log('Peer 2 connected');
+      });
+      peer2.on('data', data => {
+        console.log('Peer 2 received:', data.toString());
+      });
+      document.querySelector('#send-btn').addEventListener('click', () => {
+        const message = document.querySelector('#message').value;
+        peer2.send(message);
+        console.log('Peer 2 sent:', message);
+      });
+    </script>
+  </body>
+</html>
