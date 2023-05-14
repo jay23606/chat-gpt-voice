@@ -1,0 +1,103 @@
+<!-- https://jay23606.github.io/chat-gpt-voice/html/rtc3.htm -->
+
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>WebRTC Example</title>
+  </head>
+  <body>
+    <label for="messageInput">Message:</label>
+    <input type="text" id="messageInput">
+    <button id="sendButton">Send</button>
+
+    <script>
+      const $ = id => document.getElementById(id);
+      const $el = (el, attrs = {}) => Object.assign(document.createElement(el), attrs);
+      const $$ = sel => document.querySelectorAll(sel);
+
+      // Add on method to RTCPeerConnection prototype
+      //RTCPeerConnection.prototype.on = function (e, fn) { this.addEventListener(e, fn) };
+      
+      let localPeer, remotePeer;
+      localPeer = new RTCPeerConnection();
+
+      localPeer.addEventListener('icecandidate', (event) => {
+        console.log('Local ICE candidate:', event.candidate);
+        if (event.candidate) {
+          remotePeer.addIceCandidate(event.candidate);
+        }
+      });
+
+      const dataChannel = localPeer.createDataChannel('data');
+
+      dataChannel.addEventListener('open', () => {
+        console.log('Local data channel opened');
+      });
+
+      dataChannel.addEventListener('close', () => {
+        console.log('Local data channel closed');
+      });
+
+      dataChannel.addEventListener('error', (event) => {
+        console.log('Local data channel error:', event.error);
+      });
+
+      $('sendButton').addEventListener('click', () => {
+        const message = $('messageInput').value;
+        dataChannel.send(message);
+        console.log('Sent message:', message);
+      });
+
+      localPeer.createOffer().then((offer) => {
+        console.log('Local offer:', offer);
+
+        localPeer.setLocalDescription(offer).then(() => {
+          console.log('Local description set');
+        }).catch((error) => {
+          console.log('Error setting local description:', error);
+        });
+
+        remotePeer = new RTCPeerConnection();
+        remotePeer.addEventListener('icecandidate', (event) => {
+          console.log('Remote ICE candidate:', event.candidate);
+          if (event.candidate) {
+            localPeer.addIceCandidate(event.candidate);
+          }
+        });
+
+        remotePeer.addEventListener('datachannel', (event) => {
+          console.log('Remote data channel connected:', event.channel);
+          event.channel.addEventListener('message', (message) => {
+            console.log('Received message:', message.data);
+          });
+        });
+
+        remotePeer.setRemoteDescription(offer).then(() => {
+          console.log('Remote description set');
+
+          remotePeer.createAnswer().then((answer) => {
+            console.log('Remote answer:', answer);
+
+            remotePeer.setLocalDescription(answer).then(() => {
+              console.log('Remote description set');
+
+              localPeer.setRemoteDescription(answer).then(() => {
+                console.log('Local description set');
+              }).catch((error) => {
+                console.log('Error setting remote description on local peer:', error);
+              });
+            }).catch((error) => {
+              console.log('Error setting local description on remote peer:', error);
+            });
+          }).catch((error) => {
+            console.log('Error creating answer:', error);
+          });
+        }).catch((error) => {
+          console.log('Error setting remote description:', error);
+        });
+      }).catch((error) => {
+        console.log('Error creating offer:', error);
+      });
+    </script>
+  </body>
+</html>
