@@ -1,4 +1,5 @@
 <!-- https://jay23606.github.io/chat-gpt-voice/html/peerjs-cam-fb7.html -->
+
 <!DOCTYPE html>
 <html>
   <head>
@@ -25,14 +26,25 @@
 
       // Initialize PeerJS
       const peer = new Peer();
-      const myIdSpan = document.getElementById('my-id');
       const clearAllButton = document.getElementById('clear-all');
       const videoGrid = document.getElementById('video-grid');
       let timeoutId = null;
       let callInProgress = false;
       let currentCall = null;
 
-      function showAllPeers() {
+      const myIdDiv = () => {
+        const myIdSpan = document.createElement('span');
+        myIdSpan.id = 'my-id';
+        myIdSpan.innerText = peer.id;
+
+        const myIdH3 = document.createElement('h3');
+        myIdH3.innerText = 'My PeerJS ID: ';
+        myIdH3.appendChild(myIdSpan);
+
+        return myIdH3;
+      }
+
+      const showAllPeers = () => {
         if (callInProgress) return;
         dbRef.once('value')
           .then((snapshot) => {
@@ -42,9 +54,7 @@
             peersDiv.appendChild(document.createElement('br'));
 
             // Add own PeerJS ID to the top of the list
-            const myIdDiv = document.createElement('div');
-            myIdDiv.innerText = `My ID: ${peer.id}`;
-            peersDiv.appendChild(myIdDiv);
+            peersDiv.appendChild(myIdDiv());
             peersDiv.appendChild(document.createElement('br'));
 
             // Check if already in a call
