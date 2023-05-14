@@ -1,0 +1,89 @@
+<!-- https://jay23606.github.io/chat-gpt-voice/html/peerjs-cam-fb10.html -->
+
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>PeerJS Video Chat</title>
+</head>
+<body>
+  <div id="peers">
+    <h3>My PeerJS ID: <span id="my-id"></span></h3>
+  </div>
+  <div id="video-grid"></div>
+  <script src="https://unpkg.com/peerjs@1.4.7/dist/peerjs.min.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.2.9/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.2.9/firebase-database.js"></script>
+  <script>
+    const firebaseConfig = { databaseURL: "https://jabdal-default-rtdb.firebaseio.com" };
+    firebase.initializeApp(firebaseConfig);
+    const dbRef = firebase.database().ref('peers'), $ = (id) => document.getElementById(id), peer = new Peer();
+    const myIdSpan = $('my-id'), videoGrid = $('video-grid');
+    let currentCalls = new Map();
+    peer.on('open', (id) => {
+      myIdSpan.innerText = id;
+      dbRef.onDisconnect().remove();
+      dbRef.push(id);
+      refreshPeers();
+    });
+    peer.on('call', (incomingCall) => {
+      const answerCall = (stream) => {
+        currentCalls.set(incomingCall.peer, incomingCall);
+        incomingCall.answer(stream);
+        incomingCall.startTime = Date.now();
+        incomingCall.on('stream', (remoteStream) => {
+          const video = document.createElement('video');
+          video.srcObject = remoteStream;
+          video.autoplay = true;
+          video.dataset.peer = incomingCall.peer;
+          videoGrid.appendChild(video);
+        });
+        incomingCall.on('close', () => {
+          currentCalls.delete(incomingCall.peer);
+          videoGrid.removeChild(videoGrid.querySelector(`[data-peer="${incomingCall.peer}"]`));
+          refreshPeers();
+        });
+      };
+      navigator.mediaDevices.getUserMedia({ video: true, audio: true }).then(answerCall).catch((error) => console.error(error));
+    });
+    const refreshPeers = () => {
+      dbRef.once('value').then((snapshot) => {
+        const peersDiv = $('peers');
+        peersDiv.innerHTML = '';
+        peersDiv.appendChild(document.createElement('br'));
+        const myIdDiv = document.createElement('div');
+        myIdDiv.innerText = `My ID: ${peer.id}`;
+        peersDiv.appendChild(myIdDiv);
+        peersDiv.appendChild(document.createElement('br'));
+        snapshot.forEach((childSnapshot) => {
+          const value = childSnapshot.val();
+          if (value === peer.id || currentCalls.has(value)) return;
+          const callButton = document.createElement('button');
+          callButton.innerText = `Call ${value}`;
+          callButton.addEventListener('click', () => {
+            navigator.mediaDevices.getUserMedia({ video: true, audio: true }).then((stream) => {
+              const call = peer.call(value, stream);
+              currentCalls.set(value, call);
+              call.startTime = Date.now();
+              call.on('stream', (remoteStream) => {
+                const video = document.createElement('video');
+                video.srcObject = remoteStream;
+                video.autoplay = true;
+                video.dataset.peer = value;
+                videoGrid.appendChild(video);
+              });
+              call.on('close', () => {
+                currentCalls.delete(value);
+                videoGrid.removeChild(videoGrid.querySelector(`[data-peer="${value}"]`));
+                refreshPeers();
+              });
+            }).catch((error) => console.error(error));
+          });
+          peersDiv.appendChild(callButton);
+          peersDiv.appendChild(document.createElement('br'));
+        });
+      }).catch((error) => console.error(error));
+    };
+  </script>
+</body>
+</html>
