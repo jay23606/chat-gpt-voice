@@ -44,7 +44,7 @@
     });
     peer.on('call', (incomingCall) => {
       if ($$('video').length > 0) {
-        incomingCall.close();
+        currentCalls.set(incomingCall.peer, incomingCall);
         return;
       }
       clearTimeout(refreshTimeoutId);
@@ -56,6 +56,7 @@
           const video = document.createElement('video');
           video.srcObject = remoteStream;
           video.autoplay = true;
+          video.dataset.peer = incomingCall.peer;
           videoGrid.appendChild(video);
           $('hang-up-btn').style.display = 'block';
         });
