@@ -1,0 +1,78 @@
+<!-- https://jay23606.github.io/chat-gpt-voice/html/fb2.html -->
+
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Firebase Realtime Database Example</title>
+</head>
+<body>
+  <h1>Firebase Realtime Database Example</h1>
+
+  <label for="set-value">Value to set:</label>
+  <input type="text" id="set-value" placeholder="Enter value to set">
+
+  <button id="set-btn">Set Value</button>
+  <button id="get-btn">Get Value</button>
+  <button id="remove-btn">Remove Key</button>
+
+  <script src="https://www.gstatic.com/firebasejs/9.1.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.1.1/firebase-database-compat.js"></script>
+  <script>
+    // Your web app's Firebase configuration
+    const firebaseConfig = {
+  apiKey: "AIzaSyDbanEumaCJzhbfjVm1NUfuEZZLa8AjRoI",
+  authDomain: "jabdal.firebaseapp.com",
+  databaseURL: "https://jabdal-default-rtdb.firebaseio.com",
+  projectId: "jabdal",
+  storageBucket: "jabdal.appspot.com",
+  messagingSenderId: "676804845012",
+  appId: "1:676804845012:web:b7b1bc2d99d8c661c48a41"
+    };
+
+    // Initialize Firebase
+    const app = firebase.initializeApp(firebaseConfig);
+
+    // Get a reference to the database service
+    const database = firebase.database(app);
+
+    // Set a value to a key
+    const setBtn = document.getElementById('set-btn');
+    setBtn.addEventListener('click', () => {
+      const value = document.getElementById('set-value').value;
+      database.ref('/').set(value)
+        .then(() => {
+          console.log('Value set!');
+        })
+        .catch((error) => {
+          console.error(error);
+        });
+    });
+
+    // Get a value from a key
+    const getBtn = document.getElementById('get-btn');
+    getBtn.addEventListener('click', () => {
+      database.ref('/').once('value')
+        .then((snapshot) => {
+          const value = snapshot.val();
+          console.log(value);
+        })
+        .catch((error) => {
+          console.error(error);
+        });
+    });
+
+    // Remove a key
+    const removeBtn = document.getElementById('remove-btn');
+    removeBtn.addEventListener('click', () => {
+      database.ref('/').remove()
+        .then(() => {
+          console.log('Key removed!');
+        })
+        .catch((error) => {
+          console.error(error);
+        });
+    });
+  </script>
+</body>
+</html>
