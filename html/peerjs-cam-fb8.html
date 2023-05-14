@@ -67,6 +67,9 @@
           inCall = false;
           callInProgress = false;
           currentCall = null;
+          // Remove all video elements
+          const videos = document.querySelectorAll('video');
+          videos.forEach((video) => video.remove());
           refreshPeers();
           $('hang-up-btn').style.display = 'none';
         });
@@ -115,6 +118,9 @@
                 inCall = false;
                 callInProgress = false;
                 currentCall = null;
+                // Remove all video elements
+                const videos = document.querySelectorAll('video');
+                videos.forEach((video) => video.remove());
                 refreshPeers();
                 $('hang-up-btn').style.display = 'none';
               });
@@ -140,6 +146,9 @@
         inCall = false;
         // Remove the local stream from the video element
         $('local-video').srcObject = null;
+        // Remove all video elements
+        const videos = document.querySelectorAll('video');
+        videos.forEach((video) => video.remove());
         // Refresh the peer list to show which peers are online
         refreshPeers();
       }
