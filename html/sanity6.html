@@ -33,54 +33,34 @@ const client = createClient({
 
 const publicStorage = {
   async getItem(key) {
-    const data = await client.fetch('*[_type == $type && key == $key]', {
-      type: 'publicData',
-      key,
-    });
+    const data = await client.fetch('*[_type == $type && key == $key]', { type: 'publicData', key });
     return data[0]?.value;
   },
 
   async setItem(key, value) {
-    const data = await client.fetch('*[_type == $type && key == $key]', {
-      type: 'publicData',
-      key,
-    });
-    const action = data[0]
-      ? client.patch(data[0]._id).set({ _type: 'publicData', value })
-      : client.create({ _type: 'publicData', key, value });
-
-    await client.transaction().createIfNotExists({
+    const data = await client.fetch('*[_type == $type && key == $key]', { type: 'publicData', key });
+    const action = data[0] ? client.patch(data[0]._id).set({ value }) : client.create({ _type: 'publicData', key, value });
+    await client.transaction().createOrReplace({
       _id: `publicData.${key}`,
-      _type: 'publicData', // Add _type field
-    }).commit();
-
-    //await client.transaction().patch(`publicData.${key}`).createOrReplace(action).commit();
-
-    await client.transaction().patch(`publicData.${key}`).createOrReplace({
-      ...action,
       _type: 'publicData',
-      _id: `publicData.${key}`,
+      ...action,
     }).commit();
-
   },
 
   async removeItem(key) {
-    const data = await client.fetch('*[_type == $type && key == $key]', {
-      type: 'publicData',
-      key,
-    });
+    const data = await client.fetch('*[_type == $type && key == $key]', { type: 'publicData', key });
     if (data[0]) {
-      await client.transaction().delete(data[0]._id).commit();
+      await client.delete(data[0]._id).commit();
     }
   },
 
   async getAllKeys() {
-    const data = await client.fetch('*[_type == $type]', {
-      type: 'publicData',
-    });
+    const data = await client.fetch('*[_type == $type]', { type: 'publicData' });
     return data.map(item => item.key);
   }
 };
+
+
     </script>
     <script>
       const setDataButton = document.getElementById('setData');
