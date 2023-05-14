@@ -17,17 +17,9 @@
     <script>
       const firebaseConfig = { databaseURL: "https://jabdal-default-rtdb.firebaseio.com" };
       firebase.initializeApp(firebaseConfig);
-      const dbRef = firebase.database().ref('peers');
-
-      const peer = new Peer();
-      const myIdSpan = document.getElementById('my-id');
-      const clearAllButton = document.getElementById('clear-all');
-      const videoGrid = document.getElementById('video-grid');
-      let currentCall = null;
-      let inCall = false;
-      let callInProgress = false;
-      let refreshTimeoutId = null;
-      const callTimeout = 60000;
+      const dbRef = firebase.database().ref('peers'), $ = id => document.getElementById(id), peer = new Peer();
+      const myIdSpan = $('my-id'), clearAllButton = $('clear-all'), videoGrid = $('video-grid'), callTimeout = 60000;
+      let currentCall = null, inCall = false, callInProgress = false, refreshTimeoutId = null;
 
       peer.on('open', (id) => {
         myIdSpan.innerText = id;
@@ -84,7 +76,7 @@
                     currentCall = peer.call(value, stream);
                     currentCall.startTime = Date.now();
                     currentCall.on('stream', (remoteStream) => {
-                      callInProgress = true;
+                      //callInProgress = true;
                       const video = document.createElement('video');
                       video.srcObject = remoteStream;
                       video.autoplay = true;
@@ -124,7 +116,7 @@
                         currentCall.answer(stream);
                         currentCall.startTime = Date.now();
                         currentCall.on('stream', (remoteStream) => {
-                          callInProgress = true;
+                          //callInProgress = true;
                           const video = document.createElement('video');
                           video.srcObject = remoteStream;
                           video.autoplay = true;
