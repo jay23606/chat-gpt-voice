@@ -24,6 +24,16 @@
     const myIdSpan = $('my-id'),
           videoGrid = $('video-grid');
     let currentCalls = new Map();
+
+    const endCall = (video) => {
+      const peerId = video.dataset.peer;
+      currentCalls.get(peerId).close();
+      currentCalls.delete(peerId);
+      videoGrid.removeChild(video);
+      console.log(`Call with ${peerId} closed`);
+      refreshPeers();
+    }
+
     peer.on('open', (id) => {
       myIdSpan.innerText = id;
       dbRef.onDisconnect().remove();
@@ -41,12 +51,7 @@
           video.autoplay = true;
           video.dataset.peer = incomingCall.peer;
           video.addEventListener('click', () => {
-            currentCalls.get(incomingCall.peer).close();
-            currentCalls.delete(incomingCall.peer);
-            const videosToRemove = document.querySelectorAll(`video[data-peer="${incomingCall.peer}"]`);
-            videosToRemove.forEach((video) => videoGrid.removeChild(video));
-            console.log(`Call with ${incomingCall.peer} closed`);
-            refreshPeers();
+            endCall(video);
           });
           videoGrid.appendChild(video);
         });
@@ -84,12 +89,7 @@
                 video.autoplay = true;
                 video.dataset.peer = value;
                 video.addEventListener('click', () => {
-                  currentCalls.get(value).close();
-                  currentCalls.delete(value);
-                  const videosToRemove = document.querySelectorAll(`video[data-peer="${value}"]`);
-                  videosToRemove.forEach((video) => videoGrid.removeChild(video));
-                  console.log(`Call with ${value} closed`);
-                  refreshPeers();
+                  endCall(video);
                 });
                 videoGrid.appendChild(video);
               });
