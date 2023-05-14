@@ -1,0 +1,40 @@
+<!-- https://jay23606.github.io/chat-gpt-voice/html/srtc1.htm -->
+
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>WebRTC Video Chat with SimpleWebRTC</title>
+    <style>
+      video {
+        width: 50%;
+        height: 50%;
+        margin: auto;
+        display: block;
+        border: 1px solid black;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>WebRTC Video Chat with SimpleWebRTC</h1>
+    <div id="local-video-container">
+      <h2>Local Video Stream</h2>
+      <video id="local-video" autoplay></video>
+    </div>
+    <div id="remote-video-container">
+      <h2>Remote Video Stream</h2>
+      <video id="remote-video" autoplay></video>
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/simplewebrtc/latest.js"></script>
+    <script>
+      const webrtc = new SimpleWebRTC({
+        localVideoEl: 'local-video',
+        remoteVideoEl: 'remote-video',
+        autoRequestMedia: true
+      });
+
+      webrtc.on('readyToCall', () => {
+        webrtc.joinRoom('your-room-name');
+      });
+    </script>
+  </body>
+</html>
