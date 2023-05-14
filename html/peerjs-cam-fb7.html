@@ -1,5 +1,7 @@
 <!-- https://jay23606.github.io/chat-gpt-voice/html/peerjs-cam-fb7.html -->
+You're correct, the issue is that the answerer's call is automatically answered, which triggers the `stream` event. To prevent the timer from refreshing the peer list on the answerer side, we can add a guard that checks if the `timeoutId` variable is set to `null`. If it's not set to `null`, we can clear the timer. Here's the updated code:
 
+```html
 <!DOCTYPE html>
 <html>
   <head>
@@ -87,7 +89,10 @@
                     video.autoplay = true;
                     peersDiv.appendChild(video);
                   });
-                  timeoutId = null; // Clear the timer
+                  if (timeoutId !== null) {
+                    clearTimeout(timeoutId);
+                  }
+                  timeoutId = null;
                 })
                 .catch(error => console.error(error));
             });
@@ -140,7 +145,10 @@
                           video.autoplay = true;
                           peersDiv.appendChild(video);
                         });
-                        timeoutId = null; // Clear the timer
+                        if (timeoutId !== null) {
+                          clearTimeout(timeoutId);
+                        }
+                        timeoutId = null;
                       })
                       .catch(error => console.error(error));
                   };
@@ -167,5 +175,3 @@
         peersDiv.innerHTML = '';
       });
     </script>
-  </body>
-</html>
