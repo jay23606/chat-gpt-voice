@@ -40,13 +40,15 @@
           video.srcObject = remoteStream;
           video.autoplay = true;
           video.dataset.peer = incomingCall.peer;
+          video.addEventListener('click', () => {
+            currentCalls.get(incomingCall.peer).close();
+            currentCalls.delete(incomingCall.peer);
+            const videosToRemove = document.querySelectorAll(`video[data-peer="${incomingCall.peer}"]`);
+            videosToRemove.forEach((video) => videoGrid.removeChild(video));
+            console.log(`Call with ${incomingCall.peer} closed`);
+            refreshPeers();
+          });
           videoGrid.appendChild(video);
-        });
-        incomingCall.on('close', () => {
-          currentCalls.delete(incomingCall.peer);
-          videoGrid.removeChild(videoGrid.querySelector(`[data-peer="${incomingCall.peer}"]`));
-          console.log(`Call with ${incomingCall.peer} closed`);
-          refreshPeers();
         });
       };
       navigator.mediaDevices.getUserMedia({ video: true, audio: true }).then(answerCall).catch((error) => console.error(error));
@@ -81,13 +83,15 @@
                 video.srcObject = remoteStream;
                 video.autoplay = true;
                 video.dataset.peer = value;
+                video.addEventListener('click', () => {
+                  currentCalls.get(value).close();
+                  currentCalls.delete(value);
+                  const videosToRemove = document.querySelectorAll(`video[data-peer="${value}"]`);
+                  videosToRemove.forEach((video) => videoGrid.removeChild(video));
+                  console.log(`Call with ${value} closed`);
+                  refreshPeers();
+                });
                 videoGrid.appendChild(video);
-              });
-              call.on('close', () => {
-                currentCalls.delete(value);
-                videoGrid.removeChild(videoGrid.querySelector(`[data-peer="${value}"]`));
-                console.log(`Call with ${value} closed`);
-                refreshPeers();
               });
             }).catch((error) => console.error(error));
           });
