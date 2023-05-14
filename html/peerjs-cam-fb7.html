@@ -1,4 +1,5 @@
 <!-- https://jay23606.github.io/chat-gpt-voice/html/peerjs-cam-fb7.html -->
+
 <!DOCTYPE html>
 <html>
   <head>
@@ -38,6 +39,33 @@
             const key = childSnapshot.key;
             const value = childSnapshot.val();
             if (value === peer.id) dbRef.child(key).remove();
+          });
+        }).catch((error) => console.error(error));
+      });
+      peer.on('call', (incomingCall) => {
+        if (callInProgress) {
+          incomingCall.close();
+          return;
+        }
+        callInProgress = true;
+        clearTimeout(refreshTimeoutId);
+        navigator.mediaDevices.getUserMedia({ video: true, audio: true }).then((stream) => {
+          inCall = true;
+          currentCall = incomingCall;
+          currentCall.answer(stream);
+          currentCall.startTime = Date.now();
+          currentCall.on('stream', (remoteStream) => {
+            callInProgress = true;
+            const video = document.createElement('video');
+            video.srcObject = remoteStream;
+            video.autoplay = true;
+            videoGrid.appendChild(video);
+          });
+          currentCall.on('close', () => {
+            inCall = false;
+            callInProgress = false;
+            currentCall = null;
+            refreshPeers();
           });
         }).catch((error) => console.error(error));
       });
