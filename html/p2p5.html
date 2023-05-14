@@ -1,0 +1,110 @@
+<!-- https://jay23606.github.io/chat-gpt-voice/html/p2p5.html -->
+
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Storing Peer IDs in Firebase</title>
+  <script src="https://unpkg.com/peerjs@1.4.7/dist/peerjs.min.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.1.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.1.1/firebase-database-compat.js"></script>
+</head>
+<body>
+  <h1>Storing Peer IDs in Firebase</h1>
+
+  <div id="peers"></div>
+
+  <script>
+    // Your web app's Firebase configuration
+    const firebaseConfig = {
+      databaseURL: "https://jabdal-default-rtdb.firebaseio.com"
+    };
+
+    // Initialize Firebase
+    firebase.initializeApp(firebaseConfig);
+
+    // Initialize PeerJS
+    const peer = new Peer();
+
+    // Get a reference to the root of the database
+    const dbRef = firebase.database().ref('/');
+
+    // When the PeerJS ID is generated, store it in the database
+    peer.on('open', (peerId) => {
+      // Generate a unique key for the peer ID
+      const peerIdKey = dbRef.push().key;
+
+      // Store the peer ID in the database under the unique key
+      dbRef.child(peerIdKey).set(peerId)
+        .then(() => console.log('Peer ID stored in Firebase'))
+        .catch(error => console.error(error));
+
+      // Update the reference to the current key
+      dbRef.onDisconnect().remove();
+      dbRef.once('value')
+        .then(snapshot => {
+          snapshot.forEach(childSnapshot => {
+            const key = childSnapshot.key;
+            const value = childSnapshot.val();
+            if (value === peerId) {
+              dbRef.child(key).onDisconnect().remove();
+            }
+          });
+        })
+        .catch(error => console.error(error));
+    });
+
+    // Show all keys and values in the database
+    function showAllPeers() {
+      dbRef.once('value')
+        .then(snapshot => {
+          const peersDiv = document.getElementById('peers');
+          snapshot.forEach(childSnapshot => {
+            const key = childSnapshot.key;
+            const value = childSnapshot.val();
+            if (value !== peer.id) {
+              const callButton = document.createElement('button');
+              callButton.innerText = `Call ${value}`;
+              callButton.onclick = () => {
+                navigator.mediaDevices.getUserMedia({video: true, audio: true})
+                  .then(stream => {
+                    const call = peer.call(value, stream);
+                    call.on('stream', remoteStream => {
+                      const video = document.createElement('video');
+                      video.srcObject = remoteStream;
+                      video.autoplay = true;
+                      peersDiv.appendChild(video);
+                    });
+                  })
+                  .catch(error => console.error(error));
+              };
+              peersDiv.appendChild(callButton);
+
+              const answerButton = document.createElement('button');
+              answerButton.innerText = `Answer ${value}`;
+              answerButton.onclick = () => {
+                navigator.mediaDevices.getUserMedia({video: true, audio: true})
+                  .then(stream => {
+                    const call = peer.on('call', incomingCall => {
+                      incomingCall.answer(stream);
+                      incomingCall.on('stream', remoteStream => {
+                        const video = document.createElement('video');
+                        video.srcObject = remoteStream;
+                        video.autoplay = true;
+                        peersDiv.appendChild(video);
+                      });
+                    });
+                  })
+                  .catch(error => console.error(error));
+              };
+              peersDiv.appendChild(answerButton);
+            }
+          });
+        })
+        .catch(error => console.error(error));
+    }
+
+    // Show all peers when the page loads
+    window.onload = showAllPeers;
+  </script>
+</body>
+</html>
