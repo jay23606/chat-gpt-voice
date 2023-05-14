@@ -1,5 +1,4 @@
 <!-- https://jay23606.github.io/chat-gpt-voice/html/peerjs-cam-fb7.html -->
-
 <!DOCTYPE html>
 <html>
   <head>
@@ -9,7 +8,6 @@
   <body>
     <div id="peers">
       <h3>My PeerJS ID: <span id="my-id"></span></h3>
-      <button id="clear-all">Clear All Peers</button>
     </div>
     <div id="video-grid"></div>
     <script src="https://unpkg.com/peerjs@1.4.7/dist/peerjs.min.js"></script>
@@ -22,7 +20,6 @@
             $ = (id) => document.getElementById(id),
             peer = new Peer();
       const myIdSpan = $('my-id'),
-            clearAllButton = $('clear-all'),
             videoGrid = $('video-grid'),
             callTimeout = 60000;
       let currentCall = null,
@@ -60,7 +57,6 @@
             return;
           }
           snapshot.forEach((childSnapshot) => {
-            const key = childSnapshot.key;
             const value = childSnapshot.val();
             if (value === peer.id) return;
             const callButton = document.createElement('button');
@@ -86,23 +82,9 @@
                   currentCall = null;
                   refreshPeers();
                 });
-                const hangUpButton = document.createElement('button');
-                hangUpButton.innerText = 'Hang Up';
-                hangUpButton.addEventListener('click', () => {
-                  hangUp();
-                });
-                peersDiv.appendChild(hangUpButton);
               }).catch((error) => console.error(error));
             });
             peersDiv.appendChild(callButton);
-            if (!inCall) {
-              const deleteButton = document.createElement('button');
-              deleteButton.innerText = 'Delete';
-              deleteButton.addEventListener('click', () => {
-                dbRef.child(key).remove();
-              });
-              peersDiv.appendChild(deleteButton);
-            }
             peersDiv.appendChild(document.createElement('br'));
           });
           if (!callInProgress && refreshTimeoutId === null) {
@@ -119,11 +101,6 @@
         inCall = false;
         refreshPeers();
       };
-      clearAllButton.addEventListener('click', () => {
-        dbRef.remove();
-        const peersDiv = $('peers');
-        peersDiv.innerHTML = '';
-      });
     </script>
   </body>
 </html>
