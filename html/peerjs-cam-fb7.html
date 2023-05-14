@@ -1,7 +1,5 @@
 <!-- https://jay23606.github.io/chat-gpt-voice/html/peerjs-cam-fb7.html -->
-You're correct, the issue is that the answerer's call is automatically answered, which triggers the `stream` event. To prevent the timer from refreshing the peer list on the answerer side, we can add a guard that checks if the `timeoutId` variable is set to `null`. If it's not set to `null`, we can clear the timer. Here's the updated code:
 
-```html
 <!DOCTYPE html>
 <html>
   <head>
@@ -14,13 +12,19 @@ You're correct, the issue is that the answerer's call is automatically answered,
       <button id="clear-all">Clear All Peers</button>
     </div>
     
-    <script src="https://unpkg.com/peerjs@1.4.7/dist/peerjs.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/peerjs@1.3.2/dist/peer.min.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.2.9/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.2.9/firebase-database.js"></script>
     <script>
       // Initialize Firebase
       const firebaseConfig = {
-        databaseURL: "https://jabdal-default-rtdb.firebaseio.com"
+        apiKey: "YOUR_API_KEY",
+        authDomain: "YOUR_AUTH_DOMAIN",
+        databaseURL: "YOUR_DATABASE_URL",
+        projectId: "YOUR_PROJECT_ID",
+        storageBucket: "YOUR_STORAGE_BUCKET",
+        messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
+        appId: "YOUR_APP_ID"
       };
       firebase.initializeApp(firebaseConfig);
       const dbRef = firebase.database().ref('peers');
@@ -80,6 +84,7 @@ You're correct, the issue is that the answerer's call is automatically answered,
               }
 
               inCall = true;
+              callInProgress = true;
               navigator.mediaDevices.getUserMedia({video: true, audio: true})
                 .then(stream => {
                   call.answer(stream);
@@ -175,3 +180,5 @@ You're correct, the issue is that the answerer's call is automatically answered,
         peersDiv.innerHTML = '';
       });
     </script>
+  </body>
+</html>
