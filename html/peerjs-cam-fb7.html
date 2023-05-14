@@ -1,4 +1,5 @@
 <!-- https://jay23606.github.io/chat-gpt-voice/html/peerjs-cam-fb7.html -->
+
 <!DOCTYPE html>
 <html>
   <head>
@@ -10,150 +11,108 @@
       <h3>My PeerJS ID: <span id="my-id"></span></h3>
       <button id="clear-all">Clear All Peers</button>
     </div>
-    
+    <div id="video-grid"></div>
     <script src="https://unpkg.com/peerjs@1.4.7/dist/peerjs.min.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.2.9/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.2.9/firebase-database.js"></script>
     <script>
       const firebaseConfig = { databaseURL: "https://jabdal-default-rtdb.firebaseio.com" };
       firebase.initializeApp(firebaseConfig);
-      const dbRef = firebase.database().ref('peers'), $ = id => document.getElementById(id), peer = new Peer();
-      const myIdSpan = $('my-id'), clearAllButton = $('clear-all'), videoGrid = $('video-grid'), callTimeout = 60000;
-      let currentCall = null, inCall = false, callInProgress = false, refreshTimeoutId = null;
-
+      const dbRef = firebase.database().ref('peers'),
+            $ = (id) => document.getElementById(id),
+            peer = new Peer();
+      const myIdSpan = $('my-id'),
+            clearAllButton = $('clear-all'),
+            videoGrid = $('video-grid'),
+            callTimeout = 60000;
+      let currentCall = null,
+          inCall = false,
+          callInProgress = false,
+          refreshTimeoutId = null;
       peer.on('open', (id) => {
         myIdSpan.innerText = id;
         dbRef.onDisconnect().remove();
         dbRef.push(id);
         refreshPeers();
       });
-
       peer.on('close', () => {
-        dbRef.once('value')
-          .then((snapshot) => {
-            snapshot.forEach((childSnapshot) => {
-              const key = childSnapshot.key;
-              const value = childSnapshot.val();
-              if (value === peer.id) dbRef.child(key).remove();
-            });
-          })
-          .catch((error) => console.error(error));
+        dbRef.once('value').then((snapshot) => {
+          snapshot.forEach((childSnapshot) => {
+            const key = childSnapshot.key;
+            const value = childSnapshot.val();
+            if (value === peer.id) dbRef.child(key).remove();
+          });
+        }).catch((error) => console.error(error));
       });
-
       const refreshPeers = () => {
         if (callInProgress) return;
-        dbRef.once('value')
-          .then((snapshot) => {
-            const peersDiv = document.getElementById('peers');
-            peersDiv.innerHTML = '';
-            peersDiv.appendChild(document.createElement('hr'));
-            peersDiv.appendChild(document.createElement('br'));
-
-            const myIdDiv = document.createElement('div');
-            myIdDiv.innerText = `My ID: ${peer.id}`;
-            peersDiv.appendChild(myIdDiv);
-            peersDiv.appendChild(document.createElement('br'));
-
-            if (currentCall !== null && Date.now() - currentCall.startTime >= callTimeout) {
-              hangUp();
-              return;
-            }
-
-            snapshot.forEach((childSnapshot) => {
-              const key = childSnapshot.key;
-              const value = childSnapshot.val();
-              if (value === peer.id) return;
-
-              const callButton = document.createElement('button');
-              callButton.innerText = `Call ${value}`;
-              callButton.addEventListener('click', () => {
-                if (callInProgress) return;
-                callInProgress = true;
-                clearTimeout(refreshTimeoutId);
-                navigator.mediaDevices.getUserMedia({ video: true, audio: true })
-                  .then((stream) => {
-                    inCall = true;
-                    currentCall = peer.call(value, stream);
-                    currentCall.startTime = Date.now();
-                    currentCall.on('stream', (remoteStream) => {
-                      //callInProgress = true;
-                      const video = document.createElement('video');
-                      video.srcObject = remoteStream;
-                      video.autoplay = true;
-                      videoGrid.appendChild(video);
-                    });
-                    currentCall.on('close', () => {
-                      inCall = false;
-                      callInProgress = false;
-                      currentCall = null;
-                      refreshPeers();
-                    });
-                    const hangUpButton = document.createElement('button');
-                    hangUpButton.innerText = 'Hang Up';
-                    hangUpButton.addEventListener('click', () => {
-                      hangUp();
-                    });
-                    peersDiv.appendChild(hangUpButton);
-                  })
-                  .catch((error) => console.error(error));
-              });
-
-              const buttonsDiv = document.createElement('div');
-              buttonsDiv.appendChild(callButton);
-
-              peer.on('call', (call) => {
-                if (call.peer === value) {
-                  const answerButton = document.createElement('button');
-                  answerButton.innerText = `Answer ${value}`;
-                  answerButton.addEventListener('click', () => {
-                    if (callInProgress) return;
-                    callInProgress = true;
-                    clearTimeout(refreshTimeoutId);
-                    navigator.mediaDevices.getUserMedia({ video: true, audio: true })
-                      .then((stream) => {
-                        inCall = true;
-                        currentCall = call;
-                        currentCall.answer(stream);
-                        currentCall.startTime = Date.now();
-                        currentCall.on('stream', (remoteStream) => {
-                          //callInProgress = true;
-                          const video = document.createElement('video');
-                          video.srcObject = remoteStream;
-                          video.autoplay = true;
-                          videoGrid.appendChild(video);
-                        });
-                        currentCall.on('close', () => {
-                          inCall = false;
-                          callInProgress = false;
-                          currentCall = null;
-                          refreshPeers();
-                        });
-                        const hangUpButton = document.createElement('button');
-                        hangUpButton.innerText = 'Hang Up';
-                        hangUpButton.addEventListener('click', () => {
-                          hangUp();
-                        });
-                        peersDiv.appendChild(hangUpButton);
-                      })
-                      .catch((error) => console.error(error));
-                  });
-                  buttonsDiv.appendChild(answerButton);
-                }
-              });
-
-              peersDiv.appendChild(buttonsDiv);
-              peersDiv.appendChild(document.createElement('br'));
+        dbRef.once('value').then((snapshot) => {
+          const peersDiv = $('peers');
+          peersDiv.innerHTML = '';
+          peersDiv.appendChild(document.createElement('hr'));
+          peersDiv.appendChild(document.createElement('br'));
+          const myIdDiv = document.createElement('div');
+          myIdDiv.innerText = `My ID: ${peer.id}`;
+          peersDiv.appendChild(myIdDiv);
+          peersDiv.appendChild(document.createElement('br'));
+          if (currentCall !== null && Date.now() - currentCall.startTime >= callTimeout) {
+            hangUp();
+            return;
+          }
+          snapshot.forEach((childSnapshot) => {
+            const key = childSnapshot.key;
+            const value = childSnapshot.val();
+            if (value === peer.id) return;
+            const callButton = document.createElement('button');
+            callButton.innerText = `Call ${value}`;
+            callButton.addEventListener('click', () => {
+              if (callInProgress) return;
+              callInProgress = true;
+              clearTimeout(refreshTimeoutId);
+              navigator.mediaDevices.getUserMedia({ video: true, audio: true }).then((stream) => {
+                inCall = true;
+                currentCall = peer.call(value, stream);
+                currentCall.startTime = Date.now();
+                currentCall.on('stream', (remoteStream) => {
+                  callInProgress = true;
+                  const video = document.createElement('video');
+                  video.srcObject = remoteStream;
+                  video.autoplay = true;
+                  videoGrid.appendChild(video);
+                });
+                currentCall.on('close', () => {
+                  inCall = false;
+                  callInProgress = false;
+                  currentCall = null;
+                  refreshPeers();
+                });
+                const hangUpButton = document.createElement('button');
+                hangUpButton.innerText = 'Hang Up';
+                hangUpButton.addEventListener('click', () => {
+                  hangUp();
+                });
+                peersDiv.appendChild(hangUpButton);
+              }).catch((error) => console.error(error));
             });
-
-            if (!callInProgress && refreshTimeoutId === null) {
-              refreshTimeoutId = setTimeout(() => {
-                refreshPeers();
-              }, 5000);
+            buttonsDiv.appendChild(callButton);
+            if (!inCall) {
+              const deleteButton = document.createElement('button');
+              deleteButton.innerText = 'Delete';
+              deleteButton.addEventListener('click', () => {
+                dbRef.child(key).remove();
+              });
+              buttonsDiv.appendChild(deleteButton);
             }
-          })
-          .catch((error) => console.error(error));
+            peersDiv.appendChild(buttonsDiv);
+            peersDiv.appendChild(document.createElement('br'));
+          });
+          if (!callInProgress && refreshTimeoutId === null) {
+            refreshTimeoutId = setTimeout(() => {
+              refreshPeers();
+            }, 5000);
+          }
+        }).catch((error) => console.error(error));
       };
-
       const hangUp = () => {
         callInProgress = false;
         currentCall.close();
@@ -161,10 +120,9 @@
         inCall = false;
         refreshPeers();
       };
-
       clearAllButton.addEventListener('click', () => {
         dbRef.remove();
-        const peersDiv = document.getElementById('peers');
+        const peersDiv = $('peers');
         peersDiv.innerHTML = '';
       });
     </script>
