@@ -1,0 +1,169 @@
+<!-- https://jay23606.github.io/chat-gpt-voice/html/peerjs-cam-fb5.html -->
+
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>PeerJS Video Chat</title>
+  </head>
+  <body>
+    <button id="clear-all">Clear All Peers</button>
+    <div id="peers">
+      <h3>My PeerJS ID: <span id="my-id"></span></h3>
+    </div>
+    
+    <script src="https://unpkg.com/peerjs@1.4.7/dist/peerjs.min.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.2.9/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.2.9/firebase-database.js"></script>
+    <script>
+      // Initialize Firebase
+      const firebaseConfig = {
+        databaseURL: "https://jabdal-default-rtdb.firebaseio.com"
+      };
+      firebase.initializeApp(firebaseConfig);
+      const dbRef = firebase.database().ref('peers');
+
+      // Initialize PeerJS
+      const peer = new Peer();
+      const myIdSpan = document.getElementById('my-id');
+      const clearAllButton = document.getElementById('clear-all');
+
+      // Display own peer ID
+      peer.on('open', id => {
+        myIdSpan.innerText = id;
+        dbRef.onDisconnect().remove();
+        dbRef.push(id);
+        showAllPeers();
+      });
+
+      // Remove own peer ID from Firebase database on disconnect
+      peer.on('close', () => {
+        dbRef.once('value')
+          .then(snapshot => {
+            snapshot.forEach(childSnapshot => {
+              const key = childSnapshot.key;
+              const value = childSnapshot.val();
+              if (value === peer.id) {
+                dbRef.child(key).remove();
+              }
+            });
+          })
+          .catch(error => console.error(error));
+      });
+
+      // Show all peers in the Firebase database
+      let timeoutId;
+      let callInProgress = false;
+      function showAllPeers() {
+        if (callInProgress) return;
+        dbRef.once('value')
+          .then(snapshot => {
+            const peersDiv = document.getElementById('peers');
+            peersDiv.innerHTML = '';
+            peersDiv.appendChild(document.createElement('hr'));
+            peersDiv.appendChild(document.createElement('br'));
+
+            // Add own PeerJS ID to the top of the list
+            const myIdDiv = document.createElement('div');
+            myIdDiv.innerText = `My ID: ${peer.id}`;
+            peersDiv.appendChild(myIdDiv);
+            peersDiv.appendChild(document.createElement('br'));
+
+            // Check if already in a call
+            let inCall = false;
+            peer.on('call', call => {
+              if (inCall) {
+                call.answer();
+                return;
+              }
+
+              inCall = true;
+              navigator.mediaDevices.getUserMedia({video: true, audio: true})
+                .then(stream => {
+                  call.answer(stream);
+                  call.on('stream', remoteStream => {
+                    const video = document.createElement('video');
+                    video.srcObject = remoteStream;
+                    video.autoplay = true;
+                    peersDiv.appendChild(video);
+                  });
+                })
+                .catch(error => console.error(error));
+            });
+
+            // Create Call and Answer buttons for each peer ID except own
+            snapshot.forEach(childSnapshot => {
+              const key = childSnapshot.key;
+              const value = childSnapshot.val();
+              if (value === peer.id) return;
+
+              const callButton = document.createElement('button');
+              callButton.innerText = `Call ${value}`;
+              callButton.onclick = () => {
+                if (callInProgress) return;
+                callInProgress = true;
+                clearTimeout(timeoutId);
+                navigator.mediaDevices.getUserMedia({video: true, audio: true})
+                  .then(stream => {
+                    inCall = true;
+                    const call = peer.call(value, stream);
+                    call.on('stream', remoteStream => {
+                      const video = document.createElement('video');
+                      video.srcObject = remoteStream;
+                      video.autoplay = true;
+                      peersDiv.appendChild(video);
+                    });
+                  })
+                  .catch(error => console.error(error));
+              };
+
+              const buttonsDiv = document.createElement('div');
+              buttonsDiv.appendChild(callButton);
+
+              // Display Answer button only when receiving a call from that peer
+              peer.on('call', call => {
+                if (call.peer === value) {
+                  const answerButton = document.createElement('button');
+                  answerButton.innerText = `Answer ${value}`;
+                  answerButton.onclick = () => {
+                    if (callInProgress) return;
+                    callInProgress = true;
+                    clearTimeout(timeoutId);
+                    navigator.mediaDevices.getUserMedia({video: true, audio: true})
+                      .then(stream => {
+                        inCall = true;
+                        call.answer(stream);
+                        call.on('stream', remoteStream => {
+                          const video = document.createElement('video');
+                          video.srcObject = remoteStream;
+                          video.autoplay = true;
+                          peersDiv.appendChild(video);
+                        });
+                      })
+                      .catch(error => console.error(error));
+                  };
+                  buttonsDiv.appendChild(answerButton);
+                }
+              });
+
+              peersDiv.appendChild(buttonsDiv);
+              peersDiv.appendChild(document.createElement('br'));
+            });
+
+            // Set the timer to refresh the list of peers every 5 seconds
+            if (!callInProgress) {
+              timeoutId = setTimeout(() => {showAllPeers();}, 5000);
+            }
+          })
+          .catch(error => console.error(error));
+      }
+
+      // Clear all peers from the Firebase database
+      clearAllButton.addEventListener('click', () => {
+        dbRef.remove();
+        const peersDiv = document.getElementById('peers');
+        peersDiv.innerHTML = '';
+      });
+    </script>
+  </body>
+</html>
