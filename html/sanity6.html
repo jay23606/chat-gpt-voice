@@ -54,12 +54,13 @@ const publicStorage = {
       _type: 'publicData', // Add _type field
     }).commit();
 
-    await client.transaction().patch(`publicData.${key}`).createOrReplace(action).commit();
+    //await client.transaction().patch(`publicData.${key}`).createOrReplace(action).commit();
 
-  //await client.transaction().patch(`publicData.${key}`).createOrReplace({
-  //  ...action,
-  //  _type: 'publicData', // Add _type field
-  //}).commit();
+    await client.transaction().patch(`publicData.${key}`).createOrReplace({
+      ...action,
+      _type: 'publicData',
+      _id: `publicData.${key}`,
+    }).commit();
 
   },
 
