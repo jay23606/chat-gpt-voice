@@ -1,0 +1,94 @@
+<!-- https://jay23606.github.io/chat-gpt-voice/html/fb-cam.html -->
+
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>PeerJS Video Chat</title>
+  </head>
+  <body>
+    <div id="peers"></div>
+    
+    <script src="https://cdn.jsdelivr.net/npm/peerjs@1.3.2/dist/peer.min.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.2.9/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.2.9/firebase-database.js"></script>
+    <script>
+      // Initialize Firebase
+      const firebaseConfig = {
+        "https://jabdal-default-rtdb.firebaseio.com"
+      };
+      firebase.initializeApp(firebaseConfig);
+      const dbRef = firebase.database().ref('peers');
+
+      // Initialize PeerJS
+      const peer = new Peer();
+
+      // Show all peers in the Firebase database
+      function showAllPeers() {
+        dbRef.once('value')
+          .then(snapshot => {
+            const peersDiv = document.getElementById('peers');
+            peersDiv.innerHTML = '';
+
+            snapshot.forEach(childSnapshot => {
+              const key = childSnapshot.key;
+              const value = childSnapshot.val();
+
+              // Create Call and Answer buttons for each peer ID
+              const callButton = document.createElement('button');
+              callButton.innerText = `Call ${value}`;
+              callButton.onclick = () => {
+                // If clicking the Call button for own ID, do nothing
+                if (value === peer.id) return;
+
+                navigator.mediaDevices.getUserMedia({video: true, audio: true})
+                  .then(stream => {
+                    const call = peer.call(value, stream);
+                    call.on('stream', remoteStream => {
+                      const video = document.createElement('video');
+                      video.srcObject = remoteStream;
+                      video.autoplay = true;
+                      peersDiv.appendChild(video);
+                    });
+                  })
+                  .catch(error => console.error(error));
+              };
+
+              const answerButton = document.createElement('button');
+              answerButton.innerText = `Answer ${value}`;
+              answerButton.onclick = () => {
+                navigator.mediaDevices.getUserMedia({video: true, audio: true})
+                  .then(stream => {
+                    const call = peer.on('call', incomingCall => {
+                      incomingCall.answer(stream);
+                      incomingCall.on('stream', remoteStream => {
+                        const video = document.createElement('video');
+                        video.srcObject = remoteStream;
+                        video.autoplay = true;
+                        peersDiv.appendChild(video);
+                      });
+                    });
+                  })
+                  .catch(error => console.error(error));
+              };
+
+              const buttonsDiv = document.createElement('div');
+              buttonsDiv.appendChild(callButton);
+              buttonsDiv.appendChild(answerButton);
+              peersDiv.appendChild(buttonsDiv);
+            });
+          })
+          .catch(error => console.error(error));
+
+        // Refresh the list of peers every 5 seconds
+        setTimeout(showAllPeers, 5000);
+      }
+
+      // Add own peer ID to Firebase database
+      peer.on('open', id => {
+        dbRef.push(id);
+        showAllPeers();
+      });
+    </script>
+  </body>
+</html>
