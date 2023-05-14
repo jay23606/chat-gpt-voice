@@ -9,6 +9,7 @@
 <body>
   <div id="peers">
     <h3>My PeerJS ID: <span id="my-id"></span></h3>
+    <button id="refresh-btn">Refresh</button>
   </div>
   <div id="video-grid"></div>
   <script src="https://unpkg.com/peerjs@1.4.7/dist/peerjs.min.js"></script>
@@ -17,8 +18,11 @@
   <script>
     const firebaseConfig = { databaseURL: "https://jabdal-default-rtdb.firebaseio.com" };
     firebase.initializeApp(firebaseConfig);
-    const dbRef = firebase.database().ref('peers'), $ = (id) => document.getElementById(id), peer = new Peer();
-    const myIdSpan = $('my-id'), videoGrid = $('video-grid');
+    const dbRef = firebase.database().ref('peers'),
+          $ = (id) => document.getElementById(id),
+          peer = new Peer();
+    const myIdSpan = $('my-id'),
+          videoGrid = $('video-grid');
     let currentCalls = new Map();
     peer.on('open', (id) => {
       myIdSpan.innerText = id;
@@ -41,6 +45,7 @@
         incomingCall.on('close', () => {
           currentCalls.delete(incomingCall.peer);
           videoGrid.removeChild(videoGrid.querySelector(`[data-peer="${incomingCall.peer}"]`));
+          console.log(`Call with ${incomingCall.peer} closed`);
           refreshPeers();
         });
       };
@@ -50,10 +55,16 @@
       dbRef.once('value').then((snapshot) => {
         const peersDiv = $('peers');
         peersDiv.innerHTML = '';
+        peersDiv.appendChild(document.createElement('hr'));
         peersDiv.appendChild(document.createElement('br'));
         const myIdDiv = document.createElement('div');
         myIdDiv.innerText = `My ID: ${peer.id}`;
         peersDiv.appendChild(myIdDiv);
+        peersDiv.appendChild(document.createElement('br'));
+        const refreshBtn = document.createElement('button');
+        refreshBtn.innerText = 'Refresh';
+        refreshBtn.addEventListener('click', refreshPeers);
+        peersDiv.appendChild(refreshBtn);
         peersDiv.appendChild(document.createElement('br'));
         snapshot.forEach((childSnapshot) => {
           const value = childSnapshot.val();
@@ -75,6 +86,7 @@
               call.on('close', () => {
                 currentCalls.delete(value);
                 videoGrid.removeChild(videoGrid.querySelector(`[data-peer="${value}"]`));
+                console.log(`Call with ${value} closed`);
                 refreshPeers();
               });
             }).catch((error) => console.error(error));
