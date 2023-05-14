@@ -1,0 +1,83 @@
+<!-- https://jay23606.github.io/chat-gpt-voice/html/srtc1.html -->
+
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>WebRTC Text Chat with SimpleWebRTC</title>
+    <style>
+      #messages {
+        height: 200px;
+        border: 1px solid black;
+        overflow-y: scroll;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>WebRTC Text Chat with SimpleWebRTC</h1>
+    <div>
+      <label for="room-name">Room Name:</label>
+      <input type="text" id="room-name" />
+      <button id="join-room-btn">Join Room</button>
+    </div>
+    <div id="messages">
+      <ul id="messages-list"></ul>
+    </div>
+    <div>
+      <input type="text" id="message" />
+      <button id="send-btn">Send</button>
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/simplewebrtc/latest.js"></script>
+    <script>
+      const webrtc = new SimpleWebRTC({
+        autoRequestMedia: false,
+        debug: false
+      });
+
+      const roomNameInput = document.getElementById('room-name');
+      const joinRoomBtn = document.getElementById('join-room-btn');
+      const messagesList = document.getElementById('messages-list');
+      const messageInput = document.getElementById('message');
+      const sendBtn = document.getElementById('send-btn');
+
+      joinRoomBtn.addEventListener('click', () => {
+        const roomName = roomNameInput.value.trim();
+        if (roomName) {
+          webrtc.joinRoom(roomName);
+        }
+      });
+
+      webrtc.on('createdPeer', peer => {
+        // Listen for incoming data channel messages
+        peer.pc.ondatachannel = event => {
+          const receiveChannel = event.channel;
+          receiveChannel.onmessage = evt => {
+            const message = evt.data;
+            addMessageToChat(message);
+          };
+        };
+
+        // Create a new data channel and send a welcome message
+        const sendChannel = peer.pc.createDataChannel('sendChannel');
+        sendChannel.onopen = () => {
+          sendChannel.send('Welcome to the chat!');
+        };
+      });
+
+      sendBtn.addEventListener('click', () => {
+        const message = messageInput.value.trim();
+        if (message) {
+          // Send the message to all connected peers
+          webrtc.sendDirectlyToAll('sendChannel', 'message', message);
+          addMessageToChat(`You: ${message}`);
+          messageInput.value = '';
+        }
+      });
+
+      function addMessageToChat(message) {
+        const li = document.createElement('li');
+        li.textContent = message;
+        messagesList.appendChild(li);
+      }
+    </script>
+  </body>
+</html>
