@@ -49,8 +49,18 @@ const publicStorage = {
       ? client.patch(data[0]._id).set({ _type: 'publicData', value })
       : client.create({ _type: 'publicData', key, value });
 
-    await client.transaction().createIfNotExists({ _id: `publicData.${key}` }).commit();
+    await client.transaction().createIfNotExists({
+      _id: `publicData.${key}`,
+      _type: 'publicData', // Add _type field
+    }).commit();
+
     await client.transaction().patch(`publicData.${key}`).createOrReplace(action).commit();
+
+  //await client.transaction().patch(`publicData.${key}`).createOrReplace({
+  //  ...action,
+  //  _type: 'publicData', // Add _type field
+  //}).commit();
+
   },
 
   async removeItem(key) {
