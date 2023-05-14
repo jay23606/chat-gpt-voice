@@ -1,0 +1,144 @@
+<!-- https://jay23606.github.io/chat-gpt-voice/html/peerjs-cam-fb8.html -->
+
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>PeerJS Video Chat</title>
+  </head>
+  <body>
+    <div id="peers">
+      <h3>My PeerJS ID: <span id="my-id"></span></h3>
+    </div>
+    <div id="video-grid"></div>
+    <button id="hang-up-btn" style="display: none;">Hang Up</button>
+    <script src="https://unpkg.com/peerjs@1.4.7/dist/peerjs.min.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.2.9/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.2.9/firebase-database.js"></script>
+    <script>
+      const firebaseConfig = { databaseURL: "https://jabdal-default-rtdb.firebaseio.com" };
+      firebase.initializeApp(firebaseConfig);
+      const dbRef = firebase.database().ref('peers'),
+            $ = (id) => document.getElementById(id),
+            peer = new Peer();
+      const myIdSpan = $('my-id'),
+            videoGrid = $('video-grid'),
+            callTimeout = 60000;
+      let currentCall = null,
+          inCall = false,
+          callInProgress = false,
+          refreshTimeoutId = null;
+      peer.on('open', (id) => {
+        myIdSpan.innerText = id;
+        dbRef.onDisconnect().remove();
+        dbRef.push(id);
+        refreshPeers();
+      });
+      peer.on('close', () => {
+        dbRef.once('value').then((snapshot) => {
+          snapshot.forEach((childSnapshot) => {
+            const key = childSnapshot.key;
+            const value = childSnapshot.val();
+            if (value === peer.id) dbRef.child(key).remove();
+          });
+        }).catch((error) => console.error(error));
+      });
+      peer.on('call', (incomingCall) => {
+        if (callInProgress) {
+          incomingCall.close();
+          return;
+        }
+        callInProgress = true;
+        clearTimeout(refreshTimeoutId);
+        navigator.mediaDevices.getUserMedia({ video: true, audio: true }).then((stream) => {
+          inCall = true;
+          currentCall = incomingCall;
+          currentCall.answer(stream);
+          currentCall.startTime = Date.now();
+          currentCall.on('stream', (remoteStream) => {
+            callInProgress = true;
+            const video = document.createElement('video');
+            video.srcObject = remoteStream;
+            video.autoplay = true;
+            videoGrid.appendChild(video);
+            $('hang-up-btn').style.display = 'block';
+          });
+          currentCall.on('close', () => {
+            inCall = false;
+            callInProgress = false;
+            currentCall = null;
+            refreshPeers();
+            $('hang-up-btn').style.display = 'none';
+          });
+        }).catch((error) => console.error(error));
+      });
+      const refreshPeers = () => {
+        if (callInProgress) return;
+        dbRef.once('value').then((snapshot) => {
+          const peersDiv = $('peers');
+          peersDiv.innerHTML = '';
+          peersDiv.appendChild(document.createElement('hr'));
+          peersDiv.appendChild(document.createElement('br'));
+          const myIdDiv = document.createElement('div');
+          myIdDiv.innerText = `My ID: ${peer.id}`;
+          peersDiv.appendChild(myIdDiv);
+          peersDiv.appendChild(document.createElement('br'));
+          if (currentCall !== null && Date.now() - currentCall.startTime >= callTimeout) {
+            hangUp();
+            return;
+          }
+          snapshot.forEach((childSnapshot) => {
+            const value = childSnapshot.val();
+            if (value === peer.id) return;
+            const callButton = document.createElement('button');
+            callButton.innerText = `Call ${value}`;
+            callButton.addEventListener('click', () => {
+              if (callInProgress) {
+                alert('You are already in a call');
+                return;
+              }
+              callInProgress = true;
+              clearTimeout(refreshTimeoutId);
+              navigator.mediaDevices.getUserMedia({ video: true, audio: true }).then((stream) => {
+                inCall = true;
+                currentCall = peer.call(value, stream);
+                currentCall.startTime = Date.now();
+                currentCall.on('stream', (remoteStream) => {
+                  callInProgress = true;
+                  const video = document.createElement('video');
+                  video.srcObject = remoteStream;
+                  video.autoplay = true;
+                  videoGrid.appendChild(video);
+                  $('hang-up-btn').style.display = 'block';
+                });
+                currentCall.on('close', () => {
+                  inCall = false;
+                  callInProgress = false;
+                  currentCall = null;
+                  refreshPeers();
+                  $('hang-up-btn').style.display = 'none';
+                });
+              }).catch((error) => console.error(error));
+            });
+            peersDiv.appendChild(callButton);
+            peersDiv.appendChild(document.createElement('br'));
+          });
+          if (!callInProgress && refreshTimeoutId === null) {
+            refreshTimeoutId = setTimeout(() => {
+              refreshPeers();
+            }, 5000);
+          }
+        }).catch((error) => console.error(error));
+      };
+      const hangUp = () => {
+        callInProgress = false;
+        currentCall.close();
+        currentCall = null;
+        inCall = false;
+        refreshPeers();
+        $('hang-up-btn').style.display = 'none';
+      };
+      $('hang-up-btn').addEventListener('click', hangUp);
+    </script>
+  </body>
+</html>
