@@ -68,7 +68,7 @@
         peersDiv.appendChild(document.createElement('br'));
         snapshot.forEach((childSnapshot) => {
           const value = childSnapshot.val();
-          if (value === peer.id || currentCalls.has(value)) return;
+          if (value === peer.id) return;
           const callButton = document.createElement('button');
           callButton.innerText = `Call ${value}`;
           callButton.addEventListener('click', () => {
