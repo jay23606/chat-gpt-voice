@@ -1,0 +1,85 @@
+<!-- https://jay23606.github.io/chat-gpt-voice/html/p2p3.html -->
+
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Storing Peer IDs in Firebase</title>
+  <script src="https://unpkg.com/peerjs@1.4.7/dist/peerjs.min.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.1.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.1.1/firebase-database-compat.js"></script>
+</head>
+<body>
+  <h1>Storing Peer IDs in Firebase</h1>
+
+  <button onclick="showAllKeys()">Show All Keys and Values</button>
+  <button onclick="deleteCurrentKey()">Delete Current Key</button>
+
+  <script>
+    // Your web app's Firebase configuration
+    const firebaseConfig = {
+  apiKey: "AIzaSyDbanEumaCJzhbfjVm1NUfuEZZLa8AjRoI",
+  authDomain: "jabdal.firebaseapp.com",
+  databaseURL: "https://jabdal-default-rtdb.firebaseio.com",
+  projectId: "jabdal",
+  storageBucket: "jabdal.appspot.com",
+  messagingSenderId: "676804845012",
+  appId: "1:676804845012:web:b7b1bc2d99d8c661c48a41"
+    };
+
+    // Initialize Firebase
+    firebase.initializeApp(firebaseConfig);
+
+    // Initialize PeerJS
+    const peer = new Peer();
+
+    // Get a reference to the root of the database
+    const dbRef = firebase.database().ref('/');
+
+    // When the PeerJS ID is generated, store it in the database
+    peer.on('open', (peerId) => {
+      // Generate a unique key for the peer ID
+      const peerIdKey = dbRef.push().key;
+
+      // Store the peer ID in the database under the unique key
+      dbRef.child(peerIdKey).set(peerId)
+        .then(() => console.log('Peer ID stored in Firebase'))
+        .catch(error => console.error(error));
+
+      // Update the reference to the current key
+      dbRef.onDisconnect().remove();
+      dbRef.once('value')
+        .then(snapshot => {
+          snapshot.forEach(childSnapshot => {
+            const key = childSnapshot.key;
+            const value = childSnapshot.val();
+            if (value === peerId) {
+              dbRef.child(key).onDisconnect().remove();
+            }
+          });
+        })
+        .catch(error => console.error(error));
+    });
+
+    // Show all keys and values in the database
+    function showAllKeys() {
+      dbRef.once('value')
+        .then(snapshot => {
+          snapshot.forEach(childSnapshot => {
+            const key = childSnapshot.key;
+            const value = childSnapshot.val();
+            console.log(`${key}: ${value}`);
+          });
+        })
+        .catch(error => console.error(error));
+    }
+
+    // Delete the current key from the database
+    function deleteCurrentKey() {
+      const currentKey = dbRef.key;
+      dbRef.remove()
+        .then(() => console.log(`Key ${currentKey} deleted from Firebase`))
+        .catch(error => console.error(error));
+    }
+  </script>
+</body>
+</html>
