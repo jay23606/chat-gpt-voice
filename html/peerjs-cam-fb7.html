@@ -12,19 +12,13 @@
       <button id="clear-all">Clear All Peers</button>
     </div>
     
-    <script src="https://cdn.jsdelivr.net/npm/peerjs@1.3.2/dist/peer.min.js"></script>
+    <script src="https://unpkg.com/peerjs@1.4.7/dist/peerjs.min.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.2.9/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.2.9/firebase-database.js"></script>
     <script>
       // Initialize Firebase
       const firebaseConfig = {
-        apiKey: "YOUR_API_KEY",
-        authDomain: "YOUR_AUTH_DOMAIN",
-        databaseURL: "YOUR_DATABASE_URL",
-        projectId: "YOUR_PROJECT_ID",
-        storageBucket: "YOUR_STORAGE_BUCKET",
-        messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
-        appId: "YOUR_APP_ID"
+        databaseURL: "https://jabdal-default-rtdb.firebaseio.com"
       };
       firebase.initializeApp(firebaseConfig);
       const dbRef = firebase.database().ref('peers');
@@ -84,22 +78,25 @@
               }
 
               inCall = true;
-              callInProgress = true;
-              navigator.mediaDevices.getUserMedia({video: true, audio: true})
-                .then(stream => {
-                  call.answer(stream);
-                  call.on('stream', remoteStream => {
-                    const video = document.createElement('video');
-                    video.srcObject = remoteStream;
-                    video.autoplay = true;
-                    peersDiv.appendChild(video);
-                  });
-                  if (timeoutId !== null) {
-                    clearTimeout(timeoutId);
-                  }
-                  timeoutId = null;
-                })
-                .catch(error => console.error(error));
+              call.on('stream', remoteStream => {
+                callInProgress = true;
+                const video = document.createElement('video');
+                video.srcObject = remoteStream;
+                video.autoplay = true;
+                peersDiv.appendChild(video);
+              });
+
+              const hangUpButton = document.createElement('button');
+              hangUpButton.innerText = 'Hang Up';
+              hangUpButton.onclick = () => {
+                callInProgress = false;
+                call.close();
+                timeoutId = setTimeout(() => {showAllPeers();}, 5000);
+              };
+              peersDiv.appendChild(hangUpButton);
+              if (callInProgress) {
+                callInProgress = false;
+              }
             });
 
             // Create Call and Answer buttons for each peer ID except own
@@ -119,10 +116,22 @@
                     inCall = true;
                     const call = peer.call(value, stream);
                     call.on('stream', remoteStream => {
+                      callInProgress = true;
                       const video = document.createElement('video');
                       video.srcObject = remoteStream;
                       video.autoplay = true;
                       peersDiv.appendChild(video);
+                      const hangUpButton = document.createElement('button');
+                      hangUpButton.innerText = 'Hang Up';
+                      hangUpButton.onclick = () => {
+                        callInProgress = false;
+                        call.close();
+                        timeoutId = setTimeout(() => {showAllPeers();}, 5000);
+                      };
+                      peersDiv.appendChild(hangUpButton);
+                      if (callInProgress) {
+                        callInProgress = false;
+                      }
                     });
                   })
                   .catch(error => console.error(error));
@@ -145,15 +154,23 @@
                         inCall = true;
                         call.answer(stream);
                         call.on('stream', remoteStream => {
+                          callInProgress = true;
                           const video = document.createElement('video');
                           video.srcObject = remoteStream;
                           video.autoplay = true;
                           peersDiv.appendChild(video);
+                          const hangUpButton = document.createElement('button');
+                          hangUpButton.innerText = 'Hang Up';
+                          hangUpButton.onclick = () => {
+                            callInProgress = false;
+                            call.close();
+                            timeoutId = setTimeout(() => {showAllPeers();}, 5000);
+                          };
+                          peersDiv.appendChild(hangUpButton);
+                          if (callInProgress) {
+                            callInProgress = false;
+                          }
                         });
-                        if (timeoutId !== null) {
-                          clearTimeout(timeoutId);
-                        }
-                        timeoutId = null;
                       })
                       .catch(error => console.error(error));
                   };
