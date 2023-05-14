@@ -3,44 +3,25 @@
 <!DOCTYPE html>
 <html>
   <head>
-    <title>Simple Peer Example</title>
+    <meta charset="UTF-8">
+    <title>SimplePeer Example</title>
   </head>
   <body>
-    <h1>Simple Peer Example</h1>
-    <input type="text" id="messageInput" placeholder="Enter message...">
-    <button id="sendButton">Send</button>
-    <div id="messages"></div>
-
+    <h1>SimplePeer Example</h1>
     <script src="https://cdn.jsdelivr.net/npm/simple-peer/simplepeer.min.js"></script>
     <script>
-      let peerId = 1; // Initialize peer ID
-      
-      const peer = new SimplePeer();
-
+      let peerId = 0;
+      const peer = new SimplePeer({
+        initiator: location.hash === '#init',
+        config: {
+          peerId: `peer${peerId++}`
+        }
+      });
       peer.on('signal', data => {
-        console.log('SIGNAL', JSON.stringify(data));
-        document.querySelector('#yourId').value = 'peer' + peerId;
-      });
-
-      peer.on('connect', () => {
-        console.log('CONNECT');
-        document.getElementById('messages').innerHTML += '<div>Peer connected!</div>';
-        document.getElementById('sendButton').addEventListener('click', () => {
-          const message = document.getElementById('messageInput').value;
-          peer.send(message);
-          document.getElementById('messages').innerHTML += '<div>You: ' + message + '</div>';
-        });
-        
-        // Increment peer ID for next connection
-        peerId += 1;
-      });
-
-      peer.on('data', data => {
-        console.log('DATA', data);
-        document.getElementById('messages').innerHTML += '<div>Peer: ' + data + '</div>';
+        console.log('Signal data:', data);
+        document.querySelector('#peer-id').value = JSON.stringify(data);
       });
     </script>
-    <br>
-    <textarea id="yourId" rows="3" cols="40" readonly></textarea>
+    <p>Peer ID: <input id="peer-id" type="text"></p>
   </body>
 </html>
