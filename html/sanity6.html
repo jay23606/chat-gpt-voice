@@ -46,8 +46,8 @@ const publicStorage = {
       key,
     });
     const action = data[0]
-      ? client.patch(data[0]._id).set({ _type: 'publicData', value }) // add _type
-      : client.create({ _type: 'publicData', key, value }); // add _type
+      ? client.patch(data[0]._id).set({ _type: 'publicData', value })
+      : client.create({ _type: 'publicData', key, value });
 
     await client.transaction().createIfNotExists({ _id: `publicData.${key}` }).commit();
     await client.transaction().patch(`publicData.${key}`).createOrReplace(action).commit();
