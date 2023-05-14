@@ -1,0 +1,46 @@
+<!-- https://jay23606.github.io/chat-gpt-voice/html/sp2.htm -->
+
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Simple Peer Example</title>
+  </head>
+  <body>
+    <h1>Simple Peer Example</h1>
+    <input type="text" id="messageInput" placeholder="Enter message...">
+    <button id="sendButton">Send</button>
+    <div id="messages"></div>
+
+    <script src="https://cdn.jsdelivr.net/npm/simple-peer/simplepeer.min.js"></script>
+    <script>
+      let peerId = 1; // Initialize peer ID
+      
+      const peer = new SimplePeer();
+
+      peer.on('signal', data => {
+        console.log('SIGNAL', JSON.stringify(data));
+        document.querySelector('#yourId').value = 'peer' + peerId;
+      });
+
+      peer.on('connect', () => {
+        console.log('CONNECT');
+        document.getElementById('messages').innerHTML += '<div>Peer connected!</div>';
+        document.getElementById('sendButton').addEventListener('click', () => {
+          const message = document.getElementById('messageInput').value;
+          peer.send(message);
+          document.getElementById('messages').innerHTML += '<div>You: ' + message + '</div>';
+        });
+        
+        // Increment peer ID for next connection
+        peerId += 1;
+      });
+
+      peer.on('data', data => {
+        console.log('DATA', data);
+        document.getElementById('messages').innerHTML += '<div>Peer: ' + data + '</div>';
+      });
+    </script>
+    <br>
+    <textarea id="yourId" rows="3" cols="40" readonly></textarea>
+  </body>
+</html>
