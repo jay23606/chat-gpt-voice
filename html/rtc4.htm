@@ -1,0 +1,142 @@
+<!-- https://jay23606.github.io/chat-gpt-voice/html/rtc4.htm -->
+
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>WebRTC Example</title>
+  </head>
+  <body>
+    <label for="messageInput">Message:</label>
+    <input type="text" id="messageInput">
+    <button id="sendButton">Send</button>
+
+    <script>
+      const $ = id => document.getElementById(id);
+      const $el = (el, attrs = {}) => Object.assign(document.createElement(el), attrs);
+      const $$ = sel => document.querySelectorAll(sel);
+
+      // Add on method to RTCPeerConnection prototype
+      RTCPeerConnection.prototype.on = function (e, fn) { this.addEventListener(e, fn) };
+
+      let localPeer, remotePeer;
+      localPeer = new RTCPeerConnection({
+        iceServers: [{ urls: 'stun:stun.l.google.com:19302' }]
+      });
+
+      localPeer.addEventListener('icecandidate', (event) => {
+        console.log('Local ICE candidate:', event.candidate);
+        if (event.candidate) {
+          sendToServer({ type: 'ice', candidate: event.candidate });
+        }
+      });
+
+      const dataChannel = localPeer.createDataChannel('data');
+
+      dataChannel.addEventListener('open', () => {
+        console.log('Local data channel opened');
+      });
+
+      dataChannel.addEventListener('close', () => {
+        console.log('Local data channel closed');
+      });
+
+      dataChannel.addEventListener('error', (event) => {
+        console.log('Local data channel error:', event.error);
+      });
+
+      $('sendButton').addEventListener('click', () => {
+        const message = $('messageInput').value;
+        dataChannel.send(message);
+        console.log('Sent message:', message);
+      });
+
+      localPeer.createOffer().then((offer) => {
+        console.log('Local offer:', offer);
+
+        localPeer.setLocalDescription(offer).then(() => {
+          console.log('Local description set');
+          sendToServer({ type: 'offer', description: offer });
+        }).catch((error) => {
+          console.log('Error setting local description:', error);
+        });
+      }).catch((error) => {
+        console.log('Error creating offer:', error);
+      });
+
+      const sendToServer = (message) => {
+        const socket = new WebSocket('ws://localhost:8080');
+        socket.addEventListener('open', () => {
+          socket.send(JSON.stringify(message));
+        });
+      };
+
+      const receiveFromServer = (message) => {
+        console.log('Received message from server:', message);
+        const parsedMessage = JSON.parse(message);
+        switch (parsedMessage.type) {
+          case 'offer':
+            remotePeer = new RTCPeerConnection({
+              iceServers: [{ urls: 'stun:stun.l.google.com:19302' }]
+            });
+
+            remotePeer.addEventListener('icecandidate', (event) => {
+              console.log('Remote ICE candidate:', event.candidate);
+              if (event.candidate) {
+                sendToServer({ type: 'ice', candidate: event.candidate });
+              }
+            });
+
+            remotePeer.addEventListener('datachannel', (event) => {
+              console.log('Remote data channel connected:', event.channel);
+              event.channel.addEventListener('message', (message) => {
+                console.log('Received message:', message.data);
+              });
+            });
+
+            remotePeer.setRemoteDescription(parsedMessage.description).then(() => {
+              console.log('Remote description set');
+
+              remotePeer.createAnswer().then((answer) => {
+                console.log('Remote answer:', answer);
+
+                remotePeer.setLocalDescription(answer).then(() => {
+                  console.log('Remote description set');
+                  sendToServer({ type: 'answer', description: answer });
+                }).catch((error) => {
+                  console.log('Error setting local description on remote peer:', error);
+                });
+              }).catch((error) => {
+                console.log('Error creating answer:', error);
+              });
+            }).catch((error) => {
+              console.log('Error setting remote description:', error);
+            });
+            break;
+          case 'answer':
+            localPeer.setRemoteDescription(parsedMessage.description).then(() => {
+              console.log('Local description set');
+            }).catch((error) => {
+              console.log('Error setting remote description on local peer:', error);
+            });
+            break;
+          case 'ice':
+            if (parsedMessage.candidate) {
+              (remotePeer ? remotePeer : localPeer).addIceCandidate(parsedMessage.candidate).then(() => {
+                console.log('Ice candidate added');
+              }).catch((error) => {
+                console.log('Error adding ice candidate:', error);
+              });
+            }
+            break;
+          default:
+            console.log('Unknown message type:', parsedMessage.type);
+        }
+      };
+
+      const socket = new WebSocket('ws://localhost:8080');
+      socket.addEventListener('message', (event) => {
+        receiveFromServer(event.data);
+      });
+    </script>
+  </body>
+</html>
