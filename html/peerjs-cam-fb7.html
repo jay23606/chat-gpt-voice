@@ -94,16 +94,15 @@
                 peersDiv.appendChild(hangUpButton);
               }).catch((error) => console.error(error));
             });
-            buttonsDiv.appendChild(callButton);
+            peersDiv.appendChild(callButton);
             if (!inCall) {
               const deleteButton = document.createElement('button');
               deleteButton.innerText = 'Delete';
               deleteButton.addEventListener('click', () => {
                 dbRef.child(key).remove();
               });
-              buttonsDiv.appendChild(deleteButton);
+              peersDiv.appendChild(deleteButton);
             }
-            peersDiv.appendChild(buttonsDiv);
             peersDiv.appendChild(document.createElement('br'));
           });
           if (!callInProgress && refreshTimeoutId === null) {
