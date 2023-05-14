@@ -1,0 +1,35 @@
+<!-- https://jay23606.github.io/chat-gpt-voice/html/redis3.html -->
+
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Redis Fetch Example</title>
+  </head>
+  <body>
+    <script>
+      const url = `https://api.redislabs.com/v1`;
+
+      const serviceId = 'redis-12378'; // You can use the Redis Cloud instance name as the service ID
+
+      const redisFetch = async (method, endpoint, payload) => {
+        const response = await fetch(`${url}/services/${serviceId}${endpoint}`, {
+          method,
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(payload)
+        });
+        return await response.json();
+      };
+
+      // Example usage: set a key-value pair in Redis
+      redisFetch('POST', '/commands', {
+        command: 'SET',
+        args: ['foo', 'bar'],
+        password: 'A27jzn41kloxen09sx28l3n1mdu32zoqpeqh7aiygb9aopbk9x'
+      })
+      .then(response => console.log(response))
+      .catch(error => console.error(error));
+    </script>
+  </body>
+</html>
