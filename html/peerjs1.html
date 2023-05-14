@@ -1,0 +1,71 @@
+<!-- https://jay23606.github.io/chat-gpt-voice/html/peerjs1.html -->
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width">
+  <title>JS Bin</title>
+  <script src="https://unpkg.com/peerjs@1.4.7/dist/peerjs.min.js"></script>
+  <script src="https://unpkg.com/@sanity/client/umd/sanityClient.js"></script>
+</head>
+<body>
+  <button onclick='hiBack()'>say hi back</button>
+  <script>
+    let peer = new Peer();
+    let conn = null;
+    peer.on('open', id => {
+      console.log(id)
+      //lets store this on sanity account
+      //and remove it when page is closed?
+    });
+    
+    peer.on('connection', c => {
+      conn = c;
+      c.on('data', (data) => {
+        console.log(data)
+      });
+      //c.on('open', () => console.log("Connected to " + c.peer));
+      //c.on('close', () => console.log("close event from " + c.peer));
+    });
+    
+    const hiBack = () =>{
+      conn.send('hi back');
+    };
+  </script>
+</body>
+</html>
+
+
+
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width">
+  <title>JS Bin</title>
+  <script src="https://unpkg.com/peerjs@1.4.7/dist/peerjs.min.js"></script>
+</head>
+<body>
+  <script>
+    let peer = new Peer();
+    
+    setTimeout(() => {
+        var conn = peer.connect('cb659fa3-33c6-44af-81f8-a0a55b8fad9c')
+        conn.on('open', () => {
+            conn.send('hi!');
+        });
+        conn.on('data', (data) => {
+            console.log(data);
+        });
+    }, 1000);
+    
+  </script>
+</body>
+</html>
+
+
+
+
+
+
+
