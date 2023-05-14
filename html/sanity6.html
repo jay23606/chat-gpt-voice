@@ -40,14 +40,34 @@
             return data[0]?.value[key];
           },
 
-          async setItem(key, value) {
-            const newData = {
-              _type: 'publicData',
-              key,
-              value,
-            };
-            await client.create(newData);
-          },
+          //async setItem(key, value) {
+          //  const newData = {
+          //    _type: 'publicData',
+          //    key,
+          //    value,
+          //  };
+          //  await client.create(newData);
+          //},
+async setItem(key, value) {
+  const data = await client.fetch('*[_type == $type && key == $key]', {
+    type: 'publicData',
+    key,
+  });
+  if (data[0]) {
+    await client
+      .patch(data[0]._id)
+      .set({ value })
+      .commit();
+  } else {
+    const newData = {
+      _type: 'publicData',
+      key,
+      value,
+    };
+    await client.create(newData);
+  }
+},
+
 
           async removeItem(key) {
             const data = await client.fetch('*[_type == $type && key == $key]', {
