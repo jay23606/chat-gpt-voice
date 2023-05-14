@@ -1,4 +1,5 @@
 <!-- https://jay23606.github.io/chat-gpt-voice/html/peerjs-cam-fb9.html -->
+
 <!DOCTYPE html>
 <html>
 <head>
@@ -17,9 +18,15 @@
   <script>
     const firebaseConfig = { databaseURL: "https://jabdal-default-rtdb.firebaseio.com" };
     firebase.initializeApp(firebaseConfig);
-    const dbRef = firebase.database().ref('peers'), $ = (id) => document.getElementById(id), $$ = (sel) => document.querySelectorAll(sel), peer = new Peer();
-    const myIdSpan = $('my-id'), videoGrid = $('video-grid'), callTimeout = 60000;
-    let currentCall = null, refreshTimeoutId = null;
+    const dbRef = firebase.database().ref('peers'),
+          $ = (id) => document.getElementById(id),
+          $$ = (sel) => document.querySelectorAll(sel),
+          peer = new Peer();
+    const myIdSpan = $('my-id'),
+          videoGrid = $('video-grid'),
+          callTimeout = 60000;
+    let currentCalls = new Map(),
+        refreshTimeoutId = null;
     peer.on('open', (id) => {
       myIdSpan.innerText = id;
       dbRef.onDisconnect().remove();
@@ -42,22 +49,23 @@
       }
       clearTimeout(refreshTimeoutId);
       navigator.mediaDevices.getUserMedia({ video: true, audio: true }).then((stream) => {
-        currentCall = incomingCall;
-        currentCall.answer(stream);
-        currentCall.startTime = Date.now();
-        currentCall.on('stream', (remoteStream) => {
+        currentCalls.set(incomingCall.peer, incomingCall);
+        incomingCall.answer(stream);
+        incomingCall.startTime = Date.now();
+        incomingCall.on('stream', (remoteStream) => {
           const video = document.createElement('video');
           video.srcObject = remoteStream;
           video.autoplay = true;
           videoGrid.appendChild(video);
           $('hang-up-btn').style.display = 'block';
         });
-        currentCall.on('close', () => {
-          currentCall = null;
-          // Remove all video elements
-          $$('video').forEach((video) => video.remove());
-          refreshPeers();
-          $('hang-up-btn').style.display = 'none';
+        incomingCall.on('close', () => {
+          currentCalls.delete(incomingCall.peer);
+          videoGrid.removeChild(videoGrid.querySelector(`[data-peer="${incomingCall.peer}"]`));
+          if (currentCalls.size === 0) {
+            refreshPeers();
+            $('hang-up-btn').style.display = 'none';
+          }
         });
       }).catch((error) => console.error(error));
     });
@@ -72,13 +80,22 @@
         myIdDiv.innerText = `My ID: ${peer.id}`;
         peersDiv.appendChild(myIdDiv);
         peersDiv.appendChild(document.createElement('br'));
-        if (currentCall !== null && Date.now() - currentCall.startTime >= callTimeout) {
-          hangUp();
-          return;
+        if (currentCalls.size > 0) {
+          currentCalls.forEach((call) => {
+            if (Date.now() - call.startTime >= callTimeout) {
+              call.close();
+            } else {
+              const video = document.createElement('video');
+              video.srcObject = call.remoteStream;
+              video.autoplay = true;
+              video.dataset.peer = call.peer;
+              videoGrid.appendChild(video);
+            }
+          });
         }
         snapshot.forEach((childSnapshot) => {
           const value = childSnapshot.val();
-          if (value === peer.id) return;
+          if (value === peer.id || currentCalls.has(value)) return;
           const callButton = document.createElement('button');
           callButton.innerText = `Call ${value}`;
           callButton.addEventListener('click', () => {
@@ -88,21 +105,24 @@
             }
             clearTimeout(refreshTimeoutId);
             navigator.mediaDevices.getUserMedia({ video: true, audio: true }).then((stream) => {
-              currentCall = peer.call(value, stream);
-              currentCall.startTime = Date.now();
-              currentCall.on('stream', (remoteStream) => {
+              const call = peer.call(value, stream);
+              currentCalls.set(value, call);
+              call.startTime = Date.now();
+              call.on('stream', (remoteStream) => {
                 const video = document.createElement('video');
                 video.srcObject = remoteStream;
                 video.autoplay = true;
+                video.dataset.peer = value;
                 videoGrid.appendChild(video);
                 $('hang-up-btn').style.display = 'block';
               });
-              currentCall.on('close', () => {
-                currentCall = null;
-                // Remove all video elements
-                $$('video').forEach((video) => video.remove());
-                refreshPeers();
-                $('hang-up-btn').style.display = 'none';
+              call.on('close', () => {
+                currentCalls.delete(value);
+                videoGrid.removeChild(videoGrid.querySelector(`[data-peer="${value}"]`));
+                if (currentCalls.size === 0) {
+                  refreshPeers();
+                  $('hang-up-btn').style.display = 'none';
+                }
               });
             }).catch((error) => console.error(error));
           });
@@ -117,10 +137,8 @@
       }).catch((error) => console.error(error));
     };
     const hangUp = () => {
-      if (currentCall) {
-        currentCall.close();
-        currentCall = null;
-      }
+      currentCalls.forEach((call) => call.close());
+      currentCalls.clear();
       // Remove all video elements
       $$('video').forEach((video) => video.remove());
       refreshPeers();
