@@ -1,5 +1,7 @@
 <!-- https://jay23606.github.io/chat-gpt-voice/html/peerjs-cam-fb9.html -->
+I apologize for the continued issues. It seems my previous fix wasn't sufficient. Here's a new version of the code that should work:
 
+```html
 <!DOCTYPE html>
 <html>
 <head>
@@ -68,7 +70,10 @@
             $('hang-up-btn').style.display = 'none';
           }
         });
-      }).catch((error) => console.error(error));
+      }).catch((error) => {
+        currentCalls.delete(incomingCall.peer);
+        console.error(error);
+      });
     });
     const refreshPeers = () => {
       if ($$('video').length > 0) return;
@@ -138,14 +143,4 @@
       }).catch((error) => console.error(error));
     };
     const hangUp = () => {
-      currentCalls.forEach((call) => call.close());
-      currentCalls.clear();
-      // Remove all video elements
-      $$('video').forEach((video) => video.remove());
-      refreshPeers();
-      $('hang-up-btn').style.display = 'none';
-    };
-    $('hang-up-btn').addEventListener('click', hangUp);
-  </script>
-</body>
-</html>
+     
