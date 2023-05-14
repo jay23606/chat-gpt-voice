@@ -1,0 +1,87 @@
+<!-- https://jay23606.github.io/chat-gpt-voice/html/sanity2.html -->
+<!DOCTYPE html>
+<html>
+  <body>
+    <h1>Sanity.io Example</h1>
+    
+    <button id="setData">Set Data</button>
+    <button id="getData">Get Data</button>
+    <button id="removeData">Remove Data</button>
+    
+    <ul id="dataList">
+    </ul>
+    
+    <script src="https://unpkg.com/@sanity/client/umd/sanityClient.js"></script>
+    <script>
+    	const { createClient } = SanityClient;
+
+        const client = createClient({
+          projectId: 'b3rj1ubh',
+          dataset: 'production',
+          token: 'skOzyD4VViJ88amMAqteATe2ebZRfoPsHN4U9u1bvC6a1swtKvSKqe25j2D96wKrB3TVnz7cLHR3Mkld5dyeDKw3HE9s0kcTDTcwsO1qKv6hMHUSoS9yOMkfevPS7vMxW1gqA2kXLzBAPoO4NiNqQ1OofngwJIVfkdN9UgE2TaYBltmLUVJw',
+          useCdn: true,
+          apiVersion: '2023-05-03',
+        });
+
+        const publicStorage = {
+          async getItem(key) {
+            const data = await client.fetch('*[_type == $type && key == $key]', {
+              type: 'publicData',
+              key,
+            });
+            return data[0]?.value;
+          },
+
+          async setItem(key, value) {
+            const newData = {
+              _type: 'publicData',
+              key,
+              value,
+            };
+            await client.create(newData);
+          },
+
+          async removeItem(key) {
+            const data = await client.fetch('*[_type == $type && key == $key]', {
+              type: 'publicData',
+              key,
+            });
+            if (data[0]) {
+              await client.delete(data[0]._id);
+            }
+          },
+        };
+    </script>
+    <script>
+      const setDataButton = document.getElementById('setData');
+      const getDataButton = document.getElementById('getData');
+      const removeDataButton = document.getElementById('removeData');
+      const dataList = document.getElementById('dataList');
+
+      setDataButton.addEventListener('click', async () => {
+        const value = prompt('Enter a value to store:');
+        if (value) {
+          await publicStorage.setItem('myKey', value);
+          alert('Value stored successfully!');
+        }
+      });
+
+      getDataButton.addEventListener('click', async () => {
+        const value = await publicStorage.getItem('myKey');
+        if (value) {
+          dataList.innerHTML = `<li>${value}</li>`;
+        } else {
+          dataList.innerHTML = '<li>No data found</li>';
+        }
+      });
+
+      removeDataButton.addEventListener('click', async () => {
+        await publicStorage.removeItem('myKey');
+        alert('Value removed successfully!');
+      });
+    </script>
+  </body>
+</html>
+
+
+
