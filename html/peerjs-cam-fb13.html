@@ -49,6 +49,18 @@
         currentCalls.set(incomingCall.peer, incomingCall);
         incomingCall.answer(stream);
         incomingCall.startTime = Date.now();
+        if (!videoElements.has('me')) {
+          const localVideo = document.createElement('video');
+          localVideo.srcObject = stream;
+          localVideo.autoplay = true;
+          localVideo.muted = true;
+          localVideo.dataset.peer = 'me';
+          videoGrid.appendChild(localVideo);
+          videoElements.set('me', localVideo);
+        } else {
+          const localVideo = videoElements.get('me');
+          localVideo.srcObject = stream;
+        }
         incomingCall.on('stream', (remoteStream) => {
           if (!videoElements.has(incomingCall.peer)) {
             const remoteVideo = document.createElement('video');
@@ -65,17 +77,6 @@
             remoteVideo.srcObject = remoteStream;
           }
         });
-        if (!videoElements.has('me')) {
-          const localVideo = document.createElement('video');
-          localVideo.srcObject = stream;
-          localVideo.autoplay = true;
-          localVideo.dataset.peer = 'me';
-          videoGrid.appendChild(localVideo);
-          videoElements.set('me', localVideo);
-        } else {
-          const localVideo = videoElements.get('me');
-          localVideo.srcObject = stream;
-        }
       };
       navigator.mediaDevices.getUserMedia({ video: true, audio: true }).then(answerCall).catch((error) => console.error(error));
     });
@@ -105,6 +106,7 @@
                 const localVideo = document.createElement('video');
                 localVideo.srcObject = stream;
                 localVideo.autoplay = true;
+                localVideo.muted = true;
                 localVideo.dataset.peer = 'me';
                 videoGrid.appendChild(localVideo);
                 videoElements.set('me', localVideo);
