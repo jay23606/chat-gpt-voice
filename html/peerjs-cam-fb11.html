@@ -26,11 +26,13 @@
     let currentCalls = new Map();
 
     const endCall = (video) => {
-      const wrapper = video.closest('.call-wrapper');
       const peerId = video.dataset.peer;
       currentCalls.get(peerId).close();
       currentCalls.delete(peerId);
-      videoGrid.removeChild(wrapper);
+      const videosToRemove = document.querySelectorAll(`video[data-peer="${peerId}"]`);
+      videosToRemove.forEach((video) => {
+        video.parentNode.removeChild(video);
+      });
       console.log(`Call with ${peerId} closed`);
       refreshPeers();
     }
@@ -51,13 +53,10 @@
           video.srcObject = remoteStream;
           video.autoplay = true;
           video.dataset.peer = incomingCall.peer;
-          const wrapper = document.createElement('div');
-          wrapper.classList.add('call-wrapper');
-          wrapper.appendChild(video);
-          wrapper.addEventListener('click', (event) => {
-            endCall(event.target.querySelector('video'));
+          videoGrid.appendChild(video);
+          video.addEventListener('click', () => {
+            endCall(video);
           });
-          videoGrid.appendChild(wrapper);
         });
       };
       navigator.mediaDevices.getUserMedia({ video: true, audio: true }).then(answerCall).catch((error) => console.error(error));
@@ -92,13 +91,10 @@
                 video.srcObject = remoteStream;
                 video.autoplay = true;
                 video.dataset.peer = value;
-                const wrapper = document.createElement('div');
-                wrapper.classList.add('call-wrapper');
-                wrapper.appendChild(video);
-                wrapper.addEventListener('click', (event) => {
-                  endCall(event.target.querySelector('video'));
+                videoGrid.appendChild(video);
+                video.addEventListener('click', () => {
+                  endCall(video);
                 });
-                videoGrid.appendChild(wrapper);
               });
             }).catch((error) => console.error(error));
           });
