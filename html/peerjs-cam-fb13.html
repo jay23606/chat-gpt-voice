@@ -7,11 +7,13 @@
   <title>PeerJS Video Chat</title>
 </head>
 <body>
+  <div id="video-grid">
+    <video id="local-video" autoplay></video>
+  </div>
   <div id="peers">
     <h3>My PeerJS ID: <span id="my-id"></span></h3>
     <button id="refresh-btn">Refresh</button>
   </div>
-  <div id="video-grid"></div>
   <script src="https://unpkg.com/peerjs@1.4.7/dist/peerjs.min.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.2.9/firebase-app.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.2.9/firebase-database.js"></script>
@@ -38,6 +40,12 @@
       refreshPeers();
     }
 
+    navigator.mediaDevices.getUserMedia({ video: true, audio: true }).then((stream) => {
+      const localVideo = $('local-video');
+      localVideo.srcObject = stream;
+      localVideo.volume = 1;
+    }).catch((error) => console.error(error));
+
     peer.on('open', (id) => {
       myIdSpan.innerText = id;
       dbRef.onDisconnect().remove();
@@ -49,18 +57,6 @@
         currentCalls.set(incomingCall.peer, incomingCall);
         incomingCall.answer(stream);
         incomingCall.startTime = Date.now();
-        if (!videoElements.has('me')) {
-          const localVideo = document.createElement('video');
-          localVideo.srcObject = stream;
-          localVideo.autoplay = true;
-          localVideo.muted = true;
-          localVideo.dataset.peer = 'me';
-          videoGrid.appendChild(localVideo);
-          videoElements.set('me', localVideo);
-        } else {
-          const localVideo = videoElements.get('me');
-          localVideo.srcObject = stream;
-        }
         incomingCall.on('stream', (remoteStream) => {
           if (!videoElements.has(incomingCall.peer)) {
             const remoteVideo = document.createElement('video');
@@ -102,18 +98,9 @@
           callButton.innerText = `Call ${value}`;
           callButton.addEventListener('click', () => {
             navigator.mediaDevices.getUserMedia({ video: true, audio: true }).then((stream) => {
-              if (!videoElements.has('me')) {
-                const localVideo = document.createElement('video');
-                localVideo.srcObject = stream;
-                localVideo.autoplay = true;
-                localVideo.muted = true;
-                localVideo.dataset.peer = 'me';
-                videoGrid.appendChild(localVideo);
-                videoElements.set('me', localVideo);
-              } else {
-                const localVideo = videoElements.get('me');
-                localVideo.srcObject = stream;
-              }
+              const localVideo = $('local-video');
+              localVideo.srcObject = stream;
+              localVideo.volume = 1;
               const call = peer.call(value, stream);
               currentCalls.set(value, call);
               call.startTime = Date.now();
