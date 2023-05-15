@@ -90,10 +90,7 @@
           callButton.innerText = `Call ${value}`;
           callButton.addEventListener('click', () => {
             navigator.mediaDevices.getUserMedia({ video: true, audio: true }).then((stream) => {
-              const call = peer.call(value, stream);
-              currentCalls.set(value, call);
-              call.startTime = Date.now();
-              if (!videoElements.has(value)) {
+              if (!videoElements.has('me')) {
                 const video = document.createElement('video');
                 video.srcObject = stream;
                 video.autoplay = true;
@@ -104,6 +101,9 @@
                 const video = videoElements.get('me');
                 video.srcObject = stream;
               }
+              const call = peer.call(value, stream);
+              currentCalls.set(value, call);
+              call.startTime = Date.now();
               call.on('stream', (remoteStream) => {
                 if (!videoElements.has(value)) {
                   const video = document.createElement('video');
