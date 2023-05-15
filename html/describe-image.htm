@@ -1,0 +1,58 @@
+<!-- https://jay23606.github.io/chat-gpt-voice/html/describe-image.htm -->
+
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <title>Describe Image with OpenAI DALL-E 2 API</title>
+  </head>
+  <body>
+    <h1>Describe Image with OpenAI DALL-E 2 API</h1>
+    <div>
+      <img id="image" src="https://picsum.photos/seed/example/400" alt="Example Image" />
+    </div>
+    <div>
+      <label for="prompt">Describe the image:</label>
+      <input type="text" id="prompt" name="prompt" value="an image of a cat" />
+      <button id="generate-btn">Generate Description</button>
+    </div>
+    <div>
+      <h3>Generated Description:</h3>
+      <p id="description"></p>
+    </div>
+
+    <script>
+      const API_ENDPOINT = 'https://api.openai.com/v1/images/generations';
+      const token = localStorage.getItem('OPENAI_API_KEY') || (prompt("Please input OpenAI API key (stored in browser cache)", "") || '').trim();
+
+
+      const headers = {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`,
+      };
+
+      const generateDescription = async () => {
+        const prompt = document.getElementById('prompt').value;
+        const model = 'image-alpha-001';
+        const data = {
+          'model': model,
+          'prompt': prompt,
+          'num_images': 1,
+          'size': 256,
+          'response_format': 'url',
+        };
+
+        const response = await fetch(API_ENDPOINT, {
+          method: 'POST',
+          headers: headers,
+          body: JSON.stringify(data),
+        });
+
+        const imageUrl = response.json().data[0].url;
+        document.getElementById('description').innerHTML = `<img src="${imageUrl}" alt="${prompt}" />`
+      };
+
+      document.getElementById('generate-btn').addEventListener('click', generateDescription);
+    </script>
+  </body>
+</html>
