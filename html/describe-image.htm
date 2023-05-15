@@ -12,8 +12,6 @@
       <img id="image" src="https://picsum.photos/seed/example/400" alt="Example Image" />
     </div>
     <div>
-      <label for="prompt">Describe the image:</label>
-      <input type="text" id="prompt" name="prompt" value="an image of a cat" />
       <button id="generate-btn">Generate Description</button>
     </div>
     <div>
@@ -32,14 +30,16 @@
       };
 
       const generateDescription = async () => {
-        const prompt = document.getElementById('prompt').value;
+        const imageUrl = document.getElementById('image').src;
+
+        const prompt = `Describe the contents of this image: ${imageUrl}`;
         const model = 'image-alpha-001';
         const data = {
           'model': model,
           'prompt': prompt,
           'num_images': 1,
           'size': 256,
-          'response_format': 'url',
+          'response_format': 'text',
         };
 
         const response = await fetch(API_ENDPOINT, {
@@ -48,8 +48,8 @@
           body: JSON.stringify(data),
         });
 
-        const imageUrl = response.json().data[0].url;
-        document.getElementById('description').innerHTML = `<img src="${imageUrl}" alt="${prompt}" />`
+        const description = response.json().data[0].text;
+        document.getElementById('description').innerHTML = description;
       };
 
       document.getElementById('generate-btn').addEventListener('click', generateDescription);
