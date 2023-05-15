@@ -38,7 +38,7 @@
           'prompt': prompt,
           'num_images': 1,
           'size': '256x256',
-          'response_format': 'text',
+          'response_format': 'url',
         };
 
         const response = await fetch(API_ENDPOINT, {
@@ -47,7 +47,10 @@
           body: JSON.stringify(data),
         });
 
-        const description = response.json().data[0].text;
+        const descriptionUrl = response.json().data[0];
+        const descriptionResponse = await fetch(descriptionUrl);
+        const descriptionData = await descriptionResponse.json();
+        const description = descriptionData.data[0].text;
         document.getElementById('description').innerHTML = description;
       };
 
