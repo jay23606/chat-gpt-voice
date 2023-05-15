@@ -23,7 +23,6 @@
       const API_ENDPOINT = 'https://api.openai.com/v1/images/generations';
       const token = localStorage.getItem('OPENAI_API_KEY') || (prompt("Please input OpenAI API key (stored in browser cache)", "") || '').trim();
 
-
       const headers = {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${token}`,
@@ -38,7 +37,7 @@
           'model': model,
           'prompt': prompt,
           'num_images': 1,
-          'size': 256,
+          'size': '256',
           'response_format': 'text',
         };
 
