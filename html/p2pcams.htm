@@ -1,0 +1,169 @@
+<!-- https://jay23606.github.io/chat-gpt-voice/html/p2pcams.htm -->
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>p2p-webcam</title>
+    <style>
+        #video-grid { display: flex; flex-wrap: wrap; }
+        #local-video { position: fixed; top: 0; right: 0; width: 20%; }
+        video:not(#local-video) { width: 33%; }
+        .connected { background-color: lightgreen; }
+    </style>
+</head>
+<body>
+    <div id="video-grid"><video id="local-video" autoplay></video></div>
+    <div id="peers"></div>
+    <script src="https://unpkg.com/peerjs@1.4.7/dist/peerjs.min.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.2.9/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.2.9/firebase-database.js"></script>
+    <script>
+        let _connected = false;
+        const $$ = sel => document.querySelectorAll(sel), $ = (id, properties) => { const element = document.getElementById(id); if (properties) Object.assign(element, properties); return element; };
+        const $el = (el, attrs = {}) => Object.assign(document.createElement(el), attrs);
+        Element.prototype.append = function (...children) { children.forEach(child => { if (typeof child === 'string') child = document.createTextNode(child); this.appendChild(child); }); };
+        HTMLElement.prototype.on = function (e, fn) { this.addEventListener(e, fn) };
+
+        const firebaseConfig = { databaseURL: "https://jabdal-default-rtdb.firebaseio.com" }, media = navigator.mediaDevices.getUserMedia;
+        firebase.initializeApp(firebaseConfig);
+        const dbRef = firebase.database().ref('peers'), peer = new Peer(), videoGrid = $('video-grid');
+        let currentCalls = new Map(), videoElements = new Map();
+
+        const endCall = (peerIdOrVideo) => {
+            let peerId, videoElement;
+            if (typeof peerIdOrVideo === 'string') {
+                peerId = peerIdOrVideo;
+                videoElement = videoElements.get(peerId);
+            } else {
+                videoElement = peerIdOrVideo;
+                peerId = videoElement.dataset.peer;
+            }
+            if (videoElement) {
+                videoElement.remove();
+                videoElements.delete(peerId);
+            }
+            const callButton = $(`call-button-${peerId}`);
+            callButton.classList.remove('connected');
+            callButton.disabled = false;
+            const connection = currentCalls.get(peerId);
+            if (connection) {
+                connection.close();
+                connection.off('close');
+                currentCalls.delete(peerId);
+            }
+            const videosToRemove = $$(`video[data-peer="${peerId}"]`);
+            videosToRemove.forEach((video) => video.parentNode.removeChild(video));
+            refreshPeers();
+        };
+
+        const isPeerConnected = (peerId) => videoElements.has(peerId) && _connected;
+
+        media({ video: true, audio: true }).then((stream) => $('local-video', { srcObject: stream, muted: true })).catch((error) => console.error(error));
+
+        peer.on('open', (id) => {
+            dbRef.onDisconnect().remove();
+            dbRef.push(id);
+            refreshPeers();
+        });
+
+        peer.on('call', (incomingCall) => {
+            const answerCall = (stream) => {
+                currentCalls.set(incomingCall.peer, incomingCall);
+                incomingCall.answer(stream);
+                incomingCall.on('stream', (remoteStream) => {
+                    if (!videoElements.has(incomingCall.peer)) {
+                        const remoteVideo = $el('video', {
+                            srcObject: remoteStream,
+                            autoplay: true,
+                            onclick: () => endCall(remoteVideo),
+                            title: incomingCall.peer
+                        });
+                        remoteVideo.dataset.peer = incomingCall.peer;
+                        videoGrid.appendChild(remoteVideo);
+                        videoElements.set(incomingCall.peer, remoteVideo);
+                        refreshPeers();
+                    } else {
+                        videoElements.get(incomingCall.peer).srcObject = remoteStream;
+                    }
+                    setTimeout(() => {
+                        const callButton = $(`call-button-${incomingCall.peer}`);
+                        if (callButton) {
+                            callButton.classList.add('connected');
+                            callButton.disabled = true;
+                        }
+                    }, 500);
+                });
+                refreshPeers();
+            };
+            media({ video: true, audio: true }).then(answerCall).catch((error) => console.error(error));
+        });
+
+        const refreshPeers = () => {
+            dbRef.once('value').then((snapshot) => {
+                const pDiv = $('peers');
+                pDiv.innerHTML = '';
+                pDiv.append($el('br'), $el('div', { innerText: `Your ID: ${peer.id}` }), $el('br'), $el('br')); //, $el('button', { innerText: 'Refresh', onclick: refreshPeers })
+                snapshot.forEach((childSnapshot) => {
+                    const value = childSnapshot.val();
+                    if (value === peer.id) return;
+                    const callButton = $el('button', { innerText: `Call ${value}`, id: `call-button-${value}`, class: 'call' });
+                    if (isPeerConnected(value)) {
+                        callButton.classList.add('connected');
+                        callButton.disabled = true;
+                    }
+                    else {
+                        callButton.classList.remove('connected');
+                        callButton.disabled = false;
+                    }
+                    callButton.on('click', () => {
+                        media({ video: true, audio: true }).then((stream) => {
+                            $('local-video', { srcObject: stream });
+                            const call = peer.call(value, stream);
+                            currentCalls.set(value, call);
+                            call.on('stream', (remoteStream) => {
+                                if (!videoElements.has(value)) {
+                                    const remoteVideo = $el('video', {
+                                        srcObject: remoteStream,
+                                        autoplay: true,
+                                        onclick: () => endCall(remoteVideo),
+                                        title: value
+                                    });
+                                    remoteVideo.dataset.peer = value;
+                                    videoGrid.appendChild(remoteVideo);
+                                    videoElements.set(value, remoteVideo);
+                                    refreshPeers();
+                                } else {
+                                    videoElements.get(value).srcObject = remoteStream
+                                }
+                                setTimeout(() => {
+                                    const callButton = $(`call-button-${value}`);
+                                    if (callButton) {
+                                        callButton.classList.add('connected');
+                                        callButton.disabled = true;
+                                    }
+                                }, 500);
+                            });
+                        }).catch((error) => console.log(error));
+                    });
+                    pDiv.append(callButton, $el('br'));
+                });
+            }).catch((error) => console.error(error));
+        };
+        refreshPeers();
+
+        setInterval(() => {
+            currentCalls.forEach((call, peerId) => {
+                if (call.open) {
+                    const remotePeer = peer.connections[peerId][0];
+                    if (!(remotePeer && remotePeer.peerConnection.iceConnectionState === 'connected')) {
+                        _connected = false;
+                        endCall(peerId);
+                    } else _connected = true;
+                } else _connected = false;
+            });
+            refreshPeers();
+        }, 1500);
+
+    </script>
+</body>
+</html>
