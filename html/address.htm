@@ -1,0 +1,48 @@
+<!-- https://jay23606.github.io/chat-gpt-voice/html/address.htm -->
+
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Current Address App</title>
+</head>
+<body>
+  <h1>Current Address App</h1>
+  <button onclick="getCurrentAddress()">Get Current Address</button>
+  <p id="address"></p>
+
+  <script>
+    function getCurrentAddress() {
+      // Check if browser supports Geolocation
+      if (navigator.geolocation) {
+        // Get current position
+        navigator.geolocation.getCurrentPosition(success, error);
+      } else {
+        alert('Geolocation is not supported by your browser.');
+      }
+    }
+
+    function success(position) {
+      const latitude = position.coords.latitude;
+      const longitude = position.coords.longitude;
+
+      // Use Geocoding API to get address from coordinates
+      const geocodingUrl = `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}`;
+      
+      fetch(geocodingUrl)
+        .then(response => response.json())
+        .then(data => {
+          const address = data.display_name;
+          document.getElementById('address').textContent = `Your current address is: ${address}`;
+        })
+        .catch(error => {
+          console.log('Error:', error);
+          alert('Unable to retrieve address. Please try again later.');
+        });
+    }
+
+    function error() {
+      alert('Unable to retrieve your location.');
+    }
+  </script>
+</body>
+</html>
