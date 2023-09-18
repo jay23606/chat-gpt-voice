@@ -1,0 +1,49 @@
+<!-- https://jay23606.github.io/chat-gpt-voice/html/address2.htm -->
+
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Current Address App</title>
+</head>
+<body>
+  <h1>Current Address App</h1>
+  <button onclick="getCurrentAddress()">Get Current Address</button>
+  <p id="address"></p>
+
+  <script>
+    function getCurrentAddress() {
+      if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(success, error);
+      } else {
+        alert('Geolocation is not supported by your browser.');
+      }
+    }
+
+    function success(position) {
+      const latitude = position.coords.latitude;
+      const longitude = position.coords.longitude;
+
+      const geocodingUrl = `https://api.opencagedata.com/geocode/v1/json?q=${latitude}+${longitude}&key=c2109378d6c140f091910ed0d020864d`;
+      
+      fetch(geocodingUrl)
+        .then(response => response.json())
+        .then(data => {
+          if (data.results.length > 0) {
+            const address = data.results[0].formatted;
+            document.getElementById('address').textContent = `Your current address is: ${address}`;
+          } else {
+            throw new Error('No results found.');
+          }
+        })
+        .catch(error => {
+          console.log('Error:', error);
+          alert('Unable to retrieve address. Please try again later.');
+        });
+    }
+
+    function error() {
+      alert('Unable to retrieve your location.');
+    }
+  </script>
+</body>
+</html>
