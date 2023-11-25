@@ -1,0 +1,76 @@
+<!-- https://jay23606.github.io/chat-gpt-voice/html/ls3.htm -->
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Loan Servicing Software</title>
+</head>
+<body>
+    <h1>Loan Servicing Software</h1>
+
+    <form id="loanForm">
+        <label for="loanAmount">Loan Amount:</label>
+        <input type="number" id="loanAmount" value="100000" required><br><br>
+
+        <label for="interestRate">Interest Rate:</label>
+        <input type="number" id="interestRate" value="10" step="0.01" required><br><br>
+
+        <label for="numMonths">Number of Months:</label>
+        <input type="number" id="numMonths" value="360" required><br><br>
+
+        <label for="principalPayments">Principal Payments:</label>
+        <textarea id="principalPayments" placeholder="Format: MM/DD/YYYY:Amount, MM/DD/YYYY:Amount" rows="4" required></textarea><br><br>
+
+        <label for="installmentDate">First Installment Date:</label>
+        <input type="date" id="installmentDate" required><br><br>
+
+        <button type="submit">Submit</button>
+    </form>
+
+    <script>
+        document.getElementById("loanForm").addEventListener("submit", e => {
+            e.preventDefault();
+
+            const loanAmount = parseFloat(document.getElementById("loanAmount").value);
+            const interestRate = parseFloat(document.getElementById("interestRate").value);
+            const numMonths = parseInt(document.getElementById("numMonths").value);
+            const principalPaymentsInput = document.getElementById("principalPayments").value;
+            const firstInstallmentDate = new Date(document.getElementById("installmentDate").value);
+            
+            const principalPayments = principalPaymentsInput.split(", ").map(payment => {
+                const [dateString, amountString] = payment.split(":");
+                const dateParts = dateString.split("/");
+                const date = new Date(dateParts[2], dateParts[0] - 1, dateParts[1]);
+                const amount = parseFloat(amountString);
+                return { date, amount };
+            });
+
+            const monthlyInterestRate = interestRate / 100 / 12;
+            const monthlyPayment = (loanAmount * monthlyInterestRate) / (1 - Math.pow(1 + monthlyInterestRate, -numMonths));
+            let remainingBalance = loanAmount;
+            let currentDate = new Date(firstInstallmentDate);
+
+            let monthsToPayOff = 0;
+            while (remainingBalance > 0 && monthsToPayOff < numMonths) {
+                const interestPayment = remainingBalance * monthlyInterestRate;
+                const principalPayment = monthlyPayment - interestPayment;
+
+                if (currentDate >= firstInstallmentDate && currentDate.getMonth() - firstInstallmentDate.getMonth() < numMonths) {
+                    const applicablePayments = principalPayments.filter(payment => payment.date.getMonth() === currentDate.getMonth() && payment.date.getFullYear() === currentDate.getFullYear());
+                    applicablePayments.forEach(payment => remainingBalance -= payment.amount);
+                }
+
+                remainingBalance -= principalPayment;
+
+                currentDate.setMonth(currentDate.getMonth() + 1);
+
+                monthsToPayOff++;
+            }
+
+            alert("Months to Pay Off: " + monthsToPayOff);
+
+            document.getElementById("loanForm").reset();
+        });
+    </script>
+</body>
+</html>
