@@ -1,0 +1,49 @@
+<!-- https://jay23606.github.io/chat-gpt-voice/html/ls1.htm -->
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Loan Servicing Software</title>
+</head>
+<body>
+    <h1>Loan Servicing Software</h1>
+
+    <form id="loanForm">
+        <label for="loanAmount">Loan Amount:</label>
+        <input type="number" id="loanAmount" value="100000" required><br><br>
+
+        <label for="interestRate">Interest Rate:</label>
+        <input type="number" id="interestRate" value="10" step="0.01" required><br><br>
+
+        <label for="numMonths">Number of Months:</label>
+        <input type="number" id="numMonths" value="360" required><br><br>
+
+        <label for="installmentDate">First Installment Date:</label>
+        <input type="date" id="installmentDate" required><br><br>
+
+        <button type="submit">Submit</button>
+    </form>
+
+    <script>
+        document.getElementById("loanForm").addEventListener("submit", function(event) {
+            event.preventDefault();
+
+            // Get input values
+            const loanAmount = parseFloat(document.getElementById("loanAmount").value);
+            const interestRate = parseFloat(document.getElementById("interestRate").value);
+            const numMonths = parseInt(document.getElementById("numMonths").value);
+            const installmentDate = document.getElementById("installmentDate").value;
+
+            // Perform loan servicing calculations
+            const monthlyInterestRate = interestRate / 100 / 12;
+            const monthlyPayment = (loanAmount * monthlyInterestRate) / (1 - Math.pow(1 + monthlyInterestRate, -numMonths));
+
+            // Display results
+            alert("Monthly Payment: $" + monthlyPayment.toFixed(2));
+
+            // Reset form
+            document.getElementById("loanForm").reset();
+        });
+    </script>
+</body>
+</html>
