@@ -27,13 +27,14 @@
 			//determine if any additional principal payments were made this month
 			var pAmounts = document.querySelectorAll('.pAmount');
 			var pDates = document.querySelectorAll('.pDate');
+			var pRecurrings = document.querySelectorAll('.pRecurring');
 			var oneMonthAhead = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, currentDate.getDate());
 			for (var i = 0; i < pAmounts.length; i++) {
 				var pAmount = pAmounts[i].value;
 				var pDate = pDates[i].value;
 				if(pAmount.trim()===''||pDate.trim()==='') continue;
 				var pDate2 = new Date(pDate+" 12:00:00");
-				if(pDate2>=currentDate &&  pDate2<oneMonthAhead){
+				if((pDate2>=currentDate || pRecurrings[i].checked) && pDate2<oneMonthAhead){
 					console.log("Amount: " + pAmount + ", Date: " + pDate2);
 					pp += parseFloat(pAmount);
 				}
@@ -72,6 +73,11 @@
 
 		button.parentNode.insertBefore(newPAmountInput, button);
 		button.parentNode.insertBefore(newPDateInput, button);
+		const recurring = document.createElement('input');
+		recurring.setAttribute('class', 'pRecurring');
+		recurring.setAttribute('type', 'checkbox');
+		button.parentNode.insertBefore(recurring, button);
+		button.parentNode.insertBefore(document.createTextNode('recurring'), button);
 		button.parentNode.insertBefore(document.createElement('br'), button);
 	}
 	
@@ -83,7 +89,6 @@
 table {border-collapse:collapse}
 table td{border:1px solid black}
 table th{border:1px solid black}
-input{width:111px}
 </style>
 		</head><body>`);
 		printWindow.document.write(table.outerHTML);
@@ -96,7 +101,7 @@ input{width:111px}
 table {border-collapse:collapse}
 table td{border:1px solid black}
 table th{border:1px solid black}
-input{width:111px}
+input[type="text"]{width:111px}
 </style>
 </head>
 <body>
