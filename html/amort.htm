@@ -74,6 +74,23 @@
 		button.parentNode.insertBefore(newPDateInput, button);
 		button.parentNode.insertBefore(document.createElement('br'), button);
 	}
+	
+	function printTable() {
+		var table = $('tbl');
+		var printWindow = window.open('', '', 'width=800,height=600');
+		printWindow.document.write(`<html><head><title>Amortization Schedule</title>
+<style>
+table {border-collapse:collapse}
+table td{border:1px solid black}
+table th{border:1px solid black}
+input{width:111px}
+</style>
+		</head><body>`);
+		printWindow.document.write(table.outerHTML);
+		printWindow.document.write('</body></html>');
+		printWindow.document.close();
+		printWindow.print();
+    }
 </script>
 <style>
 table {border-collapse:collapse}
@@ -92,19 +109,20 @@ input{width:111px}
 	<button style='float:right' onclick='addRow(this)'>Add</button>
 </fieldset>
 <div id='pPayments'>
-
 <button onclick='showSchedule()'>Show Schedule</button>
-
-<table>
-	<thead>
-		<th>Pmt #</th>
-		<th>Date</th>
-		<th>Interest</th>
-		<th>Principal</th>
-		<th>Balance</th>
-	</thead>
-	<tbody id='sched'>
-	</tbody>
-</table>
+<button style='float:right' onclick="printTable()">Print</button>
+<div style='display: flex;justify-content: center;' id='tbl'>
+	<table>
+		<thead>
+			<th>Pmt #</th>
+			<th>Date</th>
+			<th>Interest</th>
+			<th>Principal</th>
+			<th>Balance</th>
+		</thead>
+		<tbody id='sched'>
+		</tbody>
+	</table>
+</div>
 </body>
 </html>
