@@ -1,0 +1,110 @@
+<!-- https://jay23606.github.io/chat-gpt-voice/html/amort.htm -->
+<html>
+<head>
+<script>
+	const $ = (id) => document.getElementById(id);
+	
+	const showSchedule = () => {
+		var rate = parseFloat($('rate').value)/(12*100);
+		var balance = parseFloat($('balance').value);
+		var payment = parseFloat($('payment').value);
+		var startDate = $('startDate').value+ " 12:00:00";
+		
+		var tbody = document.getElementById('sched');
+		tbody.innerHTML = '';
+		var index = 1;
+		var currentDate = new Date(startDate);
+		
+		while(balance>0){
+		
+			var row = tbody.insertRow();
+			var pmt = row.insertCell();
+			
+			pmt.innerHTML = index;
+			index++;
+			var pp = 0;
+			
+			//determine if any additional principal payments were made this month
+			var pAmounts = document.querySelectorAll('.pAmount');
+			var pDates = document.querySelectorAll('.pDate');
+			var oneMonthAhead = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, currentDate.getDate());
+			for (var i = 0; i < pAmounts.length; i++) {
+				var pAmount = pAmounts[i].value;
+				var pDate = pDates[i].value;
+				if(pAmount.trim()===''||pDate.trim()==='') continue;
+				var pDate2 = new Date(pDate+" 12:00:00");
+				if(pDate2>=currentDate &&  pDate2<oneMonthAhead){
+					console.log("Amount: " + pAmount + ", Date: " + pDate2);
+					pp += parseFloat(pAmount);
+				}
+			}
+			
+			var date = row.insertCell();
+			date.innerHTML = currentDate.toLocaleDateString('en-US');
+			currentDate.setMonth(currentDate.getMonth() + 1);
+			
+			var interest = row.insertCell();
+			var int = (rate*balance).toFixed(2);
+			interest.innerHTML = int;
+			
+			var principal = row.insertCell();
+			var p = ((payment - int) + pp).toFixed(2);
+			principal.innerHTML = p;
+			if(pp > 0) principal.style.textDecoration = "underline";
+			balance -= p;
+			
+			var bal = row.insertCell();
+			bal.innerHTML = balance.toFixed(2); 
+		}
+		
+	}
+
+	function addRow(button) {
+		const newPAmountInput = document.createElement('input');
+		newPAmountInput.setAttribute('class', 'pAmount');
+		newPAmountInput.setAttribute('type', 'number');
+		newPAmountInput.setAttribute('step', '0.01');
+		newPAmountInput.setAttribute('min', '0');
+
+		const newPDateInput = document.createElement('input');
+		newPDateInput.setAttribute('class', 'pDate');
+		newPDateInput.setAttribute('type', 'date');
+
+		button.parentNode.insertBefore(newPAmountInput, button);
+		button.parentNode.insertBefore(newPDateInput, button);
+		button.parentNode.insertBefore(document.createElement('br'), button);
+	}
+</script>
+<style>
+table {border-collapse:collapse}
+table td{border:1px solid black}
+table th{border:1px solid black}
+input{width:111px}
+</style>
+</head>
+<body>
+<input id='balance' type="number" step="0.01" min="0" value='84000' /> Starting Balance<br/>
+<input id='rate' type='number' step="0.001" min="0" value='10.190'/> Interest rate<br/>
+<input id='payment' type='number' step="0.01" min="0" value='748.98'/> Minimum Monthly payment<br/>
+<input id='startDate' type='date' value='2023-01-01'/> First Installment Date<br/>
+<fieldset>
+<legend>Principal payment amounts and dates</legend>
+	<button style='float:right' onclick='addRow(this)'>Add</button>
+</fieldset>
+<div id='pPayments'>
+
+<button onclick='showSchedule()'>Show Schedule</button>
+
+<table>
+	<thead>
+		<th>Pmt #</th>
+		<th>Date</th>
+		<th>Interest</th>
+		<th>Principal</th>
+		<th>Balance</th>
+	</thead>
+	<tbody id='sched'>
+	</tbody>
+</table>
+</body>
+</html>
