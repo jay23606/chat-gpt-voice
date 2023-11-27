@@ -1,0 +1,41 @@
+<!-- https://jay23606.github.io/chat-gpt-voice/html/xml-import.htm -->
+
+<!DOCTYPE html>
+<html>
+<body>
+  <input type="file" id="xmlFile" accept=".xml">
+  <script>
+    const xmlFileInput = document.getElementById('xmlFile');
+    
+    xmlFileInput.addEventListener('change', (event) => {
+      const file = event.target.files[0];
+      const reader = new FileReader();
+
+      reader.onload = function (e) {
+        const xmlString = e.target.result;
+        const parser = new DOMParser();
+        const xmlDoc = parser.parseFromString(xmlString, "text/xml");
+        const data = parseXmlToObj(xmlDoc);
+        console.log(data);
+      };
+      
+      reader.readAsText(file);
+    });
+
+    function parseXmlToObj(xmlDoc) {
+      const data = [];
+      const persons = xmlDoc.getElementsByTagName("person");
+
+      for (let i = 0; i < persons.length; i++) {
+        const person = persons[i];
+        const name = person.getElementsByTagName("name")[0].textContent;
+        const age = person.getElementsByTagName("age")[0].textContent;
+        
+        data.push({ name, age });
+      }
+
+      return data;
+    }
+  </script>
+</body>
+</html>
