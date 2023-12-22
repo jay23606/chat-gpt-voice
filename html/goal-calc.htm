@@ -69,10 +69,14 @@
               	acqArr.push(P-p);
               	
               	//lets assume they are paid off after 30 years
+              	
               	if(N>=360){
-               		MI -= CF*acqArr[N-360];
-                  	P -= acqArr[N-360];
-                  	outputDiv.innerHTML += `MI reduce by ${CF*acqArr[N-360]} due to payoff of ${acqArr[N-360]} properties<br/>`;
+                  	var buyerPaidOff = acqArr[N-360];
+                  	if(buyerPaidOff>0){
+                      MI -= CF*buyerPaidOff;
+                      P -= buyerPaidOff;
+                      outputDiv.innerHTML += `MI reduce by ${CF*buyerPaidOff} due to payoff of ${buyerPaidOff} properties<br/>`;
+                    }
                 }
                 outputDiv.innerHTML += `Month: ${N}, MI: ${MI}, B: ${B}, P: ${P}, P-p: ${P-p} <br/>`;
             }
