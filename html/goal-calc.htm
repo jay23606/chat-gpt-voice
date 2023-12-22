@@ -58,8 +58,9 @@
                 while (B >= A + R) {
                     B -= A;
                     MI += CF; //increase monthly income by CF for each acquistion
+                  	P++;
                 }
-                outputDiv.innerHTML += `Month: ${N}, MI: ${MI}, B: ${B} <br/>`;
+                outputDiv.innerHTML += `Month: ${N}, MI: ${MI}, B: ${B}, P: ${P} <br/>`;
             }
 
             outputDiv.innerHTML += `Number of months to exceed $${CF_goal} in monthly income: ${N} (${N / 12} years) <br/>`;
