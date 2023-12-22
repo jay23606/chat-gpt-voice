@@ -8,6 +8,10 @@
 </head>
 <body>
     <table>
+      	<tr>
+            <td>Balance (B):</td>
+            <td><input type="text" id="balance" value="0" /></td>
+        </tr>
         <tr>
             <td>Initial Number of Properties (P):</td>
             <td><input type="text" id="initialProperties" value="20" /></td>
@@ -41,7 +45,7 @@
     <script>
         function calculate() {
             let N = 0;    // month
-            let B = 0;    // balance
+            let B = parseInt(document.getElementById("balance").value);
             let P = parseInt(document.getElementById("initialProperties").value);
             let MI = parseInt(document.getElementById("initialIncome").value);
             const CF = parseInt(document.getElementById("incomeIncrease").value);
