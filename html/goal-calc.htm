@@ -55,16 +55,25 @@
 
             let outputDiv = document.getElementById("output");
             outputDiv.innerHTML = '';  // Clear previous results
-
+			
+          	var acqArr = []
             while (MI < CF_goal) {
                 N++;
                 B += MI;
+              	var p = P;
                 while (B >= A + R) {
                     B -= A;
                     MI += CF; //increase monthly income by CF for each acquistion
                   	P++;
                 }
-                outputDiv.innerHTML += `Month: ${N}, MI: ${MI}, B: ${B}, P: ${P} <br/>`;
+              	acqArr.push(P-p);
+              	
+              	//lets assume they are paid off after 30 years
+              	if(N>=360){
+               		MI -= CF*acqArr[N-360];
+                  	P -= acqArr[N-360];
+                }
+                outputDiv.innerHTML += `Month: ${N}, MI: ${MI}, B: ${B}, P: ${P}, P-p: ${P-p} <br/>`;
             }
 
             outputDiv.innerHTML += `Number of months to exceed $${CF_goal} in monthly income: ${N} (${N / 12} years) <br/>`;
