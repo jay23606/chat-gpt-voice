@@ -36,6 +36,10 @@
             <td>Monthly Cashflow Goal:</td>
             <td><input type="text" id="monthlyGoal" value="100000" /></td>
         </tr>
+      <tr>
+            <td>Note Term (T, months):</td>
+            <td><input type="text" id="noteTerm" value="360" /></td>
+        </tr>
     </table>
 
     <button onclick="calculate()">Calculate</button>
@@ -52,6 +56,7 @@
             const A = parseInt(document.getElementById("acquisitionCost").value);
             const R = parseInt(document.getElementById("reserves").value);
             const CF_goal = parseInt(document.getElementById("monthlyGoal").value);
+          	const T = parseInt(document.getElementById("noteTerm").value);
 
             let outputDiv = document.getElementById("output");
             outputDiv.innerHTML = '';  // Clear previous results
@@ -70,8 +75,8 @@
               	
               	//lets assume they are paid off after 30 years
               	
-              	if(N>=360){
-                  	var buyerPaidOff = acqArr[N-360];
+              	if(N>=T){
+                  	var buyerPaidOff = acqArr[N-T];
                   	if(buyerPaidOff>0){
                       MI -= CF*buyerPaidOff;
                       P -= buyerPaidOff;
