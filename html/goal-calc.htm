@@ -78,6 +78,7 @@
               	if(N>=T){
                   	var buyerPaidOff = acqArr[N-T];
                   	if(buyerPaidOff>0){
+                      outputDiv.innerHTML += `Month (before): ${N}, MI: ${MI}, B: ${B}, P: ${P}, P-p: ${P-p} <br/>`;
                       MI -= CF*buyerPaidOff;
                       P -= buyerPaidOff;
                       outputDiv.innerHTML += `MI reduce by ${CF*buyerPaidOff} due to payoff of ${buyerPaidOff} properties<br/>`;
