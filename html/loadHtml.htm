@@ -1,0 +1,79 @@
+<!-- https://jay23606.github.io/chat-gpt-voice/html/loadHtml.htm -->
+javascript
+// Load HTML and check if scripts are loaded correctly
+function loadHTML(html, targetElement, callback) {
+  // Create a temporary container element
+  const tempContainer = document.createElement('div');
+  tempContainer.innerHTML = html;
+
+  // Find all external script tags
+  const externalScripts = tempContainer.querySelectorAll('script[src]');
+
+  // Count the number of loaded scripts
+  let loadedScripts = 0;
+
+  // Callback function to be triggered when each script is loaded
+  const scriptLoaded = () => {
+    loadedScripts++;
+
+    // Check if all scripts are loaded
+    if (loadedScripts === externalScripts.length) {
+      // Append any inline scripts to the target element
+      const inlineScripts = tempContainer.querySelectorAll('script:not([src])');
+      inlineScripts.forEach(script => targetElement.appendChild(script));
+
+      // Trigger the callback function
+      if (typeof callback === 'function') {
+        callback();
+      }
+    }
+  };
+
+  // Load each external script and attach load event listener
+  externalScripts.forEach(script => {
+    const newScript = document.createElement('script');
+    newScript.src = script.src;
+    newScript.onload = scriptLoaded;
+    targetElement.appendChild(newScript);
+  });
+
+  // Check if the DOM is already loaded
+  if (document.readyState === 'complete' || document.readyState === 'interactive') {
+    // Trigger the DOMContentLoaded event manually
+    scriptLoaded();
+  }
+}
+
+// Test function to load HTML and check if scripts are loaded correctly
+function testLoadHTML() {
+  // Create a target element to append the HTML
+  const targetElement = document.createElement('div');
+
+  // HTML string with jQuery and alert
+  const html = `
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script>
+      $(document).ready(function() {
+        alert('Scripts loaded!');
+      });
+    </script>
+  `;
+
+  // Load the HTML and execute callback
+  loadHTML(html, targetElement, function() {
+    // Check if jQuery is loaded
+    if (typeof $ === 'function') {
+      // jQuery is loaded, execute alert
+      alert('jQuery is loaded!');
+    } else {
+      // jQuery failed to load
+      console.error('jQuery failed to load!');
+    }
+  });
+
+  // Append the target element to the document body
+  document.body.appendChild(targetElement);
+}
+
+// Run the test
+testLoadHTML();
