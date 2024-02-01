@@ -12,7 +12,7 @@ function loadHTML(html, targetElement, callback) {
   // Count the number of loaded scripts
   let loadedScripts = 0;
 
-  // Callback function to be triggered when each script is loaded
+  // Function to be triggered when each script is loaded
   const scriptLoaded = () => {
     loadedScripts++;
 
@@ -20,7 +20,11 @@ function loadHTML(html, targetElement, callback) {
     if (loadedScripts === externalScripts.length) {
       // Append any inline scripts to the target element
       const inlineScripts = tempContainer.querySelectorAll('script:not([src])');
-      inlineScripts.forEach(script => targetElement.appendChild(script));
+      inlineScripts.forEach(script => {
+        const newScript = document.createElement('script');
+        newScript.innerHTML = script.innerHTML;
+        targetElement.appendChild(newScript);
+      });
 
       // Trigger the callback function
       if (typeof callback === 'function') {
@@ -37,9 +41,8 @@ function loadHTML(html, targetElement, callback) {
     targetElement.appendChild(newScript);
   });
 
-  // Check if the DOM is already loaded
-  if (document.readyState === 'complete' || document.readyState === 'interactive') {
-    // Trigger the DOMContentLoaded event manually
+  // Check if there are no external scripts
+  if (externalScripts.length === 0) {
     scriptLoaded();
   }
 }
@@ -53,8 +56,9 @@ function testLoadHTML() {
   const html = `
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script>
-      $(document).ready(function() {
+      $(document).ready(() => {
         alert('Scripts loaded!');
+        alert($); // Check if jQuery ($) is available
       });
     </script>
   `;
@@ -65,6 +69,7 @@ function testLoadHTML() {
     if (typeof $ === 'function') {
       // jQuery is loaded, execute alert
       alert('jQuery is loaded!');
+      alert($); // Check if jQuery ($) is available
     } else {
       // jQuery failed to load
       console.error('jQuery failed to load!');
