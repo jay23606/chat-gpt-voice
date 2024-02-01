@@ -1,5 +1,10 @@
 <!-- https://jay23606.github.io/chat-gpt-voice/html/loadHtml.htm -->
-javascript
+
+<!DOCTYPE html>
+<html>
+<body>
+
+<script>
 // Load HTML and check if scripts are loaded correctly
 function loadHTML(html, targetElement, callback) {
   // Create a temporary container element
@@ -54,13 +59,13 @@ function testLoadHTML() {
 
   // HTML string with jQuery and alert
   const html = `
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></`>
     <script>
       $(document).ready(() => {
         alert('Scripts loaded!');
         alert($); // Check if jQuery ($) is available
       });
-    </script>
+    <\/script>
   `;
 
   // Load the HTML and execute callback
@@ -82,3 +87,8 @@ function testLoadHTML() {
 
 // Run the test
 testLoadHTML();
+
+</script>
+
+</body>
+</html>
