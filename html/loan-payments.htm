@@ -1,0 +1,127 @@
+<!-- https://jay23606.github.io/chat-gpt-voice/html/loan-payments.htm -->
+<body>
+<style>
+body, textarea{font-size: small; font-family: times new roman}
+</style>
+<textarea id="yamlData" style="height:50vh;width:100%">
+Loan_109_Main_St:
+	name: Jane Doe
+	date: 12/1/2023
+	rate: 9.88
+	amount: 80000
+	escrow: 200
+	payments:
+		2023:
+			12: 
+				payment: 800
+		2024:
+			01: 
+				payment: 895
+			02: 
+				payment: 600
+Loan_604_Center_St:
+	name: Erin Smith
+	date: 1/1/2024
+	rate: 9.7233
+	amount: 102000
+	escrow: 200
+	payments:
+		2024:
+			01: 
+				payment: 1095
+</textarea>
+<button onclick='submitLoans()'>Submit</button>
+<ul id="jsonList"></ul>
+
+
+<script>
+	HTMLElement.prototype.$$ = function(s) { return this.querySelectorAll(s) }
+	const $ = s => document.querySelector(s), $$ = s => document.querySelectorAll(s);
+	
+	
+	const parseYamlish = (text) => {
+		const getNextIdx = (m, i, t) => m[i + 1] ? t.indexOf(m[i + 1], t.indexOf(m[i])) : t.length;
+		const obj = {};
+		const parse = (classText, level) => {
+			const clsObj = {}, regex = new RegExp(`^\\t{${level}}([-_\\w:.]+):`, 'gm'); //new RegExp(`^\\s{${4 * level}}([-_\\w:.]+):`, 'gm'); //tabs or 4 spaces, can't have both
+			const propMatches = classText.match(regex) || [];
+			let lastIndex = 0;
+			propMatches.forEach((propMatch, j) => {
+				const propEndIdx = getNextIdx(propMatches, j, classText);
+				clsObj[propMatch.trim().slice(0, -1)] = parse(classText.substring(classText.indexOf(propMatch, lastIndex) + propMatch.length, propEndIdx), level + 1);
+				lastIndex = propEndIdx;
+			});
+			if (Object.keys(clsObj).length === 0) return classText.trim();
+			return clsObj;
+		};
+		const classMatches = text.match(/^([-_\w:.]+):/gm) || [];
+		let lastIndex = 0;
+		classMatches.forEach((clsMatch, i) => {
+			const clsEndIdx = getNextIdx(classMatches, i, text);
+			obj[clsMatch.trim().slice(0, -1)] = parse(text.substring(text.indexOf(clsMatch, lastIndex) + clsMatch.length, clsEndIdx), 1);
+			lastIndex = clsEndIdx;
+		});
+		return obj;
+	};
+	
+	function jsonToUL(json, ul) {
+      for (var key in json) {
+        if (json.hasOwnProperty(key)) {
+          var li = document.createElement("li");
+          li.textContent = key;
+
+          if (typeof json[key] === "object" && !Array.isArray(json[key])) {
+            var nestedUl = document.createElement("ul");
+            li.appendChild(nestedUl);
+            jsonToUL(json[key], nestedUl);
+          } else if (Array.isArray(json[key])) {
+            var nestedUl = document.createElement("ul");
+            li.appendChild(nestedUl);
+            json[key].forEach(function(item) {
+              var nestedLi = document.createElement("li");
+              nestedLi.textContent = item;
+              nestedUl.appendChild(nestedLi);
+            });
+          } else {
+            li.textContent += ": " + json[key];
+          }
+
+          ul.appendChild(li);
+        }
+      }
+    }
+	
+	const submitLoans = () => {
+		let loans = parseYamlish($("#yamlData").value);
+		
+		for(var key in loans){
+			var loan = loans[key]
+			for(var year in loan.payments){
+				var payments = loan.payments[year];
+				for(var month in payments){
+					payments[month].interest = (loan.amount*(loan.rate/(100*12))).toFixed(2);
+					payments[month].paydown = (payments[month].payment - loan.escrow - payments[month].interest).toFixed(2);
+					if(payments[month].paydown > 0) {
+						if((loan['Interest Unpaid'] || 0) === 0){
+							loan.amount = (loan.amount - payments[month].paydown).toFixed(2); //there is no unpaid interest
+						}else if(loan['Interest Unpaid'] >= payments[month].paydown){
+							loan['Interest Unpaid'] -= payments[month].paydown; //there is unpaid interest in excess of the paydown
+						}else{
+							var interestUnpaid = loan['Interest Unpaid']; //there is some unpaid interest but not in excess of payment
+							loan['Interest Unpaid'] = 0;
+							loan.amount = (loan.amount - (payments[month].paydown - interestUnpaid)).toFixed(2);
+						}
+					}
+					else loan['Interest Unpaid'] = (loan['Interest Unpaid'] || 0) - payments[month].paydown;
+				}
+			}
+		}
+		
+		var jsonList = $("#jsonList");
+		
+		jsonToUL(loans, jsonList);
+	
+	}
+	
+</script>
+</body>
