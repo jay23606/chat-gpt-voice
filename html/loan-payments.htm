@@ -62,7 +62,6 @@
 							Payments
 						</label>
 					</div>
-					
 				</td>
 			</tr>
 			<tr>
@@ -74,7 +73,7 @@
 			<tr id="paymentsOptions" style="display:none">
 				<td><strong>Year:</strong></td>
 				<td>
-					<select id="yearSelect" size="4">
+					<select id="yearSelect">
 						<option value="2023">2023</option>
 						<option value="2024" selected>2024</option>
 						<!-- Add more options as needed -->
@@ -82,20 +81,57 @@
 				</td>
 				<td><strong>Month:</strong></td>
 				<td>
-					<select id="monthSelect" size="4">
-						<option value="01" selected>January</option>
-						<option value="02">February</option>
-						<option value="03">March</option>
-						<option value="04">April</option>
-						<option value="05">May</option>
-						<option value="06">June</option>
-						<option value="07">July</option>
-						<option value="08">August</option>
-						<option value="09">September</option>
-						<option value="10">October</option>
-						<option value="11">November</option>
-						<option value="12">December</option>
-					</select>
+					<div id="monthSelect">
+						<label>
+							<input type="radio" name="m" value="01" checked>
+							Jan
+						</label>
+						<label>
+							<input type="radio" name="m" value="02">
+							Feb
+						</label>
+						<label>
+							<input type="radio" name="m" value="03">
+							Mar
+						</label>
+						<label>
+							<input type="radio" name="m" value="04">
+							Apr
+						</label>
+						<label>
+							<input type="radio" name="m" value="05">
+							May
+						</label>
+						<label>
+							<input type="radio" name="m" value="06">
+							Jun
+						</label>
+						<label>
+							<input type="radio" name="m" value="07">
+							Jul
+						</label>
+						<label>
+							<input type="radio" name="m" value="08">
+							Aug
+						</label>
+						<label>
+							<input type="radio" name="m" value="09">
+							Sep
+						</label>
+						<label>
+							<input type="radio" name="m" value="10">
+							Oct
+						</label>
+						<label>
+							<input type="radio" name="m" value="11">
+							Nov
+						</label>
+						<label>
+							<input type="radio" name="m" value="12">
+							Dec
+						</label>
+					</div>
+					
 				</td>
 			</tr>
 		</table>
@@ -206,7 +242,7 @@
 			updateRadio = $('#updateRadio'), removeRadio = $('#removeRadio');
 
 		if (selectedKey === 'payments') {
-			const payments = loan['payments'] || {}, year = $('#yearSelect').value, month = $('#monthSelect').value;
+			const payments = loan['payments'] || {}, year = $('#yearSelect').value, month = $('#monthSelect :checked').value;
 
 			if (addRadio.checked) {
 				payments[year] = payments[year] || {};
@@ -236,9 +272,7 @@
         if (address && date && !loans[loanKey]) {
             loans[loanKey] = { ...loan };
             console.log(`Loan added: ${loanKey}`, loans);
-            updateAllLoansSelect();
-			
-			
+            updateAllLoansSelect();		
         } else {
             console.log("Invalid or existing loan information for addition.");
         }
@@ -291,27 +325,14 @@
 
 
 	function createYearOptions() {
-		// Get the current year
 		const currentYear = new Date().getFullYear();
-
-		// Reference to the yearSelect dropdown
 		const yearSelect = $("#yearSelect");
-
-		// Clear existing options
 		yearSelect.innerHTML = '';
-
-		// Add options for the current year and the past 10 years
 		for (let year = currentYear; year >= currentYear - 30; year--) {
 			const option = document.createElement("option");
 			option.value = year.toString();
 			option.textContent = year.toString();
-
-			// Set the selected attribute for the current year
-			if (year === currentYear) {
-				option.selected = true;
-			}
-
-			// Append the option to the yearSelect dropdown
+			if (year === currentYear) option.selected = true;
 			yearSelect.appendChild(option);
 		}
 	}
