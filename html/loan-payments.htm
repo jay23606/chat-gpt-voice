@@ -2,78 +2,108 @@
 <body>
 <style>
 body, textarea{font-size: small; font-family: times new roman}
+label{display:inline-block;width:100px}
 </style>
-<textarea id="yamlData" style="height:50vh;width:100%">
-Loan_109_Main_St:
-	name: Jane Doe
-	date: 12/1/2023
-	rate: 9.88
-	amount: 80000
-	escrow: 200
-	payments:
-		2023:
-			12: 
-				payment: 800
-		2024:
-			01: 
-				payment: 895
-			02: 
-				payment: 600
-Loan_604_Center_St:
-	name: Erin Smith
-	date: 1/1/2024
-	rate: 9.7233
-	amount: 102000
-	escrow: 200
-	payments:
-		2024:
-			01: 
-				payment: 1095
-</textarea>
-<button onclick='submitLoans()'>Submit</button>
-<ul id="jsonList"></ul>
 
+	<fieldset>
+	<legend>
+		<h2>New Loan Entry</h2>
+	</legend>
+		<form id="newLoanForm">
+			<label for="loanAddress">Loan Address:</label>
+			<input type="text" id="loanAddress" name="loanName" required><br>
+
+			<label for="borrowerName">Borrower Name:</label>
+			<input type="text" id="borrowerName" name="borrowerName" required><br>
+
+			<label for="loanDate">Loan Date:</label>
+			<input type="date" id="loanDate" name="loanDate" required><br>
+
+			<label for="interestRate">Interest Rate:</label>
+			<input type="number" step="0.01" id="interestRate" name="interestRate" required><br>
+
+			<label for="loanAmount">Loan Amount:</label>
+			<input type="number" step="0.01" id="loanAmount" name="loanAmount" required><br>
+
+			<label for="escrowAmount">Escrow Amount:</label>
+			<input type="number" step="0.01" id="escrowAmount" name="escrowAmount" required><br>
+			
+			<fieldset>
+			<legend>
+				<button type="button" onclick="addPaymentField()">Add Additional Payment</button>
+			</legend>
+				<div id="paymentEntries">
+					<div class="payment-entry">
+						<label for="paymentDate">Payment Date:</label>
+						<input type="date" name="paymentDate[]" required>
+				
+						<label for="paymentAmount">Payment Amount:</label>
+						<input type="number" step="0.01" name="paymentAmount[]" required>
+					</div>
+				</div>
+			</fieldset>
+			<button type="button" onclick="addNewLoan()">Add Loan</button>
+		</form>
+	</fieldset>
+
+	<fieldset>
+		<legend>
+			<button type="button" onclick="importJSON()">Import JSON (Restore)</button> /
+			<button type="button" onclick="exportJSON()">Export JSON (Save)</button>
+		</legend>
+		<ul id="jsonList"></ul>
+	</fieldset>
 
 <script>
 	HTMLElement.prototype.$$ = function(s) { return this.querySelectorAll(s) }
 	const $ = s => document.querySelector(s), $$ = s => document.querySelectorAll(s);
 	
-	
-	const parseYamlish = (text) => {
-		const getNextIdx = (m, i, t) => m[i + 1] ? t.indexOf(m[i + 1], t.indexOf(m[i])) : t.length;
-		const obj = {};
-		const parse = (classText, level) => {
-			const clsObj = {}, regex = new RegExp(`^\\t{${level}}([-_\\w:.]+):`, 'gm'); //new RegExp(`^\\s{${4 * level}}([-_\\w:.]+):`, 'gm'); //tabs or 4 spaces, can't have both
-			const propMatches = classText.match(regex) || [];
-			let lastIndex = 0;
-			propMatches.forEach((propMatch, j) => {
-				const propEndIdx = getNextIdx(propMatches, j, classText);
-				clsObj[propMatch.trim().slice(0, -1)] = parse(classText.substring(classText.indexOf(propMatch, lastIndex) + propMatch.length, propEndIdx), level + 1);
-				lastIndex = propEndIdx;
-			});
-			if (Object.keys(clsObj).length === 0) return classText.trim();
-			return clsObj;
+	function exportJSON() {
+		var jsonString = JSON.stringify(loans, null, 2); // The second parameter (null) is for replacer function, and the third parameter (2) is for indentation (optional)
+		var blob = new Blob([jsonString], { type: 'application/json' });
+		var url = URL.createObjectURL(blob);
+		var a = document.createElement('a');
+		a.href = url;
+		a.download = 'loans.json'; // Set the default filename
+		document.body.appendChild(a);
+		a.click();
+		document.body.removeChild(a);
+		URL.revokeObjectURL(url);
+	}
+
+	function importJSON() {
+		var input = document.createElement('input');
+		input.type = 'file';
+		input.onchange = function (event) {
+			var file = event.target.files[0];
+			if (file) {
+				var reader = new FileReader();
+				reader.onload = function (e) {
+					loans = JSON.parse(e.target.result);
+					console.log(loans);
+					showLoansList(loans);
+				};
+				reader.readAsText(file);
+			}
 		};
-		const classMatches = text.match(/^([-_\w:.]+):/gm) || [];
-		let lastIndex = 0;
-		classMatches.forEach((clsMatch, i) => {
-			const clsEndIdx = getNextIdx(classMatches, i, text);
-			obj[clsMatch.trim().slice(0, -1)] = parse(text.substring(text.indexOf(clsMatch, lastIndex) + clsMatch.length, clsEndIdx), 1);
-			lastIndex = clsEndIdx;
-		});
-		return obj;
-	};
+		input.click();
+	}
 	
-	function jsonToUL(json, ul) {
+	function removeJson(loan){
+		delete loans[loan];
+		showLoansList(loans);
+	}
+	
+	function jsonToUL(json, ul, level=1) {
       for (var key in json) {
         if (json.hasOwnProperty(key)) {
           var li = document.createElement("li");
-          li.textContent = key;
-
+          li.innerHTML = key;
+		  if(level === 1) li.innerHTML += "<button onclick='removeJson(previousSibling.nodeValue.trim())'>Remove</button>"
           if (typeof json[key] === "object" && !Array.isArray(json[key])) {
             var nestedUl = document.createElement("ul");
             li.appendChild(nestedUl);
-            jsonToUL(json[key], nestedUl);
+            jsonToUL(json[key], nestedUl, level + 1);
           } else if (Array.isArray(json[key])) {
             var nestedUl = document.createElement("ul");
             li.appendChild(nestedUl);
@@ -85,15 +115,12 @@ Loan_604_Center_St:
           } else {
             li.textContent += ": " + json[key];
           }
-
           ul.appendChild(li);
         }
       }
     }
 	
-	const submitLoans = () => {
-		let loans = parseYamlish($("#yamlData").value);
-		
+	const showLoansList = (loans) => {
 		for(var key in loans){
 			var loan = loans[key]
 			for(var year in loan.payments){
@@ -121,12 +148,76 @@ Loan_604_Center_St:
 				}
 			}
 		}
-		
 		var jsonList = $("#jsonList");
-		
+		jsonList.innerHTML = '';
 		jsonToUL(loans, jsonList);
-	
 	}
+	
+	function addPaymentField() {
+		var paymentEntries = document.getElementById('paymentEntries');
+		var newPaymentEntry = document.createElement('div');
+		newPaymentEntry.className = 'payment-entry';
+		
+		newPaymentEntry.innerHTML = `
+			<label for="paymentDate">Payment Date:</label>
+			<input type="date" name="paymentDate[]" required>
+
+			<label for="paymentAmount">Payment Amount:</label>
+			<input type="number" step="0.01" name="paymentAmount[]" required>
+		`;
+
+		paymentEntries.appendChild(newPaymentEntry);
+	}
+	var loans = {};
+	function addNewLoan() {
+            var newLoanData = {
+                "name": $('#borrowerName').value,
+                "date": $('#loanDate').value,
+                "rate": $('#interestRate').value,
+                "amount": $('#loanAmount').value,
+                "escrow": $('#escrowAmount').value,
+                "payments": {}
+            };
+
+            var paymentDates = document.getElementsByName('paymentDate[]');
+            var paymentAmounts = document.getElementsByName('paymentAmount[]');
+
+            for (var i = 0; i < paymentDates.length; i++) {
+                var date = paymentDates[i].value;
+                var amount = paymentAmounts[i].value;
+
+                // Extracting year and month from the date
+                var year = date.split('-')[0];
+                var month = date.split('-')[1];
+
+                // Adding payment data to the new loan
+                if (!newLoanData.payments[year]) {
+                    newLoanData.payments[year] = {};
+                }
+
+                if (!newLoanData.payments[year][month]) {
+                    newLoanData.payments[year][month] = {};
+                }
+
+                newLoanData.payments[year][month].payment = amount;
+            }
+
+            // Generating a unique key for the new loan
+            var newLoanKey = "Loan_" + $('#loanAddress').value;
+
+            // Adding the new loan to the loans object
+            loans[newLoanKey] = newLoanData;
+			
+			$$('#newLoanForm input').forEach(input=>input.value='');
+			
+
+            // Logging the updated loans object (you can modify this part based on your use case)
+            console.log(loans);
+			
+			showLoansList(loans);
+        }
+		
+		
 	
 </script>
 </body>
