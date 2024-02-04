@@ -1,63 +1,89 @@
 <!-- https://jay23606.github.io/chat-gpt-voice/html/loan-payments.htm -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Loan Management</title>
+	<style>
+	    ul {
+            list-style-type: none;
+            padding-left: 20px;
+        }
+        .collapsed {
+            display: none;
+        }
+	</style>
+</head>
 <body>
-<style>
-body, textarea{font-size: small; font-family: times new roman}
-label{display:inline-block;width:100px}
-</style>
-
+	<button type="button" onclick="importJSON()">Import JSON (Restore)</button> /
+	<button type="button" onclick="exportJSON()">Export JSON (Save)</button>
 	<fieldset>
 	<legend>
-		<h2>New Loan Entry</h2>
+		<label for="allLoansSelect">Select Loan:</label>
+		<select id="allLoansSelect" onchange="changeSelectedLoan()">
+		</select>
 	</legend>
-		<form id="newLoanForm">
-			<label for="loanAddress">Loan Address:</label>
-			<input type="text" id="loanAddress" name="loanName" required><br>
+		<div>
+			<label for="keySelect">Key:</label>
+			<select id="keySelect" onchange="updateValueType()">
+				<option value="address">Address</option>
+				<option value="name">Name</option>
+				<option value="date">Date</option>
+				<option value="rate">Rate</option>
+				<option value="amount">Amount</option>
+				<option value="escrow">Escrow</option>
+				<option value="payments">Payments</option>
+			</select>
+			<label for="valueInput">Value:</label>
+			<input type="text" id="valueInput" placeholder="Enter value" onkeyup="if(event.key==='Enter')processAction()">
+			<div id="paymentsOptions" style="display:none;">
+				<label for="yearSelect">Year:</label>
+				<select id="yearSelect">
+					<option value="2023">2023</option>
+					<option value="2024" selected>2024</option>
+				</select>
 
-			<label for="borrowerName">Borrower Name:</label>
-			<input type="text" id="borrowerName" name="borrowerName" required><br>
-
-			<label for="loanDate">Loan Date:</label>
-			<input type="date" id="loanDate" name="loanDate" required><br>
-
-			<label for="interestRate">Interest Rate:</label>
-			<input type="number" step="0.01" id="interestRate" name="interestRate" required><br>
-
-			<label for="loanAmount">Loan Amount:</label>
-			<input type="number" step="0.01" id="loanAmount" name="loanAmount" required><br>
-
-			<label for="escrowAmount">Escrow Amount:</label>
-			<input type="number" step="0.01" id="escrowAmount" name="escrowAmount" required><br>
+				<label for="monthSelect">Month:</label>
+				<select id="monthSelect">
+					<option value="01">January</option>
+					<option value="02">February</option>
+					<option value="03">March</option>
+					<option value="04">April</option>
+					<option value="05">May</option>
+					<option value="06">June</option>
+					<option value="07">July</option>
+					<option value="08">August</option>
+					<option value="09">September</option>
+					<option value="10">October</option>
+					<option value="11">November</option>
+					<option value="12">December</option>
+				</select>
+			</div>
+		</div>
+		<div>
+			<input type="radio" name="action" id="addRadio" checked>
+			<label for="addRadio">Add/Update</label>
 			
-			<fieldset>
-			<legend>
-				<button type="button" onclick="addPaymentField()">Add Additional Payment</button>
-			</legend>
-				<div id="paymentEntries">
-					<div class="payment-entry">
-						<label for="paymentDate">Payment Date:</label>
-						<input type="date" name="paymentDate[]" required>
-				
-						<label for="paymentAmount">Payment Amount:</label>
-						<input type="number" step="0.01" name="paymentAmount[]" required>
-					</div>
-				</div>
-			</fieldset>
-			<button type="button" onclick="addNewLoan()">Add Loan</button>
-		</form>
+			<input style='display:none' type="radio" name="action" id="updateRadio">
+			<label style='display:none' for="updateRadio">Update</label>
+			
+			<input type="radio" name="action" id="removeRadio">
+			<label for="removeRadio">Remove</label>
+			<button onclick="processAction()">Submit</button>
+		</div>
+		<ul id="jsonTree"></ul>
 	</fieldset>
 
-	<fieldset>
-		<legend>
-			<button type="button" onclick="importJSON()">Import JSON (Restore)</button> /
-			<button type="button" onclick="exportJSON()">Export JSON (Save)</button>
-		</legend>
-		<ul id="jsonList"></ul>
-	</fieldset>
+	<div>
+		<button onclick="addLoan()">Add Loan</button>
+	</div>
 
 <script>
-	HTMLElement.prototype.$$ = function(s) { return this.querySelectorAll(s) }
 	const $ = s => document.querySelector(s), $$ = s => document.querySelectorAll(s);
 	
+    let loan = {}, loans = {};
+
 	function exportJSON() {
 		var jsonString = JSON.stringify(loans, null, 2); // The second parameter (null) is for replacer function, and the third parameter (2) is for indentation (optional)
 		var blob = new Blob([jsonString], { type: 'application/json' });
@@ -81,144 +107,164 @@ label{display:inline-block;width:100px}
 				reader.onload = function (e) {
 					loans = JSON.parse(e.target.result);
 					console.log(loans);
-					showLoansList(loans);
+					updateAllLoansSelect();
 				};
 				reader.readAsText(file);
 			}
 		};
 		input.click();
 	}
-	
-	function removeJson(loan){
-		delete loans[loan];
-		showLoansList(loans);
-	}
-	
-	function jsonToUL(json, ul, level=1) {
-      for (var key in json) {
-        if (json.hasOwnProperty(key)) {
-          var li = document.createElement("li");
-          li.innerHTML = key;
-		  if(level === 1) li.innerHTML += "<button onclick='removeJson(previousSibling.nodeValue.trim())'>Remove</button>"
-          if (typeof json[key] === "object" && !Array.isArray(json[key])) {
-            var nestedUl = document.createElement("ul");
-            li.appendChild(nestedUl);
-            jsonToUL(json[key], nestedUl, level + 1);
-          } else if (Array.isArray(json[key])) {
-            var nestedUl = document.createElement("ul");
-            li.appendChild(nestedUl);
-            json[key].forEach(function(item) {
-              var nestedLi = document.createElement("li");
-              nestedLi.textContent = item;
-              nestedUl.appendChild(nestedLi);
-            });
-          } else {
-            li.textContent += ": " + json[key];
-          }
-          ul.appendChild(li);
+
+    function updateAllLoansSelect() {
+        const allLoansSelect = $('#allLoansSelect');
+        allLoansSelect.innerHTML = '';
+        for (const loanKey in loans) {
+            const option = document.createElement('option');
+            option.value = loanKey;
+            option.textContent = loanKey;
+            allLoansSelect.appendChild(option);
         }
-      }
+		allLoansSelect.selectedIndex = allLoansSelect.options.length - 1;
+		changeSelectedLoan();
+    }
+
+    function changeSelectedLoan() {
+        const selectedLoanKey = $('#allLoansSelect').value;
+        loan = { ...loans[selectedLoanKey] };
+        console.log('Currently selected loan:', loan);
+		jsonToUL(loan, $("#jsonTree"));
+    }
+
+    function updateValueType() {
+        const selectedKey = $('#keySelect').value, valueInput = $('#valueInput'), paymentsOptions = $('#paymentsOptions');
+
+        paymentsOptions.style.display = (selectedKey === 'payments') ? 'block' : 'none';
+
+        switch (selectedKey) {
+            case 'date':
+                valueInput.type = 'date';
+                break;
+            case 'amount':
+            case 'escrow':
+            case 'payments':
+			case 'rate':
+                valueInput.type = 'number';
+                break;
+            default:
+                valueInput.type = 'text';
+        }
+    }
+
+	function processAction() {
+		const selectedKey = $('#keySelect').value, value = $('#valueInput').value, addRadio = $('#addRadio'),
+			updateRadio = $('#updateRadio'), removeRadio = $('#removeRadio');
+
+		if (selectedKey === 'payments') {
+			const payments = loan['payments'] || {}, year = $('#yearSelect').value, month = $('#monthSelect').value;
+
+			if (addRadio.checked) {
+				payments[year] = payments[year] || {};
+				payments[year][month] = { 'payment': value };
+			} else if (removeRadio.checked) 
+				payments[year] && payments[year][month] && delete payments[year][month];
+			
+			loan['payments'] = payments;
+
+			console.log(addRadio.checked ? 'Add' : removeRadio.checked ? 'Remove' : 'Update', '- Payments:', loan);
+		} else {
+			if (addRadio.checked) loan[selectedKey] = value;
+			else if (removeRadio.checked) loan.hasOwnProperty(selectedKey) && delete loan[selectedKey];
+			
+			console.log(addRadio.checked ? 'Add' : removeRadio.checked ? 'Remove' : 'Update', `- ${selectedKey}:`, loan);
+		}
+
+		$('#valueInput').value = '';
+		jsonToUL(loan, $("#jsonTree"));
+	}
+
+
+    function addLoan() {
+        const address = loan['address'] || '',
+            date = loan['date'] || '',
+            loanKey = `${address}_${date}`;
+        if (address && date && !loans[loanKey]) {
+            loans[loanKey] = { ...loan };
+            console.log(`Loan added: ${loanKey}`, loans);
+            updateAllLoansSelect();
+			
+			
+        } else {
+            console.log("Invalid or existing loan information for addition.");
+        }
     }
 	
-	const showLoansList = (loans) => {
-		for(var key in loans){
-			var loan = loans[key]
-			loan.balance = loan.amount;
-			for(var year in loan.payments){
-				var payments = loan.payments[year];
-				for(var month in payments){
-					payments[month].interest = (loan.balance*(loan.rate/(100*12))).toFixed(2);
-					payments[month].paydown = (payments[month].payment - loan.escrow - payments[month].interest).toFixed(2);
-					if(payments[month].paydown > 0) {
-						if((loan['unpaid interest'] || 0) === 0){
-							loan.balance = (loan.balance - payments[month].paydown).toFixed(2); //there is no unpaid interest
-							payments[month]['principal paydown'] = payments[month].paydown;
-						}else if(loan['unpaid interest'] >= payments[month].paydown){
-							loan['unpaid interest'] -= payments[month].paydown; //there is unpaid interest in excess of the paydown
-							payments[month]['principal paydown'] = 0;
-							payments[month]['unpaid interest paydown'] = payments[month].paydown;
-						}else{
-							var interestUnpaid = loan['unpaid interest']; //there is some unpaid interest but not in excess of payment
-							loan['unpaid interest'] = 0;
-							payments[month]['principal paydown'] = (payments[month].paydown - interestUnpaid).toFixed(2);
-							payments[month]['unpaid interest paydown'] = interestUnpaid;
-							loan.balance = (loan.balance - payments[month]['principal paydown']).toFixed(2);
-						}
+	const calcLoanUpdates = (loan) => {
+		if(!loan.amount || !loan.rate) return;
+		if(!loan.escrow) loan.escrow = 0;
+		
+		loan.balance = loan.amount;
+		loan['unpaid interest'] = 0;
+		for(var year in loan.payments){
+			var payments = loan.payments[year];
+			for(var month in payments){
+				payments[month].interest = (loan.balance*(loan.rate/(100*12))).toFixed(2);
+				payments[month].paydown = (payments[month].payment - loan.escrow - payments[month].interest).toFixed(2);
+				if(payments[month].paydown > 0) {
+					if((loan['unpaid interest'] || 0) === 0){
+						loan.balance = (loan.balance - payments[month].paydown).toFixed(2); //there is no unpaid interest
+						payments[month]['principal paydown'] = payments[month].paydown;
+					}else if(loan['unpaid interest'] >= payments[month].paydown){
+						loan['unpaid interest'] -= payments[month].paydown; //there is unpaid interest in excess of the paydown
+						payments[month]['principal paydown'] = 0;
+						payments[month]['unpaid interest paydown'] = payments[month].paydown;
+					}else{
+						var interestUnpaid = loan['unpaid interest']; //there is some unpaid interest but not in excess of payment
+						loan['unpaid interest'] = 0;
+						payments[month]['principal paydown'] = (payments[month].paydown - interestUnpaid).toFixed(2);
+						payments[month]['unpaid interest paydown'] = interestUnpaid;
+						loan.balance = (loan.balance - payments[month]['principal paydown']).toFixed(2);
 					}
-					else loan['unpaid interest'] = (loan['Interest Unpaid'] || 0) - payments[month].paydown;
 				}
+				else loan['unpaid interest'] = ((loan['unpaid interest'] || 0) - payments[month].paydown).toFixed(2);
 			}
 		}
-		var jsonList = $("#jsonList");
-		jsonList.innerHTML = '';
-		jsonToUL(loans, jsonList);
 	}
+
 	
-	function addPaymentField() {
-		var paymentEntries = document.getElementById('paymentEntries');
-		var newPaymentEntry = document.createElement('div');
-		newPaymentEntry.className = 'payment-entry';
+	
+	function jsonToUL(json, ul) {
+		calcLoanUpdates(json);
+
+		ul.innerHTML = '';
+		for (var key in json) {
+			if (json.hasOwnProperty(key)) {
+				var li = document.createElement("li");
+
+				if (typeof json[key] === "object" && !Array.isArray(json[key])) {
+					li.innerHTML = `<strong>${key}:</strong>`;
+					var nestedUl = document.createElement("ul");
+					li.appendChild(nestedUl);
+					jsonToUL(json[key], nestedUl);
+				} else if (Array.isArray(json[key])) {
+					li.innerHTML = `<strong>${key}:</strong>`;
+					var nestedUl = document.createElement("ul");
+					li.appendChild(nestedUl);
+					json[key].forEach(function (item) {
+						var nestedLi = document.createElement("li");
+						nestedLi.textContent = item;
+						nestedUl.appendChild(nestedLi);
+					});
+				} else {
+					li.innerHTML = `<strong>${key}:</strong> ${json[key]}`;
+				}
 		
-		newPaymentEntry.innerHTML = `
-			<label for="paymentDate">Payment Date:</label>
-			<input type="date" name="paymentDate[]" required>
-
-			<label for="paymentAmount">Payment Amount:</label>
-			<input type="number" step="0.01" name="paymentAmount[]" required>
-		`;
-
-		paymentEntries.appendChild(newPaymentEntry);
+				ul.appendChild(li);
+			}
+		}
 	}
-	var loans = {};
-	function addNewLoan() {
-            var newLoanData = {
-                "name": $('#borrowerName').value,
-                "date": $('#loanDate').value,
-                "rate": $('#interestRate').value,
-                "amount": $('#loanAmount').value,
-                "escrow": $('#escrowAmount').value,
-                "payments": {}
-            };
 
-            var paymentDates = document.getElementsByName('paymentDate[]');
-            var paymentAmounts = document.getElementsByName('paymentAmount[]');
-
-            for (var i = 0; i < paymentDates.length; i++) {
-                var date = paymentDates[i].value;
-                var amount = paymentAmounts[i].value;
-
-                // Extracting year and month from the date
-                var year = date.split('-')[0];
-                var month = date.split('-')[1];
-
-                // Adding payment data to the new loan
-                if (!newLoanData.payments[year]) {
-                    newLoanData.payments[year] = {};
-                }
-
-                if (!newLoanData.payments[year][month]) {
-                    newLoanData.payments[year][month] = {};
-                }
-
-                newLoanData.payments[year][month].payment = amount;
-            }
-
-            // Generating a unique key for the new loan
-            var newLoanKey = "Loan_" + $('#loanAddress').value;
-
-            // Adding the new loan to the loans object
-            loans[newLoanKey] = newLoanData;
-			
-			$$('#newLoanForm input').forEach(input=>input.value='');
-			
-
-            // Logging the updated loans object (you can modify this part based on your use case)
-            console.log(loans);
-			
-			showLoansList(loans);
-        }
-		
-		
 	
 </script>
+
 </body>
+</html>
