@@ -215,7 +215,7 @@
     }
 
     function updateValueType() {
-		processAction();
+		//processAction();
 	
         const selectedKey = $('#keySelect :checked').value, valueInput = $('#valueInput'), paymentsOptions = $('#paymentsOptions');
 
@@ -238,11 +238,13 @@
     }
 
 	function processAction() {
-		const selectedKey = $('#keySelect :checked').value, value = $('#valueInput').value, addRadio = $('#addRadio'),
+		const keySelect = $('#keySelect :checked');
+		const selectedKey = keySelect.value, value = $('#valueInput').value, addRadio = $('#addRadio'),
 			updateRadio = $('#updateRadio'), removeRadio = $('#removeRadio');
 
 		if (selectedKey === 'payments') {
-			const payments = loan['payments'] || {}, year = $('#yearSelect').value, month = $('#monthSelect :checked').value;
+			const monthSel = $('#monthSelect :checked');
+			const payments = loan['payments'] || {}, year = $('#yearSelect').value, month = monthSel.value;
 
 			if (addRadio.checked) {
 				payments[year] = payments[year] || {};
@@ -251,6 +253,10 @@
 				payments[year] && payments[year][month] && delete payments[year][month];
 			
 			loan['payments'] = payments;
+			
+			//advance radio button if possible
+			if (monthSel.closest('label').nextElementSibling) 
+				monthSel.closest('label').nextElementSibling.querySelector('input').checked = true;
 
 			console.log(addRadio.checked ? 'Add' : removeRadio.checked ? 'Remove' : 'Update', '- Payments:', loan);
 		} else {
@@ -261,6 +267,12 @@
 		}
 
 		$('#valueInput').value = '';
+		
+		//advance radio button if that's an option
+		if (keySelect.closest('label').nextElementSibling) {
+			keySelect.closest('label').nextElementSibling.querySelector('input').checked = true;
+			updateValueType();
+		}
 		jsonToUL(loan, $("#jsonTree"));
 	}
 
