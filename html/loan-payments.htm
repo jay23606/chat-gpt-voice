@@ -123,14 +123,15 @@ label{display:inline-block;width:100px}
 	const showLoansList = (loans) => {
 		for(var key in loans){
 			var loan = loans[key]
+			loan.balance = loan.amount;
 			for(var year in loan.payments){
 				var payments = loan.payments[year];
 				for(var month in payments){
-					payments[month].interest = (loan.amount*(loan.rate/(100*12))).toFixed(2);
+					payments[month].interest = (loan.balance*(loan.rate/(100*12))).toFixed(2);
 					payments[month].paydown = (payments[month].payment - loan.escrow - payments[month].interest).toFixed(2);
 					if(payments[month].paydown > 0) {
 						if((loan['unpaid interest'] || 0) === 0){
-							loan.amount = (loan.amount - payments[month].paydown).toFixed(2); //there is no unpaid interest
+							loan.balance = (loan.balance - payments[month].paydown).toFixed(2); //there is no unpaid interest
 							payments[month]['principal paydown'] = payments[month].paydown;
 						}else if(loan['unpaid interest'] >= payments[month].paydown){
 							loan['unpaid interest'] -= payments[month].paydown; //there is unpaid interest in excess of the paydown
@@ -141,7 +142,7 @@ label{display:inline-block;width:100px}
 							loan['unpaid interest'] = 0;
 							payments[month]['principal paydown'] = (payments[month].paydown - interestUnpaid).toFixed(2);
 							payments[month]['unpaid interest paydown'] = interestUnpaid;
-							loan.amount = (loan.amount - payments[month]['principal paydown']).toFixed(2);
+							loan.balance = (loan.balance - payments[month]['principal paydown']).toFixed(2);
 						}
 					}
 					else loan['unpaid interest'] = (loan['Interest Unpaid'] || 0) - payments[month].paydown;
