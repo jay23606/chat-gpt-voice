@@ -230,7 +230,31 @@
 		}
 	}
 
-	
+	function createYearOptions() {
+		// Get the current year
+		const currentYear = new Date().getFullYear();
+
+		// Reference to the yearSelect dropdown
+		const yearSelect = $("#yearSelect");
+
+		// Clear existing options
+		yearSelect.innerHTML = '';
+
+		// Add options for the current year and the past 10 years
+		for (let year = currentYear; year >= currentYear - 10; year--) {
+			const option = document.createElement("option");
+			option.value = year.toString();
+			option.textContent = year.toString();
+
+			// Set the selected attribute for the current year
+			if (year === currentYear) {
+				option.selected = true;
+			}
+
+			// Append the option to the yearSelect dropdown
+			yearSelect.appendChild(option);
+		}
+	}
 	
 	function jsonToUL(json, ul) {
 		calcLoanUpdates(json);
@@ -263,7 +287,7 @@
 		}
 	}
 
-	
+	createYearOptions();
 </script>
 
 </body>
