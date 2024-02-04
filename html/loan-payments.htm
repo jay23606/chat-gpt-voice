@@ -13,6 +13,9 @@
         .collapsed {
             display: none;
         }
+		/*.tbl td:first-child{
+			width:100px
+		}*/
 	</style>
 </head>
 <body>
@@ -24,43 +27,81 @@
 		<select id="allLoansSelect" onchange="changeSelectedLoan()">
 		</select>
 	</legend>
-		<div>
-			<label for="keySelect">Key:</label>
-			<select id="keySelect" onchange="updateValueType()">
-				<option value="address">Address</option>
-				<option value="name">Name</option>
-				<option value="date">Date</option>
-				<option value="rate">Rate</option>
-				<option value="amount">Amount</option>
-				<option value="escrow">Escrow</option>
-				<option value="payments">Payments</option>
-			</select>
-			<label for="valueInput">Value:</label>
-			<input type="text" id="valueInput" placeholder="Enter value" onkeyup="if(event.key==='Enter')processAction()">
-			<div id="paymentsOptions" style="display:none;">
-				<label for="yearSelect">Year:</label>
-				<select id="yearSelect">
-					<option value="2023">2023</option>
-					<option value="2024" selected>2024</option>
-				</select>
+		
+		<table class='tbl'>
+			<tr>
+				<td><strong>Key:</strong></td>
+				<td colspan="3">
+					<div id="keySelect">
+						<label>
+							<input type="radio" name="k" value="address" checked onchange="updateValueType()">
+							Address
+						</label>
+						<label>
+							<input type="radio" name="k" value="name" onchange="updateValueType()">
+							Name
+						</label>
+						<label>
+							<input type="radio" name="k" value="date" onchange="updateValueType()">
+							Date
+						</label>
+						<label>
+							<input type="radio" name="k" value="rate" onchange="updateValueType()">
+							Rate
+						</label>
+						<label>
+							<input type="radio" name="k" value="amount" onchange="updateValueType()">
+							Amount
+						</label>
+						<label>
+							<input type="radio" name="k" value="escrow" onchange="updateValueType()">
+							Escrow
+						</label>
+						<label>
+							<input type="radio" name="k" value="payments" onchange="updateValueType()">
+							Payments
+						</label>
+					</div>
+					
+				</td>
+			</tr>
+			<tr>
+				<td><strong>Value:</strong></td>
+				<td colspan="3">
+					<input type="text" id="valueInput" placeholder="Enter value" onkeyup="if(event.key==='Enter')processAction()">
+				</td>
+			</tr>
+			<tr id="paymentsOptions" style="display:none">
+				<td><strong>Year:</strong></td>
+				<td>
+					<select id="yearSelect" size="4">
+						<option value="2023">2023</option>
+						<option value="2024" selected>2024</option>
+						<!-- Add more options as needed -->
+					</select>
+				</td>
+				<td><strong>Month:</strong></td>
+				<td>
+					<select id="monthSelect" size="4">
+						<option value="01" selected>January</option>
+						<option value="02">February</option>
+						<option value="03">March</option>
+						<option value="04">April</option>
+						<option value="05">May</option>
+						<option value="06">June</option>
+						<option value="07">July</option>
+						<option value="08">August</option>
+						<option value="09">September</option>
+						<option value="10">October</option>
+						<option value="11">November</option>
+						<option value="12">December</option>
+					</select>
+				</td>
+			</tr>
+		</table>
 
-				<label for="monthSelect">Month:</label>
-				<select id="monthSelect">
-					<option value="01">January</option>
-					<option value="02">February</option>
-					<option value="03">March</option>
-					<option value="04">April</option>
-					<option value="05">May</option>
-					<option value="06">June</option>
-					<option value="07">July</option>
-					<option value="08">August</option>
-					<option value="09">September</option>
-					<option value="10">October</option>
-					<option value="11">November</option>
-					<option value="12">December</option>
-				</select>
-			</div>
-		</div>
+		
+		
 		<div>
 			<input type="radio" name="action" id="addRadio" checked>
 			<label for="addRadio">Add/Update</label>
@@ -113,6 +154,8 @@
 			}
 		};
 		input.click();
+		
+		$('#valueInput').focus();
 	}
 
     function updateAllLoansSelect() {
@@ -136,9 +179,11 @@
     }
 
     function updateValueType() {
-        const selectedKey = $('#keySelect').value, valueInput = $('#valueInput'), paymentsOptions = $('#paymentsOptions');
+		processAction();
+	
+        const selectedKey = $('#keySelect :checked').value, valueInput = $('#valueInput'), paymentsOptions = $('#paymentsOptions');
 
-        paymentsOptions.style.display = (selectedKey === 'payments') ? 'block' : 'none';
+        paymentsOptions.style.display = (selectedKey === 'payments') ? 'table-row' : 'none';
 
         switch (selectedKey) {
             case 'date':
@@ -153,10 +198,11 @@
             default:
                 valueInput.type = 'text';
         }
+		valueInput.focus();
     }
 
 	function processAction() {
-		const selectedKey = $('#keySelect').value, value = $('#valueInput').value, addRadio = $('#addRadio'),
+		const selectedKey = $('#keySelect :checked').value, value = $('#valueInput').value, addRadio = $('#addRadio'),
 			updateRadio = $('#updateRadio'), removeRadio = $('#removeRadio');
 
 		if (selectedKey === 'payments') {
@@ -199,17 +245,24 @@
     }
 	
 	const round2 = (num) => Math.round(num * 100) / 100;
-
+	
 	const calcLoanUpdates = (loan) => {
-		if (!loan.amount || !loan.rate) return;
+		if (!loan.amount || !loan.rate || !loan.payments) return;
 		if (!loan.escrow) loan.escrow = 0;
 
 		loan.balance = loan.amount;
 		loan['unpaid interest'] = 0;
 
-		for (var year in loan.payments) {
+		// Sort the years numerically
+		const sortedYears = Object.keys(loan.payments).sort((a, b) => parseInt(a) - parseInt(b));
+
+		for (var year of sortedYears) {
 			var payments = loan.payments[year];
-			for (var month in payments) {
+
+			// Sort the months numerically
+			const sortedMonths = Object.keys(payments).sort((a, b) => parseInt(a) - parseInt(b));
+
+			for (var month of sortedMonths) {
 				payments[month].interest = round2(loan.balance * (loan.rate / (100 * 12)));
 				payments[month].paydown = round2(payments[month].payment - loan.escrow - payments[month].interest);
 
@@ -236,6 +289,7 @@
 	};
 
 
+
 	function createYearOptions() {
 		// Get the current year
 		const currentYear = new Date().getFullYear();
@@ -247,7 +301,7 @@
 		yearSelect.innerHTML = '';
 
 		// Add options for the current year and the past 10 years
-		for (let year = currentYear; year >= currentYear - 10; year--) {
+		for (let year = currentYear; year >= currentYear - 30; year--) {
 			const option = document.createElement("option");
 			option.value = year.toString();
 			option.textContent = year.toString();
@@ -264,36 +318,38 @@
 	
 	function jsonToUL(json, ul) {
 		calcLoanUpdates(json);
-
 		ul.innerHTML = '';
-		for (var key in json) {
-			if (json.hasOwnProperty(key)) {
-				var li = document.createElement("li");
-
-				if (typeof json[key] === "object" && !Array.isArray(json[key])) {
-					li.innerHTML = `<strong>${key}:</strong>`;
-					var nestedUl = document.createElement("ul");
-					li.appendChild(nestedUl);
-					jsonToUL(json[key], nestedUl);
-				} else if (Array.isArray(json[key])) {
-					li.innerHTML = `<strong>${key}:</strong>`;
-					var nestedUl = document.createElement("ul");
-					li.appendChild(nestedUl);
-					json[key].forEach(function (item) {
-						var nestedLi = document.createElement("li");
-						nestedLi.textContent = item;
-						nestedUl.appendChild(nestedLi);
-					});
-				} else {
-					li.innerHTML = `<strong>${key}:</strong> ${json[key]}`;
-				}
-		
-				ul.appendChild(li);
+		var keys = Object.keys(json).sort((a, b) => {
+			const intA = parseInt(a);
+			const intB = parseInt(b);
+			if (!isNaN(intA) && !isNaN(intB)) return intA - intB;
+			return a.localeCompare(b);
+		});
+		keys.forEach(key => {
+			var li = document.createElement("li");
+			if (typeof json[key] === "object" && !Array.isArray(json[key])) {
+				li.innerHTML = `<strong>${key}:</strong>`;
+				var nestedUl = document.createElement("ul");
+				li.appendChild(nestedUl);
+				jsonToUL(json[key], nestedUl);
+			} else if (Array.isArray(json[key])) {
+				li.innerHTML = `<strong>${key}:</strong>`;
+				var nestedUl = document.createElement("ul");
+				li.appendChild(nestedUl);
+				json[key].forEach(function (item) {
+					var nestedLi = document.createElement("li");
+					nestedLi.textContent = item;
+					nestedUl.appendChild(nestedLi);
+				});
+			} else {
+				li.innerHTML = `<strong>${key}:</strong> ${json[key]}`;
 			}
-		}
+			ul.appendChild(li);
+		});
 	}
 
 	createYearOptions();
+	$('#valueInput').focus();
 </script>
 
 </body>
