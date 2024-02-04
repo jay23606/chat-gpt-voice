@@ -198,37 +198,43 @@
         }
     }
 	
+	const round2 = (num) => Math.round(num * 100) / 100;
+
 	const calcLoanUpdates = (loan) => {
-		if(!loan.amount || !loan.rate) return;
-		if(!loan.escrow) loan.escrow = 0;
-		
+		if (!loan.amount || !loan.rate) return;
+		if (!loan.escrow) loan.escrow = 0;
+
 		loan.balance = loan.amount;
 		loan['unpaid interest'] = 0;
-		for(var year in loan.payments){
+
+		for (var year in loan.payments) {
 			var payments = loan.payments[year];
-			for(var month in payments){
-				payments[month].interest = (loan.balance*(loan.rate/(100*12))).toFixed(2);
-				payments[month].paydown = (payments[month].payment - loan.escrow - payments[month].interest).toFixed(2);
-				if(payments[month].paydown > 0) {
-					if((loan['unpaid interest'] || 0) === 0){
-						loan.balance = (loan.balance - payments[month].paydown).toFixed(2); //there is no unpaid interest
+			for (var month in payments) {
+				payments[month].interest = round2(loan.balance * (loan.rate / (100 * 12)));
+				payments[month].paydown = round2(payments[month].payment - loan.escrow - payments[month].interest);
+
+				if (payments[month].paydown > 0) {
+					if ((loan['unpaid interest'] || 0) === 0) {
+						loan.balance = round2(loan.balance - payments[month].paydown);
 						payments[month]['principal paydown'] = payments[month].paydown;
-					}else if(loan['unpaid interest'] >= payments[month].paydown){
-						loan['unpaid interest'] -= payments[month].paydown; //there is unpaid interest in excess of the paydown
+					} else if (loan['unpaid interest'] >= payments[month].paydown) {
+						loan['unpaid interest'] -= payments[month].paydown;
 						payments[month]['principal paydown'] = 0;
-						payments[month]['unpaid interest paydown'] = payments[month].paydown;
-					}else{
-						var interestUnpaid = loan['unpaid interest']; //there is some unpaid interest but not in excess of payment
+						payments[month]['unpaid interest paydown'] = round2(payments[month].paydown);
+					} else {
+						var interestUnpaid = loan['unpaid interest'];
 						loan['unpaid interest'] = 0;
-						payments[month]['principal paydown'] = (payments[month].paydown - interestUnpaid).toFixed(2);
-						payments[month]['unpaid interest paydown'] = interestUnpaid;
-						loan.balance = (loan.balance - payments[month]['principal paydown']).toFixed(2);
+						payments[month]['principal paydown'] = round2(payments[month].paydown - interestUnpaid);
+						payments[month]['unpaid interest paydown'] = round2(interestUnpaid);
+						loan.balance = round2(loan.balance - payments[month]['principal paydown']);
 					}
+				} else {
+					loan['unpaid interest'] = round2((loan['unpaid interest'] || 0) - payments[month].paydown);
 				}
-				else loan['unpaid interest'] = ((loan['unpaid interest'] || 0) - payments[month].paydown).toFixed(2);
 			}
 		}
-	}
+	};
+
 
 	function createYearOptions() {
 		// Get the current year
