@@ -25,6 +25,7 @@
 	<legend>
 		<label for="allLoansSelect">Select Loan:</label>
 		<select id="allLoansSelect" onchange="changeSelectedLoan()">
+			<option></option>
 		</select>
 	</legend>
 		
@@ -153,7 +154,7 @@
 	</fieldset>
 
 	<div>
-		<button onclick="addLoan()">Add Loan</button>
+		<button id="addLoan" disabled onclick="addLoan()">Add Loan</button>
 	</div>
 
 <script>
@@ -196,20 +197,27 @@
 
     function updateAllLoansSelect() {
         const allLoansSelect = $('#allLoansSelect');
-        allLoansSelect.innerHTML = '';
+        allLoansSelect.innerHTML = '<option></option>';
         for (const loanKey in loans) {
             const option = document.createElement('option');
             option.value = loanKey;
             option.textContent = loanKey;
             allLoansSelect.appendChild(option);
         }
-		allLoansSelect.selectedIndex = allLoansSelect.options.length - 1;
+		allLoansSelect.selectedIndex = 0;
+		//allLoansSelect.selectedIndex = allLoansSelect.options.length - 1;
 		changeSelectedLoan();
     }
 
     function changeSelectedLoan() {
         const selectedLoanKey = $('#allLoansSelect').value;
         loan = { ...loans[selectedLoanKey] };
+		
+		//reset selected radios when loan is changed
+		$('#keySelect input:first-child').checked = true;
+		updateValueType();
+		$('#monthSelect input:first-child').checked = true;
+		
         console.log('Currently selected loan:', loan);
 		jsonToUL(loan, $("#jsonTree"));
     }
@@ -274,6 +282,7 @@
 			updateValueType();
 		}
 		jsonToUL(loan, $("#jsonTree"));
+		$('#addLoan').disabled = !(loan.address && loan.date);
 	}
 
 
@@ -282,8 +291,10 @@
             date = loan['date'] || '',
             loanKey = `${address}_${date}`;
         if (address && date && !loans[loanKey]) {
-            loans[loanKey] = { ...loan };
+			//make a deep copy
+            loans[loanKey] = JSON.parse(JSON.stringify(loan));//{ ...loan };
             console.log(`Loan added: ${loanKey}`, loans);
+			loan = {};
             updateAllLoansSelect();		
         } else {
             console.log("Invalid or existing loan information for addition.");
