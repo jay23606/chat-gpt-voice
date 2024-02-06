@@ -19,8 +19,10 @@
 	</style>
 </head>
 <body>
-	<button type="button" onclick="importJSON()">Import JSON (Restore)</button> /
-	<button type="button" onclick="exportJSON()">Export JSON (Save)</button>
+	<button type="button" onclick="importJSON()">Import JSON</button>
+	<button type="button" onclick="exportJSON()">Export JSON</button>
+	<button type="button" onclick="restoreJSON()">Restore from localStorage</button>
+	<button type="button" onclick="saveJSON()">Save to localStorage</button>
 	<fieldset>
 	<legend>
 		<label for="allLoansSelect">Select Loan:</label>
@@ -193,6 +195,21 @@
 		input.click();
 		
 		$('#valueInput').focus();
+	}
+	
+	function saveJSON(){
+		localStorage.setItem("FA_LOAN", JSON.stringify(loan));
+		localStorage.setItem("FA_LOANS", JSON.stringify(loans));
+		alert('Saved to FA_LOANS!');
+	}
+	
+	function restoreJSON(){
+		if ("FA_LOANS" in localStorage) {
+			loans = JSON.parse(localStorage.getItem("FA_LOANS"));
+			loan = JSON.parse(localStorage.getItem("FA_LOAN"));
+			updateAllLoansSelect();
+			$('#valueInput').focus();
+		}
 	}
 
     function updateAllLoansSelect() {
