@@ -1,0 +1,45 @@
+<!-- https://jay23606.github.io/chat-gpt-voice/html/card-printer2.htm -->
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Hello World</title>
+</head>
+<body>
+    <h1 id="output"></h1>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script>
+
+const generatePDF = (sel = '.section-to-capture', scale = 1, margins = 0.5, orientation = 'landscape') => {
+    const elements = document.querySelectorAll(sel);
+    const { jsPDF } = window.jspdf;
+    const pageSize = orientation === 'portrait' ? { width: 8.5 * 72, height: 11 * 72 } : { width: 11 * 72, height: 8.5 * 72 };
+    const marginSize = margins * 72;
+    const marginValues = { top: marginSize, bottom: marginSize, left: marginSize, right: marginSize };
+
+    const pdf = new jsPDF({
+        orientation: orientation, 
+        unit: 'pt', 
+        format: [pageSize.width, pageSize.height], 
+        margins: marginValues
+    });
+
+    elements.forEach((el, index) => {
+        const scaleFactor = Math.min(
+            (pageSize.width - marginValues.left - marginValues.right) / el.offsetWidth,
+            (pageSize.height - marginValues.top - marginValues.bottom) / el.offsetHeight
+        );
+        const canvasWidth = el.offsetWidth * scaleFactor;
+        const canvasHeight = el.offsetHeight * scaleFactor;
+        html2canvas(el, { scale: scale, windowWidth: el.scrollWidth + 17, windowHeight: el.scrollHeight }).then(canvas => {
+            if (index !== 0) pdf.addPage();
+            const imgData = canvas.toDataURL('image/png');
+            pdf.addImage(imgData, 'PNG', marginValues.left, marginValues.top, canvasWidth, canvasHeight);
+            if (index === elements.length - 1) pdf.save('output.pdf');
+        });
+    });
+};
+    </script>
+</body>
+</html>
