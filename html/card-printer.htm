@@ -1,0 +1,37 @@
+<!-- https://jay23606.github.io/chat-gpt-voice/html/card-printer.htm -->
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Hello World</title>
+</head>
+<body>
+    <h1 id="output"></h1>
+
+    <script>
+const printCardBodyElements = () => {
+    const printWindow = window.open('', '_blank');
+
+    printWindow.document.write('<html><head><title>Print</title>');
+
+    const cardBodies = document.querySelectorAll('#main .card-body');
+    cardBodies.forEach(cardBody => {
+        const computedStyle = window.getComputedStyle(cardBody);
+        printWindow.document.write(`<style>#main .card-body { ${computedStyle.cssText} }</style>`);
+    });
+
+    printWindow.document.write('</head><body>');
+
+    cardBodies.forEach((cardBody, i) => {
+		printWindow.document.write(cardBody.outerHTML);
+		if (i < cardBodies.length - 1) printWindow.document.write('<hr>');
+	});
+
+    printWindow.document.write('</body></html>');
+
+    printWindow.document.close();
+    printWindow.print();
+	printWindow.close();
+};
+    </script>
+</body>
+</html>
