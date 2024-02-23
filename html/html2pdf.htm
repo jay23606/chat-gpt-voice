@@ -60,13 +60,14 @@ const generatePDF = (sel = '.section-to-capture', scale = 1, margins = 0.5, orie
     });
 
     elements.forEach((el, index) => {
+	const w = el.scrollWidth + 17, h = el.scrollHeight;
         const scaleFactor = Math.min(
-            (pageSize.width - marginValues.left - marginValues.right) / el.offsetWidth,
-            (pageSize.height - marginValues.top - marginValues.bottom) / el.offsetHeight
+            (pageSize.width - marginValues.left - marginValues.right) / w,
+            (pageSize.height - marginValues.top - marginValues.bottom) / h
         );
-        const canvasWidth = el.offsetWidth * scaleFactor;
-        const canvasHeight = el.offsetHeight * scaleFactor;
-        html2canvas(el, { scale: scale, windowWidth: el.scrollWidth + 17, windowHeight: el.scrollHeight }).then(canvas => {
+        const canvasWidth = w * scaleFactor;
+        const canvasHeight = h * scaleFactor;
+        html2canvas(el, { scale: scale, width: w, height: h }).then(canvas => {
             if (index !== 0) pdf.addPage();
             const imgData = canvas.toDataURL('image/png');
             pdf.addImage(imgData, 'PNG', marginValues.left, marginValues.top, canvasWidth, canvasHeight);
