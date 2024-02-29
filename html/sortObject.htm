@@ -1,0 +1,54 @@
+<!-- https://jay23606.github.io/chat-gpt-voice/html/sortObject.htm -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Hello World</title>
+</head>
+<body>
+<h1>Hello World</h1>
+<script>
+
+  Object.prototype.sort = function(keysString) {
+    // Split the keysString into an array of keys
+    var keys = keysString.split(',');
+
+    // Map the object's properties to an array of objects containing keys and values
+    var entries = Object.entries(this);
+
+    // Sort the array based on the specified keys
+    entries.sort(function(a, b) {
+        for (var i = 0; i < keys.length; i++) {
+            var key = keys[i].trim(); // Remove any leading/trailing spaces
+            var compareResult = a[1][key].localeCompare(b[1][key]);
+            if (compareResult !== 0) {
+                return compareResult;
+            }
+        }
+        return 0; // If all keys are equal, maintain the original order
+    });
+
+    // Return the sorted entries
+    return entries;
+};
+
+// Create a steps object
+var steps = {
+    0: { NextStepName: 'Step F', CurrentStepName: 'Step A' },
+    1: { NextStepName: 'Step C', CurrentStepName: 'Step D' },
+    2: { NextStepName: 'Step E', CurrentStepName: 'Step E' },
+    // Other steps...
+};
+
+// Call the sort method on the steps object with specified keys
+var sortedEntries = steps.sort('NextStepName, CurrentStepName');
+
+// Iterate over the sorted entries and access the corresponding keys and values
+sortedEntries.forEach(function(entry) {
+    console.log(entry[0] + ':', entry[1]);
+});
+  
+</script>
+</body>
+</html>
