@@ -18,7 +18,7 @@
         $.fn.selectToInput = function() {
             return this.each(function() {
                 var $select = $(this);
-                var $input = $('<input type="text" list="' + $select.attr('id') + '-list">').val($select.find('option:selected').text()).attr('data-value', $select.find('option:selected').data('value'));
+                var $input = $('<input type="text" list="' + $select.attr('id') + '-list">').val($select.find('option:selected').text()).attr('data-value', $select.find('option:selected').data('value')).attr('id', $select.attr('id'));
 
                 var $datalist = $('<datalist id="' + $select.attr('id') + '-list"></datalist>');
                 $select.find('option').each(function() {
@@ -26,14 +26,13 @@
                     $datalist.append($option);
                 });
 
-                $select.after($input).after($datalist).hide();
+                $select.after($input).after($datalist).remove();
 
                 $input.on('change', function() {
                     var value = $(this).val();
                     var dataValue = $datalist.find('option[value="' + value + '"]').attr('data-value');
                     if (dataValue) {
                         $(this).attr('data-value', dataValue);
-                        $select.val(dataValue);
                     }
                 });
             });
