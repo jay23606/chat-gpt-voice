@@ -1,0 +1,47 @@
+<!-- https://jay23606.github.io/chat-gpt-voice/html/selectToInputPlugin.html -->
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Example using selectToInput plugin</title>
+</head>
+<body>
+
+<select id="mySelect">
+    <option value="1" data-value="1">One</option>
+    <option value="2" data-value="2">Two</option>
+    <option value="3" data-value="3" selected>Three</option>
+</select>
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script>
+    (function($) {
+        $.fn.selectToInput = function() {
+            return this.each(function() {
+                var $select = $(this);
+                var $input = $('<input type="text" list="' + $select.attr('id') + '-list">').val($select.find('option:selected').text()).attr('data-value', $select.find('option:selected').data('value'));
+
+                var $datalist = $('<datalist id="' + $select.attr('id') + '-list"></datalist>');
+                $select.find('option').each(function() {
+                    var $option = $('<option>').attr('value', $(this).text()).attr('data-value', $(this).data('value'));
+                    $datalist.append($option);
+                });
+
+                $select.after($input).after($datalist).hide();
+
+                $input.on('change', function() {
+                    var value = $(this).val();
+                    var dataValue = $datalist.find('option[value="' + value + '"]').attr('data-value');
+                    if (dataValue) {
+                        $(this).attr('data-value', dataValue);
+                        $select.val(dataValue);
+                    }
+                });
+            });
+        };
+    })(jQuery);
+
+    $('#mySelect').selectToInput();
+</script>
+
+</body>
+</html>
