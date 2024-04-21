@@ -28,6 +28,8 @@ class GitHub {
         });
         return response;
     }
+    //Possible simplification
+    //_convertToUtf8Base64 = str => btoa(new TextEncoder().encode(str).reduce((acc, byte) => acc + String.fromCharCode(byte), ''));
     _convertToUtf8Base64(str) {
         const codePoints = Array.from(str).map((char) => char.codePointAt(0)), arr = new Uint8Array(codePoints.length * 4);
         let i = 0;
