@@ -1,129 +1,67 @@
 <!-- https://jay23606.github.io/chat-gpt-voice/html/pong.htm -->
-
 <!DOCTYPE html>
 <html>
 <head>
-	<meta charset="UTF-8">
-	<title>Pong Game</title>
-	<style>
-		canvas {
-			background-color: black;
-			border: solid white 2px;
-		}
-	</style>
+    <title>Pong Game</title>
+    <style>
+        canvas {
+            background-color: black;
+            display: block;
+            margin: 0 auto;
+        }
+    </style>
 </head>
 <body>
-	<canvas id="canvas" width="600" height="400"></canvas>
-	<script>
-		const canvas = document.getElementById('canvas');
-		const ctx = canvas.getContext('2d');
-		
-		// Ball
-		let ballX = canvas.width / 2;
-		let ballY = canvas.height / 2;
-		let ballSpeedX = 5;
-		let ballSpeedY = 5;
+    <canvas id="gameCanvas" width="800" height="400"></canvas>
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
 
-		// Paddles
-		let paddleWidth = 10;
-		let paddleHeight = 80;
-		let player1Y = 160;
-		let player2Y = 160;
-		
-		// Scores
-		let player1Score = 0;
-		let player2Score = 0;
-		
-		function draw() {
-			// Clear canvas
-			ctx.fillStyle = 'black';
-			ctx.fillRect(0, 0, canvas.width, canvas.height);
+        const playerWidth = 10;
+        const playerHeight = 100;
+        const ballSize = 10;
+        let player1Y = canvas.height / 2 - playerHeight / 2;
+        let player2Y = canvas.height / 2 - playerHeight / 2;
+        let ballX = canvas.width / 2;
+        let ballY = canvas.height / 2;
+        let ballSpeedX = 5;
+        let ballSpeedY = 5;
 
-			// Draw net
-			ctx.fillStyle = 'white';			
-			for(let i = 0; i < canvas.height; i+=40) {
-				ctx.fillRect(canvas.width/2-2, i, 4, 20);
-			}
-			
-			// Draw ball
-			ctx.beginPath();
-			ctx.arc(ballX, ballY, 10, 0, Math.PI*2, false);
-			ctx.fillStyle = 'white';
-			ctx.fill();
+        const draw = () => {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.fillStyle = 'white';
+            ctx.fillRect(5, player1Y, playerWidth, playerHeight);
+            ctx.fillRect(canvas.width - playerWidth - 5, player2Y, playerWidth, playerHeight);
+            ctx.beginPath();
+            ctx.arc(ballX, ballY, ballSize, 0, Math.PI * 2);
+            ctx.fill();
+        };
 
-			// Move ball
-			ballX += ballSpeedX;
-			ballY += ballSpeedY;
+        const update = () => {
+            ballX += ballSpeedX;
+            ballY += ballSpeedY;
 
-			// Bounce ball off walls
-			if(ballY <= 0 || ballY >= canvas.height) {
-				ballSpeedY = -ballSpeedY;
-			}
+            if (ballY + ballSize >= canvas.height || ballY - ballSize <= 0) {
+                ballSpeedY = -ballSpeedY;
+            }
 
-			// Check if ball hits paddle
-			if(ballX <= paddleWidth && ballY >= player1Y && ballY <= player1Y + paddleHeight) {
-				ballSpeedX = -ballSpeedX;
-			}
-			if(ballX >= canvas.width - paddleWidth && ballY >= player2Y && ballY <= player2Y + paddleHeight) {
-				ballSpeedX = -ballSpeedX;
-			}
+            if (ballX - ballSize <= playerWidth && ballY + ballSize > player1Y && ballY - ballSize < player1Y + playerHeight) {
+                ballSpeedX = -ballSpeedX;
+            }
 
-			// Move paddles
-			canvas.addEventListener('mousemove', function(event) {
-				let mousePos = getMousePos(event);
-				player1Y = mousePos.y - paddleHeight/2;
-			});
+            if (ballX + ballSize >= canvas.width - playerWidth && ballY + ballSize > player2Y && ballY - ballSize < player2Y + playerHeight) {
+                ballSpeedX = -ballSpeedX;
+            }
 
-			// Draw paddles
-			ctx.fillStyle = 'white';
-			ctx.fillRect(0, player1Y, paddleWidth, paddleHeight);
-			ctx.fillRect(canvas.width-paddleWidth, player2Y, paddleWidth, paddleHeight);
+            draw();
+        };
 
-			// AI for player 2
-			let paddle2YCenter = player2Y + paddleHeight/2;
-			if(paddle2YCenter < ballY - 35) {
-				player2Y += 10;
-			} else if(paddle2YCenter > ballY + 35) {
-				player2Y -= 10;
-			}
-			
-			// Draw scores
-			ctx.font = '30px Arial';
-			ctx.fillText(player1Score, 100, 50);
-			ctx.fillText(player2Score, canvas.width-100, 50);
+        setInterval(update, 1000 / 60);
 
-			// Reset ball if it goes out of bounds
-			if(ballX <= 0) {
-				ballSpeedX = -ballSpeedX;
-				player2Score++;
-				resetBall();
-			}
-			if(ballX >= canvas.width) {
-				ballSpeedX = -ballSpeedX;
-				player1Score++;
-				resetBall();
-			}
-		}
-		
-		function getMousePos(event) {
-			let rect = canvas.getBoundingClientRect();
-			let root = document.documentElement;
-			let mouseX = event.clientX - rect.left - root.scrollLeft;
-			let mouseY = event.clientY - rect.top - root.scrollTop;
-			return {
-				x: mouseX,
-				y: mouseY
-			};
-		}
-		
-		function resetBall() {
-			ballX = canvas.width / 2;
-			ballY = canvas.height / 2;
-			ballSpeedX = -ballSpeedX;
-			ballSpeedY = Math.floor(Math.random() * 10) - 5;
-		}
-
-		setInterval(draw, 20);
-	</script>
+        canvas.addEventListener('mousemove', (event) => {
+            let mousePos = event.clientY - canvas.getBoundingClientRect().top;
+            player1Y = mousePos - (playerHeight / 2);
+        });
+    </script>
 </body>
 </html>
