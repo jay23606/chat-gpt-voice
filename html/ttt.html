@@ -1,0 +1,90 @@
+<!-- https://jay23606.github.io/chat-gpt-voice/html/ttt.html -->
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Tic Tac Toe</title>
+    <style>
+        table {
+            border-collapse: collapse;
+        }
+        td {
+            width: 100px;
+            height: 100px;
+            border: 1px solid black;
+            text-align: center;
+            font-size: 24px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+
+<table>
+    <tr>
+        <td onclick="play(0, 0)"></td>
+        <td onclick="play(0, 1)"></td>
+        <td onclick="play(0, 2)"></td>
+    </tr>
+    <tr>
+        <td onclick="play(1, 0)"></td>
+        <td onclick="play(1, 1)"></td>
+        <td onclick="play(1, 2)"></td>
+    </tr>
+    <tr>
+        <td onclick="play(2, 0)"></td>
+        <td onclick="play(2, 1)"></td>
+        <td onclick="play(2, 2)"></td>
+    </tr>
+</table>
+
+<script>
+    const board = [
+        ['', '', ''],
+        ['', '', ''],
+        ['', '', '']
+    ];
+
+    let currentPlayer = 'X';
+
+    const play = (row, col) => {
+        if (board[row][col] === '') {
+            board[row][col] = currentPlayer;
+            document.querySelector(`table tr:nth-child(${row + 1}) td:nth-child(${col + 1})`).innerText = currentPlayer;
+            checkWinner();
+            currentPlayer = currentPlayer === 'X' ? 'O' : 'X';
+        }
+    };
+
+    const checkWinner = () => {
+        const lines = [
+            [[0, 0], [0, 1], [0, 2]],
+            [[1, 0], [1, 1], [1, 2]],
+            [[2, 0], [2, 1], [2, 2]],
+            [[0, 0], [1, 0], [2, 0]],
+            [[0, 1], [1, 1], [2, 1]],
+            [[0, 2], [1, 2], [2, 2]],
+            [[0, 0], [1, 1], [2, 2]],
+            [[0, 2], [1, 1], [2, 0]]
+        ];
+
+        for (const line of lines) {
+            const [a, b, c] = line;
+            if (board[a[0]][a[1]] !== '' && board[a[0]][a[1]] === board[b[0]][b[1]] && board[a[0]][a[1]] === board[c[0]][c[1]]) {
+                alert(`Player ${board[a[0]][a[1]]} wins!`);
+                resetBoard();
+            }
+        }
+    };
+
+    const resetBoard = () => {
+        board.forEach((row, rowIndex) => {
+            row.forEach((cell, colIndex) => {
+                board[rowIndex][colIndex] = '';
+                document.querySelector(`table tr:nth-child(${rowIndex + 1}) td:nth-child(${colIndex + 1})`).innerText = '';
+            });
+        });
+    };
+</script>
+
+</body>
+</html>
