@@ -1,0 +1,76 @@
+<!-- https://jay23606.github.io/chat-gpt-voice/html/ttt20.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tic Tac Toe</title>
+<style>
+  .board {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 5px;
+    width: 300px;
+    margin: 0 auto;
+  }
+  .cell {
+    width: 100px;
+    height: 100px;
+    border: 1px solid black;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 24px;
+    cursor: pointer;
+  }
+</style>
+</head>
+<body>
+<div class="board"></div>
+<script>
+  const board = document.querySelector('.board');
+  let currentPlayer = 'X';
+  const cells = Array.from({ length: 9 });
+
+  const checkWinner = () => {
+    const lines = [
+      [0, 1, 2],
+      [3, 4, 5],
+      [6, 7, 8],
+      [0, 3, 6],
+      [1, 4, 7],
+      [2, 5, 8],
+      [0, 4, 8],
+      [2, 4, 6]
+    ];
+    for (let line of lines) {
+      const [a, b, c] = line;
+      if (cells[a] && cells[a] === cells[b] && cells[a] === cells[c]) {
+        return cells[a];
+      }
+    }
+    return null;
+  };
+
+  const handleClick = (index) => {
+    if (cells[index] || checkWinner()) return;
+    cells[index] = currentPlayer;
+    render();
+    currentPlayer = currentPlayer === 'X' ? 'O' : 'X';
+  };
+
+  const render = () => {
+    board.innerHTML = '';
+    cells.forEach((cell, index) => {
+      const cellDiv = document.createElement('div');
+      cellDiv.classList.add('cell');
+      cellDiv.textContent = cell || '';
+      cellDiv.addEventListener('click', () => handleClick(index));
+      board.appendChild(cellDiv);
+    });
+  };
+
+  render();
+</script>
+</body>
+</html>
