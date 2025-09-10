@@ -1,0 +1,71 @@
+<!-- https://jay23606.github.io/chat-gpt-voice/html/ttt100.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tic Tac Toe</title>
+<style>
+  .board {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 5px;
+    max-width: 300px;
+    margin: 0 auto;
+  }
+  .cell {
+    border: 1px solid black;
+    height: 100px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 24px;
+    cursor: pointer;
+  }
+</style>
+</head>
+<body>
+<div class="board"></div>
+<script>
+  const board = document.querySelector(".board");
+  let currentPlayer = "X";
+  const cells = Array.from({ length: 9 });
+
+  cells.forEach((_, index) => {
+    const cell = document.createElement("div");
+    cell.classList.add("cell");
+    cell.dataset.index = index;
+    cell.addEventListener("click", () => {
+      if (cell.textContent === "" && !checkWinner()) {
+        cell.textContent = currentPlayer;
+        currentPlayer = currentPlayer === "X" ? "O" : "X";
+      }
+    });
+    board.appendChild(cell);
+  });
+
+  const checkWinner = () => {
+    const winningCombos = [
+      [0, 1, 2], [3, 4, 5], [6, 7, 8],
+      [0, 3, 6], [1, 4, 7], [2, 5, 8],
+      [0, 4, 8], [2, 4, 6]
+    ];
+
+    for (const combo of winningCombos) {
+      const [a, b, c] = combo;
+      if (cells[a].textContent && cells[a].textContent === cells[b].textContent && cells[a].textContent === cells[c].textContent) {
+        alert(`${cells[a].textContent} wins!`);
+        return true;
+      }
+    }
+
+    if (cells.every(cell => cell.textContent !== "")) {
+      alert("It's a tie!");
+      return true;
+    }
+
+    return false;
+  };
+</script>
+</body>
+</html>
