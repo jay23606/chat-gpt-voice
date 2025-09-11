@@ -1,0 +1,85 @@
+<!-- https://jay23606.github.io/chat-gpt-voice/html/ttt101.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tic Tac Toe Game</title>
+<style>
+  body { font-family: Arial, sans-serif; text-align: center; }
+  .board { display: inline-block; }
+  .cell { width: 100px; height: 100px; font-size: 24px; border: 1px solid #000; cursor: pointer; }
+</style>
+</head>
+<body>
+<div class="board"></div>
+<script>
+    const board = document.querySelector('.board');
+    const cells = Array.from({ length: 9 });
+
+    const render = () => {
+        board.innerHTML = '';
+        cells.forEach((_, index) => {
+            const cell = document.createElement('div');
+            cell.classList.add('cell');
+            cell.textContent = cells[index];
+            cell.addEventListener('click', () => makeMove(index));
+            board.appendChild(cell);
+        });
+    };
+
+    const makeMove = (index) => {
+        if (!cells[index]) {
+            cells[index] = 'X';
+            render();
+            if (!checkWin('X') && !checkTie()) {
+                makeComputerMove();
+            }
+        }
+    };
+
+    const makeComputerMove = () => {
+        const availableMoves = cells.map((cell, index) => cell ? null : index).filter(index => index !== null);
+        const randomIndex = availableMoves[Math.floor(Math.random() * availableMoves.length)];
+        cells[randomIndex] = 'O';
+        render();
+        checkWin('O');
+        checkTie();
+    };
+
+    const checkWin = (player) => {
+        const winningCombos = [
+            [0, 1, 2], [3, 4, 5], [6, 7, 8],
+            [0, 3, 6], [1, 4, 7], [2, 5, 8],
+            [0, 4, 8], [2, 4, 6]
+        ];
+        const isWin = winningCombos.some(combo => combo.every(index => cells[index] === player));
+        if (isWin) {
+            setTimeout(() => {
+                alert(`${player} wins!`);
+                resetGame();
+            }, 10);
+        }
+        return isWin;
+    };
+
+    const checkTie = () => {
+        const isTie = cells.every(cell => cell);
+        if (isTie) {
+            setTimeout(() => {
+                alert('It\'s a tie!');
+                resetGame();
+            }, 10);
+        }
+        return isTie;
+    };
+
+    const resetGame = () => {
+        cells.fill(null);
+        render();
+    };
+
+    render();
+</script>
+</body>
+</html>
