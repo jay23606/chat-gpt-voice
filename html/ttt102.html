@@ -1,0 +1,70 @@
+<!-- https://jay23606.github.io/chat-gpt-voice/html/ttt102.html -->
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Tic Tac Toe</title>
+    <style>
+        .board {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 5px;
+            max-width: 300px;
+            margin: 0 auto;
+        }
+        .cell {
+            border: 1px solid black;
+            width: 100px;
+            height: 100px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 24px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <div class="board"></div>
+    
+    <script>
+        const board = document.querySelector('.board');
+        let currentPlayer = 'X';
+        const cells = Array.from({ length: 9 });
+
+        const checkWinner = () => {
+            const winningCombos = [
+                [0, 1, 2], [3, 4, 5], [6, 7, 8],
+                [0, 3, 6], [1, 4, 7], [2, 5, 8],
+                [0, 4, 8], [2, 4, 6]
+            ];
+
+            return winningCombos.some(combo => {
+                const [a, b, c] = combo;
+                if (cells[a] && cells[a] === cells[b] && cells[a] === cells[c]) {
+                    return true;
+                }
+            });
+        };
+
+        const handleMove = (index) => {
+            if (cells[index] || checkWinner()) return;
+            cells[index] = currentPlayer;
+            renderBoard();
+            currentPlayer = currentPlayer === 'X' ? 'O' : 'X';
+        };
+
+        const renderBoard = () => {
+            board.innerHTML = '';
+            cells.forEach((cell, index) => {
+                const cellElement = document.createElement('div');
+                cellElement.classList.add('cell');
+                cellElement.textContent = cell;
+                cellElement.addEventListener('click', () => handleMove(index));
+                board.appendChild(cellElement);
+            });
+        };
+
+        renderBoard();
+    </script>
+</body>
+</html>
